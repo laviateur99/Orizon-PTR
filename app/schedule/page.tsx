@@ -431,7 +431,6 @@ export default function SchedulePage() {
         studentId: patch.studentId,
         lesson: patch.title,
         notes: patch.notes,
-        roomId: (patch as any).roomId,
       };
 
       Object.keys(reservationPatch).forEach((key) => (reservationPatch as any)[key] === undefined && delete (reservationPatch as any)[key]);
@@ -445,7 +444,6 @@ export default function SchedulePage() {
         endTime: patch.endTime,
         reason: patch.type as ResourceUnavailability["reason"],
         notes: patch.notes,
-        roomId: (patch as any).roomId,
       };
 
       if (patch.aircraftId) {
