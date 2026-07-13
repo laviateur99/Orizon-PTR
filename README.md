@@ -1,21 +1,18 @@
-# Orizon Flight Director v14.0.0
+# Orizon Aviation - Flight Director Foundation
 
 ## Installation
 
+1. Télécharge et décompresse ce dossier.
+2. Dans Terminal :
+
 ```bash
-cd ~/Documents/Orizon-PTR
-npm install
-npm run dev
+cd ~/Downloads/flightdirector-next-foundation
+./install-foundation.sh
 ```
 
-## PTR électronique
+Puis :
 
-La version 14 ajoute :
-- plans de leçon;
-- exercices;
-- évaluation TC à quatre points;
-- calcul automatique de la note la plus faible;
-- commentaires;
-- signatures;
-- historique;
-- progression.
+```bash
+cd ~/Documents/Orizon-PTR
+git push -u origin flightdirector-next
+```
