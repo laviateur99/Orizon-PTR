@@ -1,0 +1,1 @@
+import {Sidebar} from "./Sidebar";export function AppShell({children}:{children:React.ReactNode}){return <div className="layout"><Sidebar/><main className="main">{children}</main></div>}
