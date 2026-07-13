@@ -7,6 +7,7 @@ import { subscribeStudent } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";
 import { addEvaluation, saveLesson, subscribeEvaluations, subscribeInstructors, subscribeLessons, subscribeReservations } from "./firestore";
 import { finalScore, TC_CRITERIA, TC_SCALE } from "./evaluation";
+import { initializeAtpaForStudent } from "@/features/programs/firestore";
 import type { InstructorOption, PTREvaluation, PTRLesson, PTRLessonStatus, ReservationOption, TCScore } from "./types";
 
 type ScoreKey = "pilotage" | "technical" | "situationalAwareness" | "flightManagement" | "safetyMargins";
@@ -37,6 +38,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [message, setMessage] = useState("");
+  const [initializingProgram, setInitializingProgram] = useState(false);
   const [error, setError] = useState("");
   const [lessonForm, setLessonForm] = useState({
     phase: "Phase 1", lessonNumber: "", title: "", objective: "", exercises: ""
@@ -58,6 +60,19 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const history = evaluations.filter(item => item.lessonId === selected?.id).sort((a,b) => b.date.localeCompare(a.date));
   const score = finalScore([form.pilotage, form.technical, form.situationalAwareness, form.flightManagement, form.safetyMargins]);
   const progress = orderedLessons.length ? Math.round(orderedLessons.filter(item => item.status === "Réussi").length / orderedLessons.length * 100) : 0;
+
+  async function installAtpaProgram() {
+    if (lessons.length > 0 && !window.confirm("Le PTR contient déjà des leçons. Voulez-vous importer ou mettre à jour les 102 leçons ATP(A)?")) return;
+    setInitializingProgram(true);
+    try {
+      await initializeAtpaForStudent(studentId);
+      setMessage("Programme ATP(A) importé : 102 leçons créées à partir du manuel officiel.");
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Impossible d’importer le programme.");
+    } finally {
+      setInitializingProgram(false);
+    }
+  }
 
   async function addLesson(event: React.FormEvent) {
     event.preventDefault();
@@ -118,6 +133,17 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       {error && <div className="notice error">{error}</div>}
       {message && <div className="notice">{message}</div>}
 
+      <section className="card program-install-banner">
+        <div>
+          <span className="badge ok">Manuel officiel Orizon Aviation</span>
+          <h3>Programme intégré ATP(A) — Modification no 6</h3>
+          <p>Importe automatiquement les 10 phases, 102 leçons et 146 composantes du manuel de formation en vigueur le 1er juin 2025.</p>
+        </div>
+        <button className="button" onClick={installAtpaProgram} disabled={initializingProgram}>
+          {initializingProgram ? "Importation…" : lessons.length ? "Mettre à jour le programme" : "Installer le programme ATP(A)"}
+        </button>
+      </section>
+
       <section className="card ptr-summary">
         <div><strong>Progression</strong><p>{orderedLessons.filter(item => item.status === "Réussi").length} leçon(s) réussie(s) sur {orderedLessons.length}</p></div>
         <strong className="progress-number">{progress}%</strong>
@@ -147,9 +173,49 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
         <main className="ptr-main">
           {selected ? <>
             <section className="card">
-              <h2>Leçon {selected.lessonNumber} — {selected.title}</h2>
-              <p>{selected.objective}</p>
-              <div className="lesson-exercises">{selected.exercises.map(item => <span key={item}>{item}</span>)}</div>
+              <div className="lesson-title-row">
+                <div>
+                  <span className="badge">{selected.phase}</span>
+                  <h2>Leçon {selected.lessonNumber} — {selected.title}</h2>
+                </div>
+                {selected.programRevision && <span className="badge ok">{selected.programRevision}</span>}
+              </div>
+              {selected.sourceManual && <p className="muted">{selected.sourceManual}</p>}
+              <h4>Objectif</h4>
+              <p className="lesson-objective">{selected.objective}</p>
+
+              {selected.components && selected.components.length > 0 && (
+                <div className="manual-components">
+                  {selected.components.map((component, index) => (
+                    <section className="manual-component" key={`${component.modality}-${index}`}>
+                      <header>
+                        <strong>{component.modality}</strong>
+                        <span>Page {component.manualPage}</span>
+                      </header>
+                      <p><b>{component.category}</b> · {component.title}</p>
+                      <div className="hours">
+                        {component.hours.sol > 0 && <span>Sol {component.hours.sol} h</span>}
+                        {component.hours.dev > 0 && <span>DEV {component.hours.dev} h</span>}
+                        {component.hours.doubleCommande > 0 && <span>DC {component.hours.doubleCommande} h</span>}
+                        {component.hours.solo > 0 && <span>Solo {component.hours.solo} h</span>}
+                      </div>
+                      {component.objective && <p>{component.objective}</p>}
+                      {component.exercises.length > 0 && (
+                        <details>
+                          <summary>Exercices ({component.exercises.length})</summary>
+                          <ul>{component.exercises.map((item, exerciseIndex) => <li key={exerciseIndex}>{item}</li>)}</ul>
+                        </details>
+                      )}
+                      {component.successCriteria && <p className="success-criteria"><b>Norme de réussite :</b> {component.successCriteria}</p>}
+                      {component.nextLesson && <p className="muted"><b>Leçon suivante :</b> {component.nextLesson}</p>}
+                    </section>
+                  ))}
+                </div>
+              )}
+
+              {(!selected.components || selected.components.length === 0) && (
+                <div className="lesson-exercises">{selected.exercises.map(item => <span key={item}>{item}</span>)}</div>
+              )}
             </section>
 
             <section className="card">

@@ -8,6 +8,7 @@ import type { InstructorOption, PTREvaluation, PTRLesson, ReservationOption, TCS
 export type LiveHandlers<T> = { next: (items: T[]) => void; error: (error: FirestoreError) => void };
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
 const list = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+const objects = (value: unknown) => Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object") : [];
 const score = (value: unknown): TCScore | undefined => value === 1 || value === 2 || value === 3 || value === 4 ? value : undefined;
 
 function scoped<T>(name: string, studentId: string, map: (id: string, data: DocumentData) => T, handlers: LiveHandlers<T>): Unsubscribe {
@@ -25,7 +26,27 @@ export function subscribeLessons(studentId: string, handlers: LiveHandlers<PTRLe
     exercises: list(data.exercises),
     status: text(data.status, "Non commencé") as PTRLesson["status"],
     linkedReservationId: text(data.linkedReservationId),
-    updatedAt: text(data.updatedAt)
+    updatedAt: text(data.updatedAt),
+    programId: text(data.programId),
+    programRevision: text(data.programRevision),
+    sourceManual: text(data.sourceManual),
+    successCriteria: list(data.successCriteria),
+    components: objects(data.components).map(component => ({
+      modality: text(component.modality),
+      category: text(component.category),
+      title: text(component.title),
+      objective: text(component.objective),
+      hours: {
+        sol: typeof (component.hours as Record<string, unknown> | undefined)?.sol === "number" ? Number((component.hours as Record<string, unknown>).sol) : 0,
+        dev: typeof (component.hours as Record<string, unknown> | undefined)?.dev === "number" ? Number((component.hours as Record<string, unknown>).dev) : 0,
+        doubleCommande: typeof (component.hours as Record<string, unknown> | undefined)?.doubleCommande === "number" ? Number((component.hours as Record<string, unknown>).doubleCommande) : 0,
+        solo: typeof (component.hours as Record<string, unknown> | undefined)?.solo === "number" ? Number((component.hours as Record<string, unknown>).solo) : 0
+      },
+      exercises: list(component.exercises),
+      nextLesson: text(component.nextLesson),
+      successCriteria: text(component.successCriteria),
+      manualPage: typeof component.manualPage === "number" ? component.manualPage : 0
+    }))
   }), handlers);
 }
 
@@ -39,7 +60,12 @@ export async function saveLesson(lesson: PTRLesson, exists: boolean) {
     exercises: lesson.exercises,
     status: lesson.status,
     linkedReservationId: lesson.linkedReservationId,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    programId: lesson.programId || "",
+    programRevision: lesson.programRevision || "",
+    sourceManual: lesson.sourceManual || "",
+    successCriteria: lesson.successCriteria || [],
+    components: lesson.components || []
   };
   const ref = doc(db, "ptrLessons", lesson.id);
   if (exists) await updateDoc(ref, payload);

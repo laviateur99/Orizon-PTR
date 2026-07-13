@@ -12,6 +12,21 @@ export type PTRLesson = {
   status: PTRLessonStatus;
   linkedReservationId: string;
   updatedAt?: string;
+  programId?: string;
+  programRevision?: string;
+  sourceManual?: string;
+  successCriteria?: string[];
+  components?: Array<{
+    modality: string;
+    category: string;
+    title: string;
+    objective: string;
+    hours: { sol: number; dev: number; doubleCommande: number; solo: number };
+    exercises: string[];
+    nextLesson: string;
+    successCriteria: string;
+    manualPage: number;
+  }>;
 };
 
 export type PTREvaluation = {
