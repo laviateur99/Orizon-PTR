@@ -26,6 +26,10 @@ export function subscribeLessons(studentId: string, handlers: LiveHandlers<PTRLe
     exercises: list(data.exercises),
     status: text(data.status, "Non commencé") as PTRLesson["status"],
     linkedReservationId: text(data.linkedReservationId),
+    lessonPlanId: text(data.lessonPlanId),
+    lessonPdfPath: text(data.lessonPdfPath),
+    lastEvaluationId: text(data.lastEvaluationId),
+    lastFinalScore: [1,2,3,4].includes(data.lastFinalScore) ? data.lastFinalScore as 1|2|3|4 : undefined,
     updatedAt: text(data.updatedAt),
     programId: text(data.programId),
     programRevision: text(data.programRevision),
@@ -60,6 +64,10 @@ export async function saveLesson(lesson: PTRLesson, exists: boolean) {
     exercises: lesson.exercises,
     status: lesson.status,
     linkedReservationId: lesson.linkedReservationId,
+    lessonPlanId: lesson.lessonPlanId || "",
+    lessonPdfPath: lesson.lessonPdfPath || "",
+    lastEvaluationId: lesson.lastEvaluationId || "",
+    lastFinalScore: lesson.lastFinalScore ?? null,
     updatedAt: new Date().toISOString(),
     programId: lesson.programId || "",
     programRevision: lesson.programRevision || "",
@@ -98,7 +106,11 @@ export function subscribeEvaluations(studentId: string, handlers: LiveHandlers<P
 }
 
 export async function addEvaluation(value: Omit<PTREvaluation, "id">) {
-  await addDoc(collection(db, "ptrEvaluations"), { ...value, createdAt: serverTimestamp() });
+  const reference = await addDoc(
+    collection(db, "ptrEvaluations"),
+    { ...value, createdAt: serverTimestamp() }
+  );
+  return reference.id;
 }
 
 export function subscribeReservations(studentId: string, handlers: LiveHandlers<ReservationOption>) {

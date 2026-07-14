@@ -1,35 +1,24 @@
-# Orizon Aviation - Flight Director v15.9.0
+# Orizon Aviation - Flight Director v15.9.1
 
-## Horaire
-- fenêtre de réservation centrée et toujours visible;
-- réservation placée sous le bandeau SNAG;
-- bloc SNAG compact afin de conserver les vols visibles;
-- plan de leçon sélectionnable dans la réservation;
-- lien direct vers le PDF original;
-- lien vers le PTR de l’élève;
-- bouton d’évaluation TC au check-out.
+## Correctifs PTR
+- l’évaluation d’une leçon met maintenant à jour le document `ptrLessons`;
+- le statut de la leçon est synchronisé dans le dossier étudiant;
+- la note finale TC est enregistrée dans la leçon;
+- l’identifiant de la dernière évaluation est enregistré;
+- l’historique demeure dans `ptrEvaluations`.
 
-## PTR
-Lorsqu’une réservation comporte un étudiant et un plan de leçon :
-- la leçon est créée ou mise à jour dans son PTR;
-- la réservation est reliée à la leçon;
-- l’instructeur peut ouvrir le PTR au check-out et évaluer les objectifs.
-
-## Flotte et ressources
-- ajout, modification et retrait d’un avion;
-- ajout, modification et retrait d’un simulateur;
-- ajout, modification et retrait d’un local;
-- les changements apparaissent dans l’horaire en temps réel.
-
-## SNAG
-- les réservations demeurent visibles;
-- fenêtre automatique des vols affectés;
-- bouton permanent « Gérer les vols affectés » sur l’avion;
-- déplacement, avis, annulation ou décision ultérieure.
+## Check-out
+- la bonne leçon est automatiquement sélectionnée;
+- le vol lié est automatiquement celui du check-out;
+- le vol lié est verrouillé pendant l’évaluation;
+- le plan de leçon original PDF apparaît directement dans la page;
+- bouton pour ouvrir le PDF dans un nouvel onglet;
+- échelle TC raccourcie en mode check-out;
+- fenêtre plus compacte et centrée sur l’évaluation.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.0-Ressources-Plans-Lecons-SNAG
+cd ~/Downloads/Orizon-Flight-Director-v15.9.1-Correctif-PTR-Checkout
 ./install-foundation.sh
 ```
 

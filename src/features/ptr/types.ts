@@ -11,6 +11,10 @@ export type PTRLesson = {
   exercises: string[];
   status: PTRLessonStatus;
   linkedReservationId: string;
+  lessonPlanId?: string;
+  lessonPdfPath?: string;
+  lastEvaluationId?: string;
+  lastFinalScore?: TCScore;
   updatedAt?: string;
   programId?: string;
   programRevision?: string;

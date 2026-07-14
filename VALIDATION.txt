@@ -4,14 +4,14 @@ build: OK
 
 TYPECHECK OUTPUT
 
-> orizon-flight-director-next@15.9.0 typecheck
+> orizon-flight-director-next@15.9.1 typecheck
 > tsc --noEmit
 
 
 
 BUILD OUTPUT
 
-> orizon-flight-director-next@15.9.0 build
+> orizon-flight-director-next@15.9.1 build
 > next build
 
 [33m[1m⚠[22m[39m No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
@@ -40,12 +40,12 @@ You can learn more, including how to opt-out if you'd not like to participate in
 ├ ○ /admin/schedule                      3.72 kB         [37m[1m181 kB[22m[39m
 ├ ○ /emergency                           4.99 kB         [37m[1m182 kB[22m[39m
 ├ ○ /fleet                               5.07 kB         [37m[1m186 kB[22m[39m
-├ ○ /instructors                         2.34 kB         [37m[1m180 kB[22m[39m
+├ ○ /instructors                         2.35 kB         [37m[1m180 kB[22m[39m
 ├ ○ /maintenance/snags                   2.28 kB         [37m[1m183 kB[22m[39m
 ├ ○ /programs                            1.67 kB         [37m[1m207 kB[22m[39m
 ├ ○ /ptr                                 2.11 kB         [37m[1m179 kB[22m[39m
-├ ƒ /ptr/[studentId]                     6.78 kB         [37m[1m212 kB[22m[39m
-├ ○ /schedule                            8.14 kB         [37m[1m214 kB[22m[39m
+├ ƒ /ptr/[studentId]                     7.07 kB         [37m[1m213 kB[22m[39m
+├ ○ /schedule                            8.15 kB         [37m[1m214 kB[22m[39m
 ├ ○ /students                            2.75 kB         [37m[1m180 kB[22m[39m
 ├ ƒ /students/[id]                       5 kB            [37m[1m182 kB[22m[39m
 └ ○ /students/new                        2.89 kB         [37m[1m180 kB[22m[39m

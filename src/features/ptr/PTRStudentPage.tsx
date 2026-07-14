@@ -38,6 +38,8 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [message, setMessage] = useState("");
+  const [checkoutMode, setCheckoutMode] = useState(false);
+  const [requestedReservationId, setRequestedReservationId] = useState("");
   const [initializingProgram, setInitializingProgram] = useState(false);
   const [error, setError] = useState("");
   const [lessonForm, setLessonForm] = useState({
@@ -46,17 +48,40 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const [form, setForm] = useState(emptyEvaluation());
 
   useEffect(() => {
-    const requested =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("lesson")
-        : null;
-    if (requested) {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedLesson = params.get("lesson");
+    const reservationId = params.get("reservation") || "";
+    const isCheckout = params.get("checkout") === "1";
+
+    setCheckoutMode(isCheckout);
+    setRequestedReservationId(reservationId);
+
+    if (requestedLesson) {
       const matching = lessons.find(
         item =>
-          item.id.endsWith(requested) ||
-          (item as PTRLesson & { lessonPlanId?: string }).lessonPlanId === requested
+          item.id.endsWith(requestedLesson) ||
+          item.lessonPlanId === requestedLesson
       );
-      if (matching) setSelectedId(matching.id);
+      if (matching) {
+        setSelectedId(matching.id);
+        setForm(current => ({
+          ...current,
+          reservationId: reservationId || matching.linkedReservationId || ""
+        }));
+      }
+    } else if (reservationId) {
+      const matching = lessons.find(
+        item => item.linkedReservationId === reservationId
+      );
+      if (matching) {
+        setSelectedId(matching.id);
+        setForm(current => ({
+          ...current,
+          reservationId
+        }));
+      }
     }
   }, [lessons]);
 
@@ -75,6 +100,17 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const history = evaluations.filter(item => item.lessonId === selected?.id).sort((a,b) => b.date.localeCompare(a.date));
   const score = finalScore([form.pilotage, form.technical, form.situationalAwareness, form.flightManagement, form.safetyMargins]);
   const progress = orderedLessons.length ? Math.round(orderedLessons.filter(item => item.status === "Réussi").length / orderedLessons.length * 100) : 0;
+
+  useEffect(() => {
+    if (!requestedReservationId) return;
+    if (reservations.some(item => item.id === requestedReservationId)) {
+      setForm(current => ({
+        ...current,
+        reservationId: requestedReservationId
+      }));
+    }
+  }, [requestedReservationId, reservations]);
+
 
   async function installAtpaProgram() {
     if (lessons.length > 0 && !window.confirm("Le PTR contient déjà des leçons. Voulez-vous importer ou mettre à jour les 102 leçons ATP(A)?")) return;
@@ -123,7 +159,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       return;
     }
     const instructor = instructors.find(item => item.id === form.instructorId);
-    await addEvaluation({
+    const evaluationId = await addEvaluation({
       studentId, lessonId: selected.id, reservationId: form.reservationId,
       instructorId: form.instructorId, instructorName: instructor?.name || "",
       date: form.date, pilotage: form.pilotage, technical: form.technical,
@@ -134,7 +170,11 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       studentSignature: form.studentSignature, signedAt: new Date().toISOString()
     });
     await saveLesson({
-      ...selected, status: form.lessonStatus, linkedReservationId: form.reservationId
+      ...selected,
+      status: form.lessonStatus,
+      linkedReservationId: form.reservationId,
+      lastEvaluationId: evaluationId,
+      lastFinalScore: score
     }, true);
     setForm(emptyEvaluation());
     setMessage("Évaluation PTR enregistrée.");
@@ -144,7 +184,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 
   return (
     <>
-      <PageHeader title={`${student.firstName} ${student.lastName}`} subtitle={`PTR · ${student.program} · ${student.programType}`} />
+      <PageHeader title={`${student.firstName} ${student.lastName}`} subtitle={checkoutMode ? `Évaluation après vol · ${student.program}` : `PTR · ${student.program} · ${student.programType}`} />
       {error && <div className="notice error">{error}</div>}
       {message && <div className="notice">{message}</div>}
 
@@ -236,14 +276,41 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
             <section className="card">
               <h3>Échelle d’évaluation Transports Canada</h3>
               <p className="muted">La note finale correspond au critère applicable le plus faible.</p>
-              <div className="tc-scale">{TC_SCALE.map(item => <div key={item.score}><strong>{item.score}</strong><b>{item.title}</b><p>{item.summary}</p></div>)}</div>
+              <div className={checkoutMode ? "tc-scale compact" : "tc-scale"}>
+                {TC_SCALE.map(item => (
+                  <div key={item.score}>
+                    <strong>{item.score}</strong>
+                    <b>{item.title}</b>
+                    {!checkoutMode && <p>{item.summary}</p>}
+                  </div>
+                ))}
+              </div>
 
               <form className="form" onSubmit={submit}>
                 <div className="form-grid">
                   <label>Instructeur<select value={form.instructorId} onChange={event => setForm({...form, instructorId:event.target.value})}><option value="">Sélectionner</option>{instructors.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
                   <label>Date<input type="date" value={form.date} onChange={event => setForm({...form, date:event.target.value})}/></label>
                 </div>
-                <label>Vol lié<select value={form.reservationId} onChange={event => setForm({...form, reservationId:event.target.value})}><option value="">Aucun vol lié</option>{reservations.map(item => <option value={item.id} key={item.id}>{item.date} · {item.startTime}-{item.endTime} · {item.title}</option>)}</select></label>
+                <label>
+                  Vol lié
+                  <select
+                    value={form.reservationId}
+                    disabled={checkoutMode && Boolean(requestedReservationId)}
+                    onChange={event => setForm({...form, reservationId:event.target.value})}
+                  >
+                    <option value="">Aucun vol lié</option>
+                    {reservations.map(item => (
+                      <option value={item.id} key={item.id}>
+                        {item.date} · {item.startTime}-{item.endTime} · {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {checkoutMode && requestedReservationId && (
+                  <div className="notice">
+                    Cette évaluation sera enregistrée sur le vol du check-out.
+                  </div>
+                )}
 
                 <div className="score-table">
                   {TC_CRITERIA.map(criterion => {
