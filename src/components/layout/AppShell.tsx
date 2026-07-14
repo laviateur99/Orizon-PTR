@@ -4,7 +4,7 @@ import { OrizonLogo } from "@/components/branding/OrizonLogo";
 
 const links = [
   ["/", "Tableau de bord"], ["/schedule", "Horaire"], ["/students", "Étudiants"],
-  ["/instructors", "Instructeurs"], ["/fleet", "Flotte"], ["/emergency", "Urgences"], ["/ptr", "PTR"], ["/programs", "Programmes"]
+  ["/instructors", "Instructeurs"], ["/fleet", "Flotte"], ["/maintenance/snags", "Tableau SNAG"], ["/emergency", "Urgences"], ["/ptr", "PTR"], ["/programs", "Programmes"]
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

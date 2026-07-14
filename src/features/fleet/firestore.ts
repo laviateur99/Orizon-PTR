@@ -39,3 +39,26 @@ export async function createSnag(value:Omit<Snag,"id"|"reportedAt"|"status">){
 }
 export async function updateSnag(id:string,patch:Partial<Snag>){await updateDoc(doc(db,"snags",id),compact({...patch,updatedAt:new Date().toISOString()}));}
 export async function closeSnag(s:Snag){await updateDoc(doc(db,"snags",s.id),{status:"Fermé",updatedAt:new Date().toISOString()});await updateDoc(doc(db,"aircraft",s.aircraftId),{status:"Disponible",statusReason:"",maintenanceStart:"",maintenanceEnd:"",blockedForScheduling:false,updatedAt:new Date().toISOString()});}
+
+
+export type SnagDashboardAccess = { allowedRoles: string[] };
+
+export function subscribeSnagDashboardAccess(
+  next: (value: SnagDashboardAccess) => void,
+  error: (error: FirestoreError) => void
+): Unsubscribe {
+  return onSnapshot(doc(db, "settings", "snagDashboardAccess"), snapshot => {
+    const data = snapshot.data();
+    const allowedRoles = Array.isArray(data?.allowedRoles)
+      ? data.allowedRoles.filter((item): item is string => typeof item === "string")
+      : ["Maintenance", "Directeur de maintenance", "Administrateur"];
+    next({ allowedRoles });
+  }, error);
+}
+
+export async function saveSnagDashboardAccess(allowedRoles: string[]) {
+  await setDoc(doc(db, "settings", "snagDashboardAccess"), {
+    allowedRoles,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+}
