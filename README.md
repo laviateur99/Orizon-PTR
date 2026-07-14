@@ -1,27 +1,35 @@
-# Orizon Aviation - Flight Director v15.8.1
+# Orizon Aviation - Flight Director v15.9.0
 
-## Correctifs Horaire
-- un clic simple sur une réservation ouvre de nouveau la fenêtre de modification;
-- les boutons Check-in et Check-out fonctionnent de nouveau;
-- les boutons IN/OUT ne déclenchent plus le déplacement du bloc;
-- petite poignée dédiée pour déplacer une réservation;
-- poignées gauche et droite conservées pour modifier les heures;
-- interaction plus claire : clic pour modifier, poignée pour déplacer.
+## Horaire
+- fenêtre de réservation centrée et toujours visible;
+- réservation placée sous le bandeau SNAG;
+- bloc SNAG compact afin de conserver les vols visibles;
+- plan de leçon sélectionnable dans la réservation;
+- lien direct vers le PDF original;
+- lien vers le PTR de l’élève;
+- bouton d’évaluation TC au check-out.
 
-## Programmes étudiants
-La fiche étudiante propose maintenant :
-- Modulaire;
-- ATP(A) intégré;
-- CPL IR/ME intégré;
-- CPL intégré.
+## PTR
+Lorsqu’une réservation comporte un étudiant et un plan de leçon :
+- la leçon est créée ou mise à jour dans son PTR;
+- la réservation est reliée à la leçon;
+- l’instructeur peut ouvrir le PTR au check-out et évaluer les objectifs.
 
-Le champ Type est calculé automatiquement :
-- Modulaire → Modulaire;
-- les trois autres programmes → Intégré.
+## Flotte et ressources
+- ajout, modification et retrait d’un avion;
+- ajout, modification et retrait d’un simulateur;
+- ajout, modification et retrait d’un local;
+- les changements apparaissent dans l’horaire en temps réel.
+
+## SNAG
+- les réservations demeurent visibles;
+- fenêtre automatique des vols affectés;
+- bouton permanent « Gérer les vols affectés » sur l’avion;
+- déplacement, avis, annulation ou décision ultérieure.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.8.1-Correctif-Horaire-Programmes-Etudiants
+cd ~/Downloads/Orizon-Flight-Director-v15.9.0-Ressources-Plans-Lecons-SNAG
 ./install-foundation.sh
 ```
 

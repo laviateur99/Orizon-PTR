@@ -135,3 +135,51 @@ textarea{min-height:90px}.icon-button{border:0;background:#eef3f8;width:36px;hei
 .resize-handle{position:relative;z-index:13}
 .schedule-event.snag-block .event-drag-handle,
 .schedule-event.snag-block .resize-handle{display:none}
+
+
+/* v15.9.0 — Positionnement, ressources, plans de leçon */
+.modal-backdrop{
+  position:fixed!important;
+  inset:0!important;
+  z-index:5000!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:24px!important;
+  overflow:auto!important
+}
+.modal{
+  position:relative!important;
+  margin:auto!important;
+  max-height:calc(100vh - 48px)!important;
+  overflow:auto!important
+}
+.time-row{height:82px}
+.resource-cell{height:82px}
+.schedule-event:not(.snag-block){top:20px!important;height:56px!important}
+.schedule-event.snag-block{top:3px!important;height:13px!important}
+.event-plan-link{
+  display:inline-flex;
+  margin-top:2px;
+  padding:1px 5px;
+  border-radius:5px;
+  background:rgba(255,255,255,.8);
+  color:#0b2f5b;
+  font-size:8px;
+  font-weight:900;
+  text-decoration:none
+}
+.lesson-prep-links{display:flex;gap:8px;flex-wrap:wrap}
+.resource-management{margin-bottom:18px}
+.resource-management-head{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.resource-add-actions{display:flex;gap:8px;flex-wrap:wrap}
+.resource-admin-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.resource-admin-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.resource-admin-row strong,.resource-admin-row span{display:block}
+.resource-admin-row span{font-size:12px;color:var(--muted)}
+.resource-admin-row>div:last-child{display:flex;gap:6px}
+.aircraft-actions{grid-template-columns:1fr!important}
+@media(max-width:1000px){
+  .resource-management-head{display:grid}
+  .resource-admin-columns{grid-template-columns:1fr}
+}

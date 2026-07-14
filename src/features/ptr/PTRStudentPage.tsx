@@ -46,6 +46,21 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const [form, setForm] = useState(emptyEvaluation());
 
   useEffect(() => {
+    const requested =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("lesson")
+        : null;
+    if (requested) {
+      const matching = lessons.find(
+        item =>
+          item.id.endsWith(requested) ||
+          (item as PTRLesson & { lessonPlanId?: string }).lessonPlanId === requested
+      );
+      if (matching) setSelectedId(matching.id);
+    }
+  }, [lessons]);
+
+  useEffect(() => {
     const offStudent = subscribeStudent(studentId, setStudent, value => setError(value.message));
     const offLessons = subscribeLessons(studentId, { next: setLessons, error: value => setError(value.message) });
     const offEvaluations = subscribeEvaluations(studentId, { next: setEvaluations, error: value => setError(value.message) });

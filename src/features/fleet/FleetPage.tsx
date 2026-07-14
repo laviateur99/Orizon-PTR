@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ResourceManagement } from "./ResourceManagement";
 import {
   closeSnag,
   createSnag,
@@ -130,6 +131,30 @@ export function FleetPage() {
 
 
 
+
+  async function openImpactedReservations(snag: Snag, item: Aircraft) {
+    const impacted = await findImpactedReservations(item.id);
+    setImpactedReservations(impacted);
+    setImpactActions(
+      Object.fromEntries(
+        impacted.map(reservation => [
+          reservation.id,
+          {
+            action: "À décider plus tard" as ImpactResolutionAction,
+            replacementAircraftId: "",
+            notes: "",
+            completed: false
+          }
+        ])
+      )
+    );
+    setImpactSnag({
+      id: snag.id,
+      snagNumber: snag.snagNumber || "SNAG",
+      aircraft: item
+    });
+  }
+
   async function applyImpactAction(reservation:ImpactedReservation){
     if(!impactSnag)return;
     const value=impactActions[reservation.id];
@@ -145,6 +170,8 @@ export function FleetPage() {
       <PageHeader title="Flotte" subtitle="Avions, maintenance, SNAG et urgences" />
       {error && <div className="notice error">{error}</div>}
       {message && <div className="notice">{message}</div>}
+
+      <ResourceManagement aircraft={aircraft} />
 
       <div className="fleet-toolbar">
         <input placeholder="Rechercher…" value={query} onChange={event => setQuery(event.target.value)} />
@@ -164,7 +191,11 @@ export function FleetPage() {
         <section className="card fleet-group" key={group.type}>
           <h2>{group.type}</h2>
           <div className="fleet-grid">
-            {group.items.map(item => (
+            {group.items.map(item => {
+              const openSnags = snags.filter(
+                snag => snag.aircraftId === item.id && snag.status !== "Fermé"
+              );
+              return (
               <article className="aircraft-card" key={item.id}>
                 <header>
                   <div><strong>{item.registration}</strong><span>{item.typeLabel}</span></div>
@@ -177,11 +208,22 @@ export function FleetPage() {
                 </div>
                 <div className="aircraft-actions">
                   <button className="button secondary" onClick={() => setEditing(item)}>Modifier</button>
-                  <button className="button danger" onClick={() => setSnagAircraft(item)}>Signaler un SNAG</button>
+                  {openSnags.length > 0 && (
+                      <button
+                        className="button secondary"
+                        onClick={() =>
+                          openImpactedReservations(openSnags[0], item)
+                        }
+                      >
+                        Gérer les vols affectés
+                      </button>
+                    )}
+                    <button className="button danger" onClick={() => setSnagAircraft(item)}>Signaler un SNAG</button>
                   <a className="button emergency" href={`/emergency?aircraft=${item.id}`}>Urgence</a>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
       ))}

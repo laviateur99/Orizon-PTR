@@ -8,12 +8,21 @@ const num=(v:unknown)=>typeof v==="number"&&Number.isFinite(v)?v:undefined;
 function minutes(v:unknown,f:number){if(typeof v==="number"&&Number.isFinite(v))return v;if(typeof v!=="string"||!/^\d{1,2}:\d{2}$/.test(v))return f;const [h,m]=v.split(":").map(Number);return h*60+m;}
 function mapResource(id:string,d:DocumentData,kind:SchedulerResource["kind"]):SchedulerResource{const effective:SchedulerResource["kind"]=kind==="room"&&text(d.resourceKind)==="simulator"?"simulator":kind;const name=text(d.name)||text(d.registration)||`${effective}-${id}`;const typeLabel=text(d.typeLabel)||text(d.type);const detail=text(d.detail)||[typeLabel,text(d.classLevel),text(d.status)].filter(Boolean).join(" · ");const groupLabel=effective==="aircraft"?(typeLabel||"Autres avions"):effective==="simulator"?"Simulateurs":effective==="instructor"?"Instructeurs":"Locaux";return{id,kind:effective,name,detail,groupLabel,blocked:effective==="aircraft"&&(d.blockedForScheduling===true||["Maintenance","Hors service","SNAG"].includes(text(d.status)))}}
 export function subscribeResources(h:LiveHandlers<SchedulerResource>):Unsubscribe{const values=new Map<string,SchedulerResource[]>();const emit=()=>h.next([...(values.get("aircraft")??[]),...(values.get("instructors")??[]),...(values.get("resources")??[])]);const configs=[{name:"aircraft",kind:"aircraft" as const},{name:"instructors",kind:"instructor" as const},{name:"resources",kind:"room" as const}];const offs=configs.map(c=>onSnapshot(collection(db,c.name),s=>{values.set(c.name,s.docs.map(i=>mapResource(i.id,i.data(),c.kind)));emit();},h.error));return()=>offs.forEach(x=>x());}
-function mapEvent(id:string,d:DocumentData):SchedulerEvent{return {id,date:text(d.date,new Date().toISOString().slice(0,10)),resourceId:text(d.resourceId)||text(d.aircraftId)||text(d.instructorId)||text(d.roomId),aircraftId:optional(d.aircraftId),instructorId:optional(d.instructorId),roomId:optional(d.roomId),studentId:optional(d.studentId),studentName:optional(d.studentName)||optional(d.student),type:text(d.type,"Double commande") as SchedulerEvent["type"],startMinutes:minutes(d.startMinutes??d.startTime,420),endMinutes:minutes(d.endMinutes??d.endTime,480),title:text(d.title)||text(d.lesson)||text(d.type,"Réservation"),notes:optional(d.notes),source:"reservation",status:text(d.status,"Planifié") as SchedulerEvent["status"],checkedInAt:optional(d.checkedInAt),checkedInBy:optional(d.checkedInBy),checkedOutAt:optional(d.checkedOutAt),checkedOutBy:optional(d.checkedOutBy),hobbsStart:num(d.hobbsStart),hobbsEnd:num(d.hobbsEnd),takeoffTime:optional(d.takeoffTime),landingTime:optional(d.landingTime),airtimeMinutes:num(d.airtimeMinutes),overdueAlertMinutes:num(d.overdueAlertMinutes)};}
+function mapEvent(id:string,d:DocumentData):SchedulerEvent{return {id,date:text(d.date,new Date().toISOString().slice(0,10)),resourceId:text(d.resourceId)||text(d.aircraftId)||text(d.instructorId)||text(d.roomId),aircraftId:optional(d.aircraftId),instructorId:optional(d.instructorId),roomId:optional(d.roomId),studentId:optional(d.studentId),studentName:optional(d.studentName)||optional(d.student),type:text(d.type,"Double commande") as SchedulerEvent["type"],startMinutes:minutes(d.startMinutes??d.startTime,420),endMinutes:minutes(d.endMinutes??d.endTime,480),title:text(d.title)||text(d.lesson)||text(d.type,"Réservation"),notes:optional(d.notes),source:"reservation",status:text(d.status,"Planifié") as SchedulerEvent["status"],checkedInAt:optional(d.checkedInAt),checkedInBy:optional(d.checkedInBy),checkedOutAt:optional(d.checkedOutAt),checkedOutBy:optional(d.checkedOutBy),hobbsStart:num(d.hobbsStart),hobbsEnd:num(d.hobbsEnd),takeoffTime:optional(d.takeoffTime),landingTime:optional(d.landingTime),airtimeMinutes:num(d.airtimeMinutes),overdueAlertMinutes:num(d.overdueAlertMinutes),
+lessonPlanId:optional(d.lessonPlanId),
+lessonTitle:optional(d.lessonTitle),
+lessonPdfPath:optional(d.lessonPdfPath),
+lessonComponentId:optional(d.lessonComponentId)};}
 export function subscribeReservations(h:LiveHandlers<SchedulerEvent>):Unsubscribe{return onSnapshot(collection(db,"reservations"),s=>h.next(s.docs.map(i=>mapEvent(i.id,i.data()))),h.error);}
 export function subscribeSnagBlocks(h:LiveHandlers<SchedulerEvent>):Unsubscribe{return onSnapshot(collection(db,"snags"),s=>h.next(s.docs.flatMap(i=>{const d=i.data();if(text(d.status)==="Fermé")return[];const start=text(d.reportedAt).slice(0,10)||new Date().toISOString().slice(0,10);return[{id:`snag-${i.id}`,date:start,rangeEndDate:text(d.estimatedReturnDate)||start,resourceId:text(d.aircraftId),aircraftId:text(d.aircraftId),type:"Maintenance" as const,startMinutes:420,endMinutes:1260,title:`SNAG — ${text(d.defectTitle,"Défectuosité")}`,notes:text(d.description),source:"snag" as const,snagId:i.id,status:"Planifié" as const}];})),h.error);}
 export function subscribeCancellations(h:LiveHandlers<Cancellation>):Unsubscribe{const q=query(collection(db,"cancellations"),orderBy("cancelledAt","desc"));return onSnapshot(q,s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,eventId:text(d.eventId),eventTitle:text(d.eventTitle)||text(d.title,"Réservation"),reason:text(d.reason,"Autre"),cancelledAt:text(d.cancelledAt)}})),h.error);}
 function time(v:number){return`${String(Math.floor(v/60)).padStart(2,"0")}:${String(v%60).padStart(2,"0")}`}
-function payload(e:SchedulerEvent){return{date:e.date,resourceId:e.resourceId,aircraftId:e.aircraftId??"",instructorId:e.instructorId??"",roomId:e.roomId??"",studentId:e.studentId??"",studentName:e.studentName??"",type:e.type,startMinutes:e.startMinutes,endMinutes:e.endMinutes,startTime:time(e.startMinutes),endTime:time(e.endMinutes),title:e.title,lesson:e.title,notes:e.notes??"",status:e.status??"Planifié",checkedInAt:e.checkedInAt??"",checkedInBy:e.checkedInBy??"",checkedOutAt:e.checkedOutAt??"",checkedOutBy:e.checkedOutBy??"",hobbsStart:e.hobbsStart??null,hobbsEnd:e.hobbsEnd??null,takeoffTime:e.takeoffTime??"",landingTime:e.landingTime??"",airtimeMinutes:e.airtimeMinutes??null,overdueAlertMinutes:e.overdueAlertMinutes??null,updatedAt:serverTimestamp()};}
+function payload(e:SchedulerEvent){return{date:e.date,resourceId:e.resourceId,aircraftId:e.aircraftId??"",instructorId:e.instructorId??"",roomId:e.roomId??"",studentId:e.studentId??"",studentName:e.studentName??"",type:e.type,startMinutes:e.startMinutes,endMinutes:e.endMinutes,startTime:time(e.startMinutes),endTime:time(e.endMinutes),title:e.title,lesson:e.title,notes:e.notes??"",status:e.status??"Planifié",checkedInAt:e.checkedInAt??"",checkedInBy:e.checkedInBy??"",checkedOutAt:e.checkedOutAt??"",checkedOutBy:e.checkedOutBy??"",hobbsStart:e.hobbsStart??null,hobbsEnd:e.hobbsEnd??null,takeoffTime:e.takeoffTime??"",landingTime:e.landingTime??"",airtimeMinutes:e.airtimeMinutes??null,overdueAlertMinutes:e.overdueAlertMinutes??null,
+lessonPlanId:e.lessonPlanId??"",
+lessonTitle:e.lessonTitle??"",
+lessonPdfPath:e.lessonPdfPath??"",
+lessonComponentId:e.lessonComponentId??"",
+updatedAt:serverTimestamp()};}
 export async function saveReservation(e:SchedulerEvent,exists:boolean){const r=doc(db,"reservations",e.id);if(exists)await updateDoc(r,payload(e));else await setDoc(r,{...payload(e),createdAt:serverTimestamp()});}
 export async function updateFlightOperation(id:string,patch:FlightOperationUpdate){await updateDoc(doc(db,"reservations",id),{...patch,updatedAt:serverTimestamp()});}
 export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),{eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)});await deleteDoc(doc(db,"reservations",e.id));}
@@ -32,4 +41,31 @@ export function subscribeSchedulerSettings(h:LiveHandlers<SchedulerSettings>):Un
 }
 export async function saveSchedulerSettings(value:SchedulerSettings){
   await setDoc(doc(db,"appSettings","scheduler"),{...value,updatedAt:new Date().toISOString()},{merge:true});
+}
+
+
+export async function assignLessonToStudentPTR(
+  event: SchedulerEvent
+) {
+  if (!event.studentId || !event.lessonPlanId) return;
+
+  const lessonId = `${event.studentId}-${event.lessonPlanId}`;
+  await setDoc(
+    doc(db, "ptrLessons", lessonId),
+    {
+      studentId: event.studentId,
+      phase: event.lessonPlanId.split("-")[0] || "Programme",
+      lessonNumber: event.lessonPlanId,
+      title: event.lessonTitle || event.title,
+      objective: "Voir le plan de leçon officiel associé.",
+      exercises: [],
+      status: "Non commencé",
+      linkedReservationId: event.id,
+      lessonPlanId: event.lessonPlanId,
+      lessonPdfPath: event.lessonPdfPath || "",
+      updatedAt: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    },
+    { merge: true }
+  );
 }
