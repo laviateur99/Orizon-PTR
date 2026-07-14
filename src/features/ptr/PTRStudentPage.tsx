@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ProfessionalLessonEvaluation } from "./ProfessionalLessonEvaluation";
 import { SignaturePad } from "@/components/ui/SignaturePad";
 import { subscribeStudent } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";

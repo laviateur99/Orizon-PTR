@@ -92,8 +92,14 @@
           "manualPage": 49,
           "pdfPath": "/docs/plans/lecon-001-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 50
+          "manualPdfPage": 50,
+          "evaluationItems": [
+            "Démarrage du moteur Communications radio Circulation au sol Vérifications avant décollage Décollage, départ du circuit et montée initiale Navigation : Points de repère, cap général Assiettes et mouvement Vol rectiligne en palier Virages Navigation, orientation, cap général Intégration du circuit, approche, atterrissage, circulation"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Démarrage du moteur Communications radio Circulation au sol Vérifications avant décollage Décollage, départ du circuit et montée initiale Navigation : Points de repère, cap général Assiettes et mouvement Vol rectiligne en palier Virages Navigation, orientation, cap général Intégration du circuit, approche, atterrissage, circulation"
       ]
     },
     {
@@ -144,9 +150,11 @@
           "manualPage": 50,
           "pdfPath": "/docs/plans/lecon-002-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 51
+          "manualPdfPage": 51,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 3,
@@ -202,7 +210,8 @@
           "manualPage": 51,
           "pdfPath": "/docs/plans/lecon-003-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 52
+          "manualPdfPage": 52,
+          "evaluationItems": []
         },
         {
           "number": 3,
@@ -230,8 +239,14 @@
           "manualPage": 52,
           "pdfPath": "/docs/plans/lecon-003-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 53
+          "manualPdfPage": 53,
+          "evaluationItems": [
+            "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Commandes auxiliaires Décollage, départ du circuit et montée initiale Navigation : points de repère, caps généraux vers la zone d'entraînement Assiettes et mouvements Vol rectiligne en palier Montées et descentes Virages à faible et moyenne inclinaison Compas magnétique Indicateur de cap Navigation : orientation et cap général pour retourner à l'aéroport Intégration du circuit, approche, atterrissage, circulation au sol et stationnement"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Commandes auxiliaires Décollage, départ du circuit et montée initiale Navigation : points de repère, caps généraux vers la zone d'entraînement Assiettes et mouvements Vol rectiligne en palier Montées et descentes Virages à faible et moyenne inclinaison Compas magnétique Indicateur de cap Navigation : orientation et cap général pour retourner à l'aéroport Intégration du circuit, approche, atterrissage, circulation au sol et stationnement"
       ]
     },
     {
@@ -286,7 +301,8 @@
           "manualPage": 53,
           "pdfPath": "/docs/plans/lecon-004-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 54
+          "manualPdfPage": 54,
+          "evaluationItems": []
         },
         {
           "number": 4,
@@ -314,8 +330,14 @@
           "manualPage": 54,
           "pdfPath": "/docs/plans/lecon-004-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 55
+          "manualPdfPage": 55,
+          "evaluationItems": [
+            "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Décollage, départ du circuit et montée initiale Navigation : points de repère, caps généraux vers la zone d'entraînement Assiettes et mouvements Vol rectiligne en palier Commandes auxiliaires Montées et descentes Virages à faible et moyenne inclinaison Compas magnétique Indicateur de cap Navigation : orientation et cap général pour retourner à l'aéroport Intégration du circuit, approche, atterrissage, circulation au sol et stationnement"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Décollage, départ du circuit et montée initiale Navigation : points de repère, caps généraux vers la zone d'entraînement Assiettes et mouvements Vol rectiligne en palier Commandes auxiliaires Montées et descentes Virages à faible et moyenne inclinaison Compas magnétique Indicateur de cap Navigation : orientation et cap général pour retourner à l'aéroport Intégration du circuit, approche, atterrissage, circulation au sol et stationnement"
       ]
     },
     {
@@ -385,7 +407,8 @@
           "manualPage": 55,
           "pdfPath": "/docs/plans/lecon-005-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 56
+          "manualPdfPage": 56,
+          "evaluationItems": []
         },
         {
           "number": 5,
@@ -416,8 +439,14 @@
           "manualPage": 56,
           "pdfPath": "/docs/plans/lecon-005-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 57
+          "manualPdfPage": 57,
+          "evaluationItems": [
+            "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Décollage et montée Navigation : cap et chronométrage Assiettes et mouvements Vol rectiligne en palier à différentes vitesses Commandes auxiliaires Montées à différentes vitesses Descentes moteur au ralenti avec/sans volets Utilisation du point de visé en descente Remise des gaz Virages à faible et moyenne inclinaison Virages en montées et descentes Navigation : caps et altitude Circuit Approche, atterrissage, circulation au sol et stationnement Procédures d’urgences"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Vérifications avant décollage Décollage et montée Navigation : cap et chronométrage Assiettes et mouvements Vol rectiligne en palier à différentes vitesses Commandes auxiliaires Montées à différentes vitesses Descentes moteur au ralenti avec/sans volets Utilisation du point de visé en descente Remise des gaz Virages à faible et moyenne inclinaison Virages en montées et descentes Navigation : caps et altitude Circuit Approche, atterrissage, circulation au sol et stationnement Procédures d’urgences"
       ]
     },
     {
@@ -473,7 +502,8 @@
           "manualPage": 57,
           "pdfPath": "/docs/plans/lecon-006-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 58
+          "manualPdfPage": 58,
+          "evaluationItems": []
         },
         {
           "number": 6,
@@ -504,8 +534,14 @@
           "manualPage": 58,
           "pdfPath": "/docs/plans/lecon-006-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 59
+          "manualPdfPage": 59,
+          "evaluationItems": [
+            "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Décollage et montée Départ du circuit Vol rectiligne en palier à différentes vitesses Montées à différentes vitesses Descentes moteur au ralenti avec/sans volets Descentes avec moteur avec/sans volets Utilisation du point de visé en descente Remise des gaz Virages à faible et moyenne inclinaison Virages en montées et descentes Distance franchissable et autonomie maximale Vol lent Intégration du circuit et approche Atterrissage Circulation au sol et stationnement Procédures d’urgences Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Visite prévol de l'avion Démarrage du moteur Procédures radio Circulation au sol Décollage et montée Départ du circuit Vol rectiligne en palier à différentes vitesses Montées à différentes vitesses Descentes moteur au ralenti avec/sans volets Descentes avec moteur avec/sans volets Utilisation du point de visé en descente Remise des gaz Virages à faible et moyenne inclinaison Virages en montées et descentes Distance franchissable et autonomie maximale Vol lent Intégration du circuit et approche Atterrissage Circulation au sol et stationnement Procédures d’urgences Interroger"
       ]
     },
     {
@@ -539,7 +575,8 @@
           "manualPage": 59,
           "pdfPath": "/docs/plans/lecon-007-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 60
+          "manualPdfPage": 60,
+          "evaluationItems": []
         },
         {
           "number": 7,
@@ -560,8 +597,14 @@
           "manualPage": 61,
           "pdfPath": "/docs/plans/lecon-007-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 62
+          "manualPdfPage": 62,
+          "evaluationItems": [
+            "Visite prévol de l'avion, démarrage, communications radio, circulation au sol et point fixe. Décollage Départ du circuit Montées et virages en descentes Montées à l'angle de montée optimal et à la vitesse optimale montée Descentes et virages en descentes Remise des gaz Vol rectiligne en palier et virages à moyenne inclinaison Variations de vitesse en vol en palier Distance franchissable maximale Autonomie maximale Vol lent Décrochage sans moteur Glissade Approche vers l'aéroport et intégration au circuit Atterrissage Communications radio, circulation au sol et arrêt moteur Procédures d’urgences Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Visite prévol de l'avion, démarrage, communications radio, circulation au sol et point fixe. Décollage Départ du circuit Montées et virages en descentes Montées à l'angle de montée optimal et à la vitesse optimale montée Descentes et virages en descentes Remise des gaz Vol rectiligne en palier et virages à moyenne inclinaison Variations de vitesse en vol en palier Distance franchissable maximale Autonomie maximale Vol lent Décrochage sans moteur Glissade Approche vers l'aéroport et intégration au circuit Atterrissage Communications radio, circulation au sol et arrêt moteur Procédures d’urgences Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
       ]
     },
     {
@@ -595,7 +638,8 @@
           "manualPage": 63,
           "pdfPath": "/docs/plans/lecon-008-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 64
+          "manualPdfPage": 64,
+          "evaluationItems": []
         },
         {
           "number": 8,
@@ -616,8 +660,14 @@
           "manualPage": 65,
           "pdfPath": "/docs/plans/lecon-008-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 66
+          "manualPdfPage": 66,
+          "evaluationItems": [
+            "Décollage et départ du circuit Navigation: Caps et chronométrage Autonomie maximale Vol lent Vol lent jusqu'à la VMC Virage serrés Décrochage moteur au ralenti Glissade Décrochage au moteur Amorce de vrille Sortie d’un piqué en spirale Approche vers l'aéroport et intégration au circuit Atterrissage Communications radio, circulation au sol et arrêt moteur Procédures d’urgence Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et départ du circuit Navigation: Caps et chronométrage Autonomie maximale Vol lent Vol lent jusqu'à la VMC Virage serrés Décrochage moteur au ralenti Glissade Décrochage au moteur Amorce de vrille Sortie d’un piqué en spirale Approche vers l'aéroport et intégration au circuit Atterrissage Communications radio, circulation au sol et arrêt moteur Procédures d’urgence Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
       ]
     },
     {
@@ -680,7 +730,8 @@
           "manualPage": 67,
           "pdfPath": "/docs/plans/lecon-009-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 68
+          "manualPdfPage": 68,
+          "evaluationItems": []
         },
         {
           "number": 9,
@@ -708,8 +759,14 @@
           "manualPage": 68,
           "pdfPath": "/docs/plans/lecon-009-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 69
+          "manualPdfPage": 69,
+          "evaluationItems": [
+            "Décollage et départ du circuit Navigation: Caps et contrôle de l'altitude Vol lent en vol rectiligne et en palier, en montées, en descentes et en virages Décrochages au moteur au ralenti Décrochages avec puissance Amorces de vrille Vrille Sortie d’un piqué en spirale Atterrissage forcé élémentaire Atterrissage de précaution sur un aéroport inconnu Virage serré Intégration au circuit Atterrissage Procédure d’urgence Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et départ du circuit Navigation: Caps et contrôle de l'altitude Vol lent en vol rectiligne et en palier, en montées, en descentes et en virages Décrochages au moteur au ralenti Décrochages avec puissance Amorces de vrille Vrille Sortie d’un piqué en spirale Atterrissage forcé élémentaire Atterrissage de précaution sur un aéroport inconnu Virage serré Intégration au circuit Atterrissage Procédure d’urgence Interroger"
       ]
     },
     {
@@ -754,8 +811,14 @@
           "manualPage": 69,
           "pdfPath": "/docs/plans/lecon-010-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 70
+          "manualPdfPage": 70,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Procédures d'urgence dans le circuit Vents de travers (familiarisation, démo et exercice) Illusion dans le circuit (familiarisation, démo et exercice) Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Procédures d'urgence dans le circuit Vents de travers (familiarisation, démo et exercice) Illusion dans le circuit (familiarisation, démo et exercice) Interroger"
       ]
     },
     {
@@ -808,7 +871,8 @@
           "manualPage": 70,
           "pdfPath": "/docs/plans/lecon-011-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 71
+          "manualPdfPage": 71,
+          "evaluationItems": []
         },
         {
           "number": 11,
@@ -836,8 +900,14 @@
           "manualPage": 71,
           "pdfPath": "/docs/plans/lecon-011-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 72
+          "manualPdfPage": 72,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Décrochage avec et sans moteur Sortie de spirale en piqué Pannes moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Décrochage avec et sans moteur Sortie de spirale en piqué Pannes moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
       ]
     },
     {
@@ -886,8 +956,14 @@
           "manualPage": 72,
           "pdfPath": "/docs/plans/lecon-012-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 73
+          "manualPdfPage": 73,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Virage serré Décrochage avec et sans moteur Sortie de spirale en piqué Vrille Pannes moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Virage serré Décrochage avec et sans moteur Sortie de spirale en piqué Vrille Pannes moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
       ]
     },
     {
@@ -936,8 +1012,14 @@
           "manualPage": 73,
           "pdfPath": "/docs/plans/lecon-013-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 74
+          "manualPdfPage": 74,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Virage serré Décrochage avec et sans moteur Sortie de spirale en piqué Vrille Pannes de moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Entrée et sortie de la zone de contrôle Vol lent Virage serré Décrochage avec et sans moteur Sortie de spirale en piqué Vrille Pannes de moteur à toutes les étapes du circuit Procédures d'urgence dans le circuit Interroger"
       ]
     },
     {
@@ -991,7 +1073,8 @@
           "manualPage": 74,
           "pdfPath": "/docs/plans/lecon-014-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 75
+          "manualPdfPage": 75,
+          "evaluationItems": []
         },
         {
           "number": 14,
@@ -1015,7 +1098,10 @@
           "manualPage": 75,
           "pdfPath": "/docs/plans/lecon-014-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 76
+          "manualPdfPage": 76,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Mesures d'urgence avant un vol en Solo Interroger"
+          ]
         },
         {
           "number": 14,
@@ -1038,8 +1124,12 @@
           "manualPage": 76,
           "pdfPath": "/docs/plans/lecon-014-03-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 77
+          "manualPdfPage": 77,
+          "evaluationItems": []
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Mesures d'urgence avant un vol en Solo Interroger"
       ]
     },
     {
@@ -1082,7 +1172,10 @@
           "manualPage": 77,
           "pdfPath": "/docs/plans/lecon-015-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 78
+          "manualPdfPage": 78,
+          "evaluationItems": [
+            "Décollages, circuits et atterrissages Procédures d’urgence dans le circuit"
+          ]
         },
         {
           "number": 15,
@@ -1105,8 +1198,12 @@
           "manualPage": 78,
           "pdfPath": "/docs/plans/lecon-015-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 79
+          "manualPdfPage": 79,
+          "evaluationItems": []
         }
+      ],
+      "evaluationItems": [
+        "Décollages, circuits et atterrissages Procédures d’urgence dans le circuit"
       ]
     },
     {
@@ -1140,7 +1237,10 @@
           "manualPage": 79,
           "pdfPath": "/docs/plans/lecon-016-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 80
+          "manualPdfPage": 80,
+          "evaluationItems": [
+            "Décrire les situations pouvant justifier un atterrissage de précaution Discuter des points à considérer pour choisir la meilleure surface d’atterrissage Décrire les particularités de l’inspection en vol du terrain Discuter des particularités d’un atterrissage dans les arbres ou sur l’eau Revoir la règlementation à propos du vol à basse altitude Expliquer la technique de décollage à course minimale sans obstacles Expliquer la technique de décollage à course minimale avec franchissement obstacles Expliquer les techniques d'approches et d'atterrissages sur terrain court sans obstacles Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
+          ]
         },
         {
           "number": 16,
@@ -1161,8 +1261,15 @@
           "manualPage": 81,
           "pdfPath": "/docs/plans/lecon-016-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 82
+          "manualPdfPage": 82,
+          "evaluationItems": [
+            "Décollage et atterrissage court Décollage et atterrissage mou Navigation : Cap et ETA vers la zone d’entrainement Lecture de carte et orientation dans la zone d’entrainement Atterrissage forcés Vol lent Atterrissage de précaution Illusions créées par la dérive Navigation à l’estime, retour de la zone d’entrainement Procédure d’urgence Décollage terrain court Décollage terrain court avec franchissement d’obstacle Décollages terrain mous Décollage terrain mous avec franchissement d’obstacle Atterrissage terrain court Atterrissage terrain court avec franchissement d’obstacle Atterrissage terrain mou Atterrissage terrain mou avec franchissement d’obstacle Décollage et atterrissage par vent de travers Illusion créée par la dérive Procédures d’urgence Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décrire les situations pouvant justifier un atterrissage de précaution Discuter des points à considérer pour choisir la meilleure surface d’atterrissage Décrire les particularités de l’inspection en vol du terrain Discuter des particularités d’un atterrissage dans les arbres ou sur l’eau Revoir la règlementation à propos du vol à basse altitude Expliquer la technique de décollage à course minimale sans obstacles Expliquer la technique de décollage à course minimale avec franchissement obstacles Expliquer les techniques d'approches et d'atterrissages sur terrain court sans obstacles Version originale en date du 2016-05-09 Modification no 6 2025-06-01",
+        "Décollage et atterrissage court Décollage et atterrissage mou Navigation : Cap et ETA vers la zone d’entrainement Lecture de carte et orientation dans la zone d’entrainement Atterrissage forcés Vol lent Atterrissage de précaution Illusions créées par la dérive Navigation à l’estime, retour de la zone d’entrainement Procédure d’urgence Décollage terrain court Décollage terrain court avec franchissement d’obstacle Décollages terrain mous Décollage terrain mous avec franchissement d’obstacle Atterrissage terrain court Atterrissage terrain court avec franchissement d’obstacle Atterrissage terrain mou Atterrissage terrain mou avec franchissement d’obstacle Décollage et atterrissage par vent de travers Illusion créée par la dérive Procédures d’urgence Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
       ]
     },
     {
@@ -1212,7 +1319,8 @@
           "manualPage": 83,
           "pdfPath": "/docs/plans/lecon-017-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 84
+          "manualPdfPage": 84,
+          "evaluationItems": []
         },
         {
           "number": 17,
@@ -1239,8 +1347,14 @@
           "manualPage": 84,
           "pdfPath": "/docs/plans/lecon-017-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 85
+          "manualPdfPage": 85,
+          "evaluationItems": [
+            "Décollage et atterrissage court et mou Navigation, caps et ETA dans la zone d'entraînement Distance franchissable et autonomie maximale Décrochage avec et sans puissance Atterrissage de précaution Atterrissage forcés Déroutement Illusions créées par la dérive"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et atterrissage court et mou Navigation, caps et ETA dans la zone d'entraînement Distance franchissable et autonomie maximale Décrochage avec et sans puissance Atterrissage de précaution Atterrissage forcés Déroutement Illusions créées par la dérive"
       ]
     },
     {
@@ -1279,9 +1393,11 @@
           "manualPage": 85,
           "pdfPath": "/docs/plans/lecon-018-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 86
+          "manualPdfPage": 86,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 19,
@@ -1327,8 +1443,14 @@
           "manualPage": 86,
           "pdfPath": "/docs/plans/lecon-019-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 87
+          "manualPdfPage": 87,
+          "evaluationItems": [
+            "Décollage terrain court Décollage terrain court avec franchissement d’obstacle Décollages terrain mous Décollage terrain mous avec franchissement d’obstacle Atterrissage terrain court Atterrissage terrain court avec franchissement d’obstacle Atterrissage terrain mou Atterrissage terrain mou avec franchissement d’obstacle"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage terrain court Décollage terrain court avec franchissement d’obstacle Décollages terrain mous Décollage terrain mous avec franchissement d’obstacle Atterrissage terrain court Atterrissage terrain court avec franchissement d’obstacle Atterrissage terrain mou Atterrissage terrain mou avec franchissement d’obstacle"
       ]
     },
     {
@@ -1381,7 +1503,10 @@
           "manualPage": 87,
           "pdfPath": "/docs/plans/lecon-020-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 88
+          "manualPdfPage": 88,
+          "evaluationItems": [
+            "Comprendre les situations qui pourraient nous amener à nous dérouter Comment tracer une route sur la carte Expliquer les méthodes d'estimation de la distance, du cap et ETA Expliquer les mesures de sécurité à basse altitude Illusions créées par la dérive"
+          ]
         },
         {
           "number": 20,
@@ -1406,8 +1531,15 @@
           "manualPage": 88,
           "pdfPath": "/docs/plans/lecon-020-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 89
+          "manualPdfPage": 89,
+          "evaluationItems": [
+            "Décollage et atterrissage court et mou Procédure de départ de navigation, caps et ETA vers la zone d'entraînement Vol lent Glissade Atterrissages forcés Virages serrés Déroutement Illusions créées par la dérive"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Comprendre les situations qui pourraient nous amener à nous dérouter Comment tracer une route sur la carte Expliquer les méthodes d'estimation de la distance, du cap et ETA Expliquer les mesures de sécurité à basse altitude Illusions créées par la dérive",
+        "Décollage et atterrissage court et mou Procédure de départ de navigation, caps et ETA vers la zone d'entraînement Vol lent Glissade Atterrissages forcés Virages serrés Déroutement Illusions créées par la dérive"
       ]
     },
     {
@@ -1452,8 +1584,14 @@
           "manualPage": 89,
           "pdfPath": "/docs/plans/lecon-021-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 90
+          "manualPdfPage": 90,
+          "evaluationItems": [
+            "Décollage et atterrissage court Décollage et atterrissage mou Navigation : Cap et ETA vers la zone d’entrainement Lecture de carte et orientation dans la zone d’entrainement Navigation à l’estime, retour de la zone d’entrainement"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et atterrissage court Décollage et atterrissage mou Navigation : Cap et ETA vers la zone d’entrainement Lecture de carte et orientation dans la zone d’entrainement Navigation à l’estime, retour de la zone d’entrainement"
       ]
     },
     {
@@ -1510,7 +1648,8 @@
           "manualPage": 90,
           "pdfPath": "/docs/plans/lecon-022-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 91
+          "manualPdfPage": 91,
+          "evaluationItems": []
         },
         {
           "number": 22,
@@ -1536,9 +1675,11 @@
           "manualPage": 91,
           "pdfPath": "/docs/plans/lecon-022-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 92
+          "manualPdfPage": 92,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 23,
@@ -1580,8 +1721,14 @@
           "manualPage": 92,
           "pdfPath": "/docs/plans/lecon-023-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 93
+          "manualPdfPage": 93,
+          "evaluationItems": [
+            "Décollage et atterrissage court et mou Procédure de départ de navigation vers la zone d’entrainement Virage à grande inclinaison Vol lent Décrochage avec et sans puissance Glissade Atterrissage forcé Atterrissage de précaution Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et atterrissage court et mou Procédure de départ de navigation vers la zone d’entrainement Virage à grande inclinaison Vol lent Décrochage avec et sans puissance Glissade Atterrissage forcé Atterrissage de précaution Interroger"
       ]
     },
     {
@@ -1622,9 +1769,11 @@
           "manualPage": 93,
           "pdfPath": "/docs/plans/lecon-024-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 94
+          "manualPdfPage": 94,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 25,
@@ -1666,9 +1815,11 @@
           "manualPage": 94,
           "pdfPath": "/docs/plans/lecon-025-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 95
+          "manualPdfPage": 95,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 26,
@@ -1710,9 +1861,11 @@
           "manualPage": 95,
           "pdfPath": "/docs/plans/lecon-026-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 96
+          "manualPdfPage": 96,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 27,
@@ -1780,7 +1933,8 @@
           "manualPage": 96,
           "pdfPath": "/docs/plans/lecon-027-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 97
+          "manualPdfPage": 97,
+          "evaluationItems": []
         },
         {
           "number": 27,
@@ -1807,7 +1961,10 @@
           "manualPage": 97,
           "pdfPath": "/docs/plans/lecon-027-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 98
+          "manualPdfPage": 98,
+          "evaluationItems": [
+            "Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Atterrissage forcés Procédures d’urgences Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Virage chronométré Panneau partiel"
+          ]
         },
         {
           "number": 27,
@@ -1834,8 +1991,14 @@
           "manualPage": 98,
           "pdfPath": "/docs/plans/lecon-027-03-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 99
+          "manualPdfPage": 99,
+          "evaluationItems": [
+            "Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Atterrissage forcés Procédures d’urgences Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Virage chronométré Panneau partiel"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Atterrissage forcés Procédures d’urgences Assiettes et mouvements aux instruments Vol rectiligne en palier aux instruments Montées et descentes aux instruments Virages à faible et moyenne inclinaison aux instruments Assiette inhabituelle aux instruments Virage chronométré Panneau partiel"
       ]
     },
     {
@@ -1880,8 +2043,14 @@
           "manualPage": 99,
           "pdfPath": "/docs/plans/lecon-028-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 100
+          "manualPdfPage": 100,
+          "evaluationItems": [
+            "Décollage et atterrissage court et mou Vol lent/ Virages en vol lent Décochage sans/avec moteur sans/avec volet Décrochage en montée/descente/virage Virage serré Descente/Remise des gaz Atterrissage forcé Atterrissage de précaution Procédure d’urgences Décollage et atterrissage court et mou Procédures d’urgences"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Décollage et atterrissage court et mou Vol lent/ Virages en vol lent Décochage sans/avec moteur sans/avec volet Décrochage en montée/descente/virage Virage serré Descente/Remise des gaz Atterrissage forcé Atterrissage de précaution Procédure d’urgences Décollage et atterrissage court et mou Procédures d’urgences"
       ]
     },
     {
@@ -1924,9 +2093,11 @@
           "manualPage": 100,
           "pdfPath": "/docs/plans/lecon-029-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 101
+          "manualPdfPage": 101,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 30,
@@ -1970,7 +2141,8 @@
           "manualPage": 101,
           "pdfPath": "/docs/plans/lecon-030-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 102
+          "manualPdfPage": 102,
+          "evaluationItems": []
         },
         {
           "number": 30,
@@ -1996,9 +2168,11 @@
           "manualPage": 102,
           "pdfPath": "/docs/plans/lecon-030-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 103
+          "manualPdfPage": 103,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 31,
@@ -2056,7 +2230,8 @@
           "manualPage": 103,
           "pdfPath": "/docs/plans/lecon-031-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 104
+          "manualPdfPage": 104,
+          "evaluationItems": []
         },
         {
           "number": 31,
@@ -2086,8 +2261,14 @@
           "manualPage": 104,
           "pdfPath": "/docs/plans/lecon-031-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 105
+          "manualPdfPage": 105,
+          "evaluationItems": [
+            "Masse et centrage Journal de navigation et plan de vol Navigation en VFR à vue et à l'estime Utilisation des aides à la navigation Procédures en cas d'égarement Simulation d'une rencontre imprévue de situations météo défavorables (déroutement) Procédures à suivre aux aéroports inconnus Utilisation de la radio pour les communications en route Urgences en vol de navigation"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Masse et centrage Journal de navigation et plan de vol Navigation en VFR à vue et à l'estime Utilisation des aides à la navigation Procédures en cas d'égarement Simulation d'une rencontre imprévue de situations météo défavorables (déroutement) Procédures à suivre aux aéroports inconnus Utilisation de la radio pour les communications en route Urgences en vol de navigation"
       ]
     },
     {
@@ -2137,7 +2318,8 @@
           "manualPage": 105,
           "pdfPath": "/docs/plans/lecon-032-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 106
+          "manualPdfPage": 106,
+          "evaluationItems": []
         },
         {
           "number": 32,
@@ -2162,9 +2344,11 @@
           "manualPage": 106,
           "pdfPath": "/docs/plans/lecon-032-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 107
+          "manualPdfPage": 107,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 33,
@@ -2209,7 +2393,8 @@
           "manualPage": 107,
           "pdfPath": "/docs/plans/lecon-033-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 108
+          "manualPdfPage": 108,
+          "evaluationItems": []
         },
         {
           "number": 33,
@@ -2232,8 +2417,14 @@
           "manualPage": 108,
           "pdfPath": "/docs/plans/lecon-033-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 109
+          "manualPdfPage": 109,
+          "evaluationItems": [
+            "Éléments du test en vol de pilote privé."
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Éléments du test en vol de pilote privé."
       ]
     },
     {
@@ -2272,9 +2463,11 @@
           "manualPage": 109,
           "pdfPath": "/docs/plans/lecon-034-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 110
+          "manualPdfPage": 110,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 35,
@@ -2317,7 +2510,8 @@
           "manualPage": 110,
           "pdfPath": "/docs/plans/lecon-035-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 111
+          "manualPdfPage": 111,
+          "evaluationItems": []
         },
         {
           "number": 35,
@@ -2340,8 +2534,14 @@
           "manualPage": 111,
           "pdfPath": "/docs/plans/lecon-035-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 112
+          "manualPdfPage": 112,
+          "evaluationItems": [
+            "Test en vol de pilote privé"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Test en vol de pilote privé"
       ]
     },
     {
@@ -2385,7 +2585,8 @@
           "manualPage": 112,
           "pdfPath": "/docs/plans/lecon-036-01-sol.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 113
+          "manualPdfPage": 113,
+          "evaluationItems": []
         },
         {
           "number": 36,
@@ -2408,8 +2609,14 @@
           "manualPage": 113,
           "pdfPath": "/docs/plans/lecon-036-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 114
+          "manualPdfPage": 114,
+          "evaluationItems": [
+            "Test en vol de pilote privé"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Test en vol de pilote privé"
       ]
     },
     {
@@ -2454,7 +2661,8 @@
           "manualPage": 114,
           "pdfPath": "/docs/plans/lecon-037-01-sol.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 115
+          "manualPdfPage": 115,
+          "evaluationItems": []
         },
         {
           "number": 37,
@@ -2477,7 +2685,10 @@
           "manualPage": 115,
           "pdfPath": "/docs/plans/lecon-037-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 116
+          "manualPdfPage": 116,
+          "evaluationItems": [
+            "Test en vol de pilote privé"
+          ]
         },
         {
           "number": 37,
@@ -2500,8 +2711,14 @@
           "manualPage": 116,
           "pdfPath": "/docs/plans/lecon-037-03-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 117
+          "manualPdfPage": 117,
+          "evaluationItems": [
+            "Test en vol de pilote privé"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Test en vol de pilote privé"
       ]
     },
     {
@@ -2536,9 +2753,11 @@
           "manualPage": 117,
           "pdfPath": "/docs/plans/lecon-038-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 118
+          "manualPdfPage": 118,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 39,
@@ -2604,7 +2823,8 @@
           "manualPage": 118,
           "pdfPath": "/docs/plans/lecon-039-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 119
+          "manualPdfPage": 119,
+          "evaluationItems": []
         },
         {
           "number": 39,
@@ -2635,9 +2855,11 @@
           "manualPage": 119,
           "pdfPath": "/docs/plans/lecon-039-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 120
+          "manualPdfPage": 120,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 40,
@@ -2694,7 +2916,8 @@
           "manualPage": 120,
           "pdfPath": "/docs/plans/lecon-040-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 121
+          "manualPdfPage": 121,
+          "evaluationItems": []
         },
         {
           "number": 40,
@@ -2720,8 +2943,14 @@
           "manualPage": 121,
           "pdfPath": "/docs/plans/lecon-040-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 122
+          "manualPdfPage": 122,
+          "evaluationItems": [
+            "Revue des fonctions de base du GPS Vol rectiligne, montée et descente en panneau complet Trianguler sa position Naviguer en approchement et en éloignement Intercepter une trajectoire Circuit vol de nuit Illusions de nuit Circuit aérodrome non contrôlé Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit Atterrissage sans électricité Urgence de nuit Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Revue des fonctions de base du GPS Vol rectiligne, montée et descente en panneau complet Trianguler sa position Naviguer en approchement et en éloignement Intercepter une trajectoire Circuit vol de nuit Illusions de nuit Circuit aérodrome non contrôlé Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit Atterrissage sans électricité Urgence de nuit Interroger"
       ]
     },
     {
@@ -2762,9 +2991,11 @@
           "manualPage": 122,
           "pdfPath": "/docs/plans/lecon-041-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 123
+          "manualPdfPage": 123,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 42,
@@ -2802,9 +3033,11 @@
           "manualPage": 123,
           "pdfPath": "/docs/plans/lecon-042-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 124
+          "manualPdfPage": 124,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 43,
@@ -2842,8 +3075,14 @@
           "manualPage": 124,
           "pdfPath": "/docs/plans/lecon-043-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 125
+          "manualPdfPage": 125,
+          "evaluationItems": [
+            "Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit Interroger l'élève sur l'exercice"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit Interroger l'élève sur l'exercice"
       ]
     },
     {
@@ -2880,9 +3119,11 @@
           "manualPage": 125,
           "pdfPath": "/docs/plans/lecon-044-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 126
+          "manualPdfPage": 126,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 45,
@@ -2918,9 +3159,11 @@
           "manualPage": 126,
           "pdfPath": "/docs/plans/lecon-045-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 127
+          "manualPdfPage": 127,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 46,
@@ -2952,9 +3195,11 @@
           "manualPage": 127,
           "pdfPath": "/docs/plans/lecon-046-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 128
+          "manualPdfPage": 128,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 47,
@@ -2990,9 +3235,11 @@
           "manualPage": 128,
           "pdfPath": "/docs/plans/lecon-047-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 129
+          "manualPdfPage": 129,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 48,
@@ -3048,7 +3295,8 @@
           "manualPage": 129,
           "pdfPath": "/docs/plans/lecon-048-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 130
+          "manualPdfPage": 130,
+          "evaluationItems": []
         },
         {
           "number": 48,
@@ -3075,9 +3323,11 @@
           "manualPage": 130,
           "pdfPath": "/docs/plans/lecon-048-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 131
+          "manualPdfPage": 131,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 49,
@@ -3121,7 +3371,8 @@
           "manualPage": 131,
           "pdfPath": "/docs/plans/lecon-049-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 132
+          "manualPdfPage": 132,
+          "evaluationItems": []
         },
         {
           "number": 49,
@@ -3145,9 +3396,11 @@
           "manualPage": 132,
           "pdfPath": "/docs/plans/lecon-049-02-double.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 133
+          "manualPdfPage": 133,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 50,
@@ -3187,9 +3440,11 @@
           "manualPage": 133,
           "pdfPath": "/docs/plans/lecon-050-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 134
+          "manualPdfPage": 134,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 51,
@@ -3233,9 +3488,11 @@
           "manualPage": 134,
           "pdfPath": "/docs/plans/lecon-051-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 135
+          "manualPdfPage": 135,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 52,
@@ -3288,7 +3545,8 @@
           "manualPage": 135,
           "pdfPath": "/docs/plans/lecon-052-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 136
+          "manualPdfPage": 136,
+          "evaluationItems": []
         },
         {
           "number": 52,
@@ -3316,9 +3574,11 @@
           "manualPage": 136,
           "pdfPath": "/docs/plans/lecon-052-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 137
+          "manualPdfPage": 137,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 53,
@@ -3356,9 +3616,11 @@
           "manualPage": 137,
           "pdfPath": "/docs/plans/lecon-053-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 138
+          "manualPdfPage": 138,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 54,
@@ -3396,9 +3658,11 @@
           "manualPage": 138,
           "pdfPath": "/docs/plans/lecon-054-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 139
+          "manualPdfPage": 139,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 55,
@@ -3437,7 +3701,8 @@
           "manualPage": 139,
           "pdfPath": "/docs/plans/lecon-055-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 140
+          "manualPdfPage": 140,
+          "evaluationItems": []
         },
         {
           "number": 55,
@@ -3460,8 +3725,14 @@
           "manualPage": 140,
           "pdfPath": "/docs/plans/lecon-055-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 141
+          "manualPdfPage": 141,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente GNSS Circuit d’attente GNSS Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Approche de non-précision Interroger l'élève sur l'exercice"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente GNSS Circuit d’attente GNSS Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Approche de non-précision Interroger l'élève sur l'exercice"
       ]
     },
     {
@@ -3502,7 +3773,8 @@
           "manualPage": 141,
           "pdfPath": "/docs/plans/lecon-056-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 142
+          "manualPdfPage": 142,
+          "evaluationItems": []
         },
         {
           "number": 56,
@@ -3525,8 +3797,14 @@
           "manualPage": 142,
           "pdfPath": "/docs/plans/lecon-056-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 143
+          "manualPdfPage": 143,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche RNAV – LNAV ou LOC Approche LNAV Approche LOC Approche interrompue Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche RNAV – LNAV ou LOC Approche LNAV Approche LOC Approche interrompue Interroger l'élève"
       ]
     },
     {
@@ -3569,9 +3847,11 @@
           "manualPage": 143,
           "pdfPath": "/docs/plans/lecon-057-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 144
+          "manualPdfPage": 144,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 58,
@@ -3611,7 +3891,8 @@
           "manualPage": 144,
           "pdfPath": "/docs/plans/lecon-058-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 145
+          "manualPdfPage": 145,
+          "evaluationItems": []
         },
         {
           "number": 58,
@@ -3634,8 +3915,14 @@
           "manualPage": 145,
           "pdfPath": "/docs/plans/lecon-058-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 146
+          "manualPdfPage": 146,
+          "evaluationItems": [
+            "Préparation d’envolée IFR Plan de vol IFR Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID Vecteur Procédure en route Préparation approche Approche Approche interrompue Préparation d’une arrivée STAR Arrivée STAR Urgences Communications radios Interroger l'élève sur Exposé après sol Aperçu de la leçon suivante Conditions, norme pour la Le candidat connaît réussite du plan de leçon Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation d’envolée IFR Plan de vol IFR Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID Vecteur Procédure en route Préparation approche Approche Approche interrompue Préparation d’une arrivée STAR Arrivée STAR Urgences Communications radios Interroger l'élève sur Exposé après sol Aperçu de la leçon suivante Conditions, norme pour la Le candidat connaît réussite du plan de leçon Version originale en date du 2016-05-09 Modification no 6 2025-06-01"
       ]
     },
     {
@@ -3674,9 +3961,11 @@
           "manualPage": 146,
           "pdfPath": "/docs/plans/lecon-059-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 147
+          "manualPdfPage": 147,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 60,
@@ -3716,8 +4005,14 @@
           "manualPage": 147,
           "pdfPath": "/docs/plans/lecon-060-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 148
+          "manualPdfPage": 148,
+          "evaluationItems": [
+            "Préparation d’envolée IFR Plan de vol IFR Préparation du poste de pilotage en vue d’un vol IFR Procédures de départs IFR SID Vecteur Approche ILS avec encerclement Approche contenant une ARC-DME Approche LOC (avec ou sans encerclement) Approche indirecte Procédure d’approche interrompue Procédure d’approche interrompue lors d’une procédure d’encerclement Procédure de correction de température Préparation d’une arrivée STAR Arrivée STAR Urgences Communications radios Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation d’envolée IFR Plan de vol IFR Préparation du poste de pilotage en vue d’un vol IFR Procédures de départs IFR SID Vecteur Approche ILS avec encerclement Approche contenant une ARC-DME Approche LOC (avec ou sans encerclement) Approche indirecte Procédure d’approche interrompue Procédure d’approche interrompue lors d’une procédure d’encerclement Procédure de correction de température Préparation d’une arrivée STAR Arrivée STAR Urgences Communications radios Interroger l'élève"
       ]
     },
     {
@@ -3756,8 +4051,14 @@
           "manualPage": 148,
           "pdfPath": "/docs/plans/lecon-061-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 149
+          "manualPdfPage": 149,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente GNSS Circuit d’attente GNSS Préparation d’approche de précision ILS ou LPV Approches ILS ou LPV Approche interrompue Préparation d’approche de non précision LOC ou LNAV Approches LOC ou LNAV Communications radios Urgences Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR Procédure panne de communications SID vecteur Préparation de circuit d’attente GNSS Circuit d’attente GNSS Préparation d’approche de précision ILS ou LPV Approches ILS ou LPV Approche interrompue Préparation d’approche de non précision LOC ou LNAV Approches LOC ou LNAV Communications radios Urgences Interroger l'élève"
       ]
     },
     {
@@ -3798,8 +4099,14 @@
           "manualPage": 149,
           "pdfPath": "/docs/plans/lecon-062-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 150
+          "manualPdfPage": 150,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Procédure en route Préparation d’approche GNSS Approche GNSS Approche interrompue Préparation d’une arrivée STAR Arrivée STAR Préparation d’approche à CYQB Approche RNAV, ILS ou LOC Communications radios Urgences Interroger l'élève sur"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Procédure en route Préparation d’approche GNSS Approche GNSS Approche interrompue Préparation d’une arrivée STAR Arrivée STAR Préparation d’approche à CYQB Approche RNAV, ILS ou LOC Communications radios Urgences Interroger l'élève sur"
       ]
     },
     {
@@ -3849,7 +4156,8 @@
           "manualPage": 150,
           "pdfPath": "/docs/plans/lecon-063-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 151
+          "manualPdfPage": 151,
+          "evaluationItems": []
         },
         {
           "number": 63,
@@ -3872,9 +4180,11 @@
           "manualPage": 151,
           "pdfPath": "/docs/plans/lecon-063-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 152
+          "manualPdfPage": 152,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 64,
@@ -3912,8 +4222,14 @@
           "manualPage": 152,
           "pdfPath": "/docs/plans/lecon-064-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 153
+          "manualPdfPage": 153,
+          "evaluationItems": [
+            "Démarrage des moteurs, liste de vérification Communications radio Circulation au sol Point fixe, vérification des systèmes Décollage, montée Vol en croisière: différents réglages de puissance Manœuvres à vitesse réduite Virage à grande inclinaison Amorce de décrochage configuration lisse Amorce de décrochage en configuration d’approche Panne moteur en croisière Approche et atterrissage Remise des gaz Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Démarrage des moteurs, liste de vérification Communications radio Circulation au sol Point fixe, vérification des systèmes Décollage, montée Vol en croisière: différents réglages de puissance Manœuvres à vitesse réduite Virage à grande inclinaison Amorce de décrochage configuration lisse Amorce de décrochage en configuration d’approche Panne moteur en croisière Approche et atterrissage Remise des gaz Interroger l'élève"
       ]
     },
     {
@@ -3958,9 +4274,11 @@
           "manualPage": 153,
           "pdfPath": "/docs/plans/lecon-065-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 154
+          "manualPdfPage": 154,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 66,
@@ -3996,8 +4314,14 @@
           "manualPage": 154,
           "pdfPath": "/docs/plans/lecon-066-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 155
+          "manualPdfPage": 155,
+          "evaluationItems": [
+            "Panne-moteur en croisière Panne-moteur sur la remontée Arrêt intentionnel d'un moteur (simulé) Approche et atterrissage-un moteur en panne Urgences mineures Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Panne-moteur en croisière Panne-moteur sur la remontée Arrêt intentionnel d'un moteur (simulé) Approche et atterrissage-un moteur en panne Urgences mineures Interroger l'élève"
       ]
     },
     {
@@ -4042,8 +4366,14 @@
           "manualPage": 155,
           "pdfPath": "/docs/plans/lecon-067-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 156
+          "manualPdfPage": 156,
+          "evaluationItems": [
+            "Descente d’urgence Virage serré Décollages, circuits, atterrissages Liste de vérification-gestion de l'avion Panne de moteur sur la remontée Panne de moteur en vent arrière Panne des volets Interroger"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Descente d’urgence Virage serré Décollages, circuits, atterrissages Liste de vérification-gestion de l'avion Panne de moteur sur la remontée Panne de moteur en vent arrière Panne des volets Interroger"
       ]
     },
     {
@@ -4080,8 +4410,14 @@
           "manualPage": 156,
           "pdfPath": "/docs/plans/lecon-068-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 157
+          "manualPdfPage": 157,
+          "evaluationItems": [
+            "Démarrage et liste de vérification Circulation Décollage Circuit Atterrissage Vol à vitesse réduite Virage à grande inclinaison Approche au décrochage et décrochage Panne-moteur en croisière Panne-moteur sur la remontée Arrêt intentionnel du moteur Urgences mineures Discuter soigneusement"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Démarrage et liste de vérification Circulation Décollage Circuit Atterrissage Vol à vitesse réduite Virage à grande inclinaison Approche au décrochage et décrochage Panne-moteur en croisière Panne-moteur sur la remontée Arrêt intentionnel du moteur Urgences mineures Discuter soigneusement"
       ]
     },
     {
@@ -4120,7 +4456,8 @@
           "manualPage": 157,
           "pdfPath": "/docs/plans/lecon-069-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 158
+          "manualPdfPage": 158,
+          "evaluationItems": []
         },
         {
           "number": 69,
@@ -4143,9 +4480,11 @@
           "manualPage": 158,
           "pdfPath": "/docs/plans/lecon-069-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 159
+          "manualPdfPage": 159,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 70,
@@ -4181,9 +4520,11 @@
           "manualPage": 159,
           "pdfPath": "/docs/plans/lecon-070-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 160
+          "manualPdfPage": 160,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 71,
@@ -4221,9 +4562,11 @@
           "manualPage": 160,
           "pdfPath": "/docs/plans/lecon-071-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 161
+          "manualPdfPage": 161,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 72,
@@ -4267,7 +4610,10 @@
           "manualPage": 161,
           "pdfPath": "/docs/plans/lecon-072-01-sol.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 162
+          "manualPdfPage": 162,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur-NAV Préparation de circuit d’attente Circuit d’attente Préparation d’approche de précision Approches de précision Préparation d’approche de non-précision Approche de non-précision Urgences IFR mineures Interroger l'élève sur"
+          ]
         },
         {
           "number": 72,
@@ -4290,8 +4636,12 @@
           "manualPage": 162,
           "pdfPath": "/docs/plans/lecon-072-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 163
+          "manualPdfPage": 163,
+          "evaluationItems": []
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur-NAV Préparation de circuit d’attente Circuit d’attente Préparation d’approche de précision Approches de précision Préparation d’approche de non-précision Approche de non-précision Urgences IFR mineures Interroger l'élève sur"
       ]
     },
     {
@@ -4330,8 +4680,14 @@
           "manualPage": 163,
           "pdfPath": "/docs/plans/lecon-073-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 164
+          "manualPdfPage": 164,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Urgences IFR mineures Interroger l'élève sur"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Urgences IFR mineures Interroger l'élève sur"
       ]
     },
     {
@@ -4370,8 +4726,14 @@
           "manualPage": 164,
           "pdfPath": "/docs/plans/lecon-074-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 165
+          "manualPdfPage": 165,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche RNAV – LNAV Approche LNAV Urgences IFR mineures Interroger l'élève"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche RNAV – LNAV Approche LNAV Urgences IFR mineures Interroger l'élève"
       ]
     },
     {
@@ -4414,7 +4776,8 @@
           "manualPage": 165,
           "pdfPath": "/docs/plans/lecon-075-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 166
+          "manualPdfPage": 166,
+          "evaluationItems": []
         },
         {
           "number": 75,
@@ -4437,8 +4800,14 @@
           "manualPage": 166,
           "pdfPath": "/docs/plans/lecon-075-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 167
+          "manualPdfPage": 167,
+          "evaluationItems": [
+            "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Urgence mineure en IFR Panne-moteur lors d’approche IFR Interroger l'élève sur"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Préparation du poste de pilotage en vue d’un vol IFR Autorisation IFR Procédures de départs IFR SID vecteur Préparation de circuit d’attente Circuit d’attente Préparation d’approche ILS et/ou LPV Approches ILS ou LPV Urgence mineure en IFR Panne-moteur lors d’approche IFR Interroger l'élève sur"
       ]
     },
     {
@@ -4475,9 +4844,11 @@
           "manualPage": 167,
           "pdfPath": "/docs/plans/lecon-076-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 168
+          "manualPdfPage": 168,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 77,
@@ -4523,7 +4894,8 @@
           "manualPage": 168,
           "pdfPath": "/docs/plans/lecon-077-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 169
+          "manualPdfPage": 169,
+          "evaluationItems": []
         },
         {
           "number": 77,
@@ -4546,7 +4918,8 @@
           "manualPage": 169,
           "pdfPath": "/docs/plans/lecon-077-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 170
+          "manualPdfPage": 170,
+          "evaluationItems": []
         },
         {
           "number": 77,
@@ -4569,9 +4942,11 @@
           "manualPage": 170,
           "pdfPath": "/docs/plans/lecon-077-03-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 171
+          "manualPdfPage": 171,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 78,
@@ -4609,9 +4984,11 @@
           "manualPage": 171,
           "pdfPath": "/docs/plans/lecon-078-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 172
+          "manualPdfPage": 172,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 79,
@@ -4649,9 +5026,11 @@
           "manualPage": 172,
           "pdfPath": "/docs/plans/lecon-079-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 173
+          "manualPdfPage": 173,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 80,
@@ -4689,8 +5068,14 @@
           "manualPage": 173,
           "pdfPath": "/docs/plans/lecon-080-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 174
+          "manualPdfPage": 174,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Manœuvre de vols aux instruments Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Manœuvre de vols aux instruments Donner"
       ]
     },
     {
@@ -4727,8 +5112,14 @@
           "manualPage": 174,
           "pdfPath": "/docs/plans/lecon-081-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 175
+          "manualPdfPage": 175,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -4765,8 +5156,14 @@
           "manualPage": 175,
           "pdfPath": "/docs/plans/lecon-082-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 176
+          "manualPdfPage": 176,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -4803,8 +5200,14 @@
           "manualPage": 176,
           "pdfPath": "/docs/plans/lecon-083-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 177
+          "manualPdfPage": 177,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -4843,9 +5246,11 @@
           "manualPage": 177,
           "pdfPath": "/docs/plans/lecon-084-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 178
+          "manualPdfPage": 178,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 85,
@@ -4883,9 +5288,11 @@
           "manualPage": 178,
           "pdfPath": "/docs/plans/lecon-085-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 179
+          "manualPdfPage": 179,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 86,
@@ -4928,7 +5335,8 @@
           "manualPage": 179,
           "pdfPath": "/docs/plans/lecon-086-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 180
+          "manualPdfPage": 180,
+          "evaluationItems": []
         },
         {
           "number": 86,
@@ -4952,9 +5360,11 @@
           "manualPage": 180,
           "pdfPath": "/docs/plans/lecon-086-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 181
+          "manualPdfPage": 181,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 87,
@@ -4992,9 +5402,11 @@
           "manualPage": 181,
           "pdfPath": "/docs/plans/lecon-087-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 182
+          "manualPdfPage": 182,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 88,
@@ -5037,7 +5449,8 @@
           "manualPage": 182,
           "pdfPath": "/docs/plans/lecon-088-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 183
+          "manualPdfPage": 183,
+          "evaluationItems": []
         },
         {
           "number": 88,
@@ -5061,9 +5474,11 @@
           "manualPage": 183,
           "pdfPath": "/docs/plans/lecon-088-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 184
+          "manualPdfPage": 184,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 89,
@@ -5099,8 +5514,14 @@
           "manualPage": 184,
           "pdfPath": "/docs/plans/lecon-089-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 185
+          "manualPdfPage": 185,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -5137,8 +5558,14 @@
           "manualPage": 185,
           "pdfPath": "/docs/plans/lecon-090-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 186
+          "manualPdfPage": 186,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -5175,8 +5602,14 @@
           "manualPage": 186,
           "pdfPath": "/docs/plans/lecon-091-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 187
+          "manualPdfPage": 187,
+          "evaluationItems": [
+            "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -5220,7 +5653,8 @@
           "manualPage": 187,
           "pdfPath": "/docs/plans/lecon-092-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 188
+          "manualPdfPage": 188,
+          "evaluationItems": []
         },
         {
           "number": 92,
@@ -5243,9 +5677,11 @@
           "manualPage": 188,
           "pdfPath": "/docs/plans/lecon-092-02-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 189
+          "manualPdfPage": 189,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 93,
@@ -5281,8 +5717,14 @@
           "manualPage": 189,
           "pdfPath": "/docs/plans/lecon-093-01-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 190
+          "manualPdfPage": 190,
+          "evaluationItems": [
+            "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -5321,9 +5763,11 @@
           "manualPage": 190,
           "pdfPath": "/docs/plans/lecon-094-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 191
+          "manualPdfPage": 191,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 95,
@@ -5359,7 +5803,10 @@
           "manualPage": 191,
           "pdfPath": "/docs/plans/lecon-095-01-double-commande.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 192
+          "manualPdfPage": 192,
+          "evaluationItems": [
+            "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         },
         {
           "number": 95,
@@ -5382,8 +5829,14 @@
           "manualPage": 192,
           "pdfPath": "/docs/plans/lecon-095-02-solo.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 193
+          "manualPdfPage": 193,
+          "evaluationItems": [
+            "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
+          ]
         }
+      ],
+      "evaluationItems": [
+        "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement Donner"
       ]
     },
     {
@@ -5428,7 +5881,8 @@
           "manualPage": 193,
           "pdfPath": "/docs/plans/lecon-096-01-sol-preparatoire.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 194
+          "manualPdfPage": 194,
+          "evaluationItems": []
         },
         {
           "number": 96,
@@ -5454,9 +5908,11 @@
           "manualPage": 194,
           "pdfPath": "/docs/plans/lecon-096-02-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 195
+          "manualPdfPage": 195,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 97,
@@ -5498,9 +5954,11 @@
           "manualPage": 195,
           "pdfPath": "/docs/plans/lecon-097-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 196
+          "manualPdfPage": 196,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 98,
@@ -5538,9 +5996,11 @@
           "manualPage": 196,
           "pdfPath": "/docs/plans/lecon-098-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 197
+          "manualPdfPage": 197,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 99,
@@ -5578,9 +6038,11 @@
           "manualPage": 197,
           "pdfPath": "/docs/plans/lecon-099-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 198
+          "manualPdfPage": 198,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 100,
@@ -5620,9 +6082,11 @@
           "manualPage": 198,
           "pdfPath": "/docs/plans/lecon-100-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 199
+          "manualPdfPage": 199,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 101,
@@ -5662,9 +6126,11 @@
           "manualPage": 199,
           "pdfPath": "/docs/plans/lecon-101-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 200
+          "manualPdfPage": 200,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     },
     {
       "number": 102,
@@ -5704,12 +6170,16 @@
           "manualPage": 200,
           "pdfPath": "/docs/plans/lecon-102-01-dev.pdf",
           "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
-          "manualPdfPage": 201
+          "manualPdfPage": 201,
+          "evaluationItems": []
         }
-      ]
+      ],
+      "evaluationItems": []
     }
   ],
   "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
   "hoursVerifiedFromManual": true,
-  "hoursVerifiedComponentCount": 146
+  "hoursVerifiedComponentCount": 146,
+  "professionalPTRVersion": "16.0.0",
+  "evaluationComponentsParsed": 57
 }

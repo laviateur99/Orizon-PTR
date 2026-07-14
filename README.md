@@ -1,17 +1,31 @@
-# Orizon Aviation - Flight Director v15.9.6
+# Orizon Aviation - Flight Director v16.0.0 — PTR professionnel
 
-## Correctif navigation Administration
+## Évaluation détaillée
 
-- correction d’une boucle de mise à jour dans le panneau d’ordre;
-- les liens du menu bleu restent cliquables après l’enregistrement;
-- ordre des groupes et des ressources conservé;
-- boutons définis explicitement comme `type="button"`;
-- priorité d’affichage du menu latéral renforcée.
+Les éléments évalués proviennent automatiquement de la colonne de gauche des plans de leçon du manuel approuvé.
+
+- 57 composantes du manuel analysées;
+- note TC 1 à 4 pour chaque élément;
+- option Non vu;
+- commentaire par élément;
+- note finale fondée sur le critère applicable le plus faible;
+- moyenne calculée;
+- éléments faibles détectés;
+- éléments non vus conservés;
+- points forts;
+- points à améliorer;
+- travail à faire;
+- signatures instructeur et élève;
+- enregistrement direct dans le PTR.
+
+## PDF
+
+Le plan de leçon original reste disponible par un bouton dans l’évaluation.
 
 ## Installation
 
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.6-Correctif-Navigation-Administration
+cd ~/Downloads/Orizon-Flight-Director-v16.0.0-PTR-Professionnel
 ./install-foundation.sh
 ```
 
@@ -19,5 +33,6 @@ Puis :
 
 ```bash
 cd ~/Documents/Orizon-PTR
+git push
 npm run dev
 ```

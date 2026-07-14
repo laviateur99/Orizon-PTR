@@ -266,3 +266,62 @@ textarea{min-height:90px}.icon-button{border:0;background:#eef3f8;width:36px;hei
 
 /* v15.9.6 — Navigation administration */
 .sidebar{position:relative;z-index:1000;flex:0 0 260px}.sidebar nav,.sidebar nav a{position:relative;z-index:1001;pointer-events:auto}.main{position:relative;z-index:1;min-width:0}.resource-order-panel{position:relative;z-index:1}
+
+
+/* v16 — PTR professionnel */
+.professional-evaluation{margin-top:18px}
+.professional-evaluation-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.professional-evaluation-head p{color:var(--muted)}
+.evaluation-score-summary{
+  min-width:130px;
+  padding:12px 16px;
+  border-radius:16px;
+  background:#eaf4ff;
+  display:grid;
+  text-align:center
+}
+.evaluation-score-summary span,.evaluation-score-summary small{color:var(--muted);font-weight:800}
+.evaluation-score-summary strong{font-size:38px;color:#0b2f5b}
+.lesson-pdf-actions{margin:12px 0}
+.evaluation-items-table{display:grid;gap:6px;margin:16px 0}
+.evaluation-items-head,.evaluation-item-row{
+  display:grid;
+  grid-template-columns:minmax(260px,1.6fr) 62px 46px 46px 46px 46px minmax(200px,1fr);
+  gap:8px;
+  align-items:center
+}
+.evaluation-items-head{
+  padding:9px 10px;
+  border-radius:12px;
+  background:#dfeaf6;
+  font-size:12px;
+  font-weight:900
+}
+.evaluation-item-row{
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff
+}
+.evaluation-item-row strong{font-size:13px}
+.score-button{
+  height:36px;
+  border:1px solid #cbd9e8;
+  border-radius:10px;
+  background:#fff;
+  font-weight:900;
+  cursor:pointer
+}
+.score-button.active{background:#0b376d;color:#fff;border-color:#0b376d}
+.score-button:disabled{opacity:.35;cursor:not-allowed}
+.score-choice{display:flex;align-items:center;justify-content:center;gap:4px}
+.professional-comments{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.professional-comments textarea{min-height:100px}
+@media(max-width:1100px){
+  .evaluation-items-table{overflow-x:auto}
+  .evaluation-items-head,.evaluation-item-row{min-width:980px}
+}
+@media(max-width:800px){
+  .professional-evaluation-head{display:grid}
+  .professional-comments{grid-template-columns:1fr}
+}

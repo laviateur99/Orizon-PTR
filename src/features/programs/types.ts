@@ -20,6 +20,7 @@ export type ProgramLessonComponent = {
   pdfPath?: string;
   manualPdfPath?: string;
   manualPdfPage?: number;
+  evaluationItems?: string[];
 };
 
 export type ProgramLessonTemplate = {
@@ -31,6 +32,7 @@ export type ProgramLessonTemplate = {
   exercises: string[];
   successCriteria: string[];
   components: ProgramLessonComponent[];
+  evaluationItems?: string[];
 };
 
 export type TrainingProgram = {

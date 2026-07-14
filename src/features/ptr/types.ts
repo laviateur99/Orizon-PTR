@@ -68,3 +68,32 @@ export type ReservationOption = {
 };
 
 export type InstructorOption = { id: string; name: string };
+
+
+export type PTRItemEvaluation = {
+  id: string;
+  label: string;
+  score: TCScore | 0;
+  notSeen: boolean;
+  comment: string;
+};
+
+export type PTRProfessionalEvaluation = {
+  lessonId: string;
+  studentId: string;
+  reservationId: string;
+  instructorId: string;
+  instructorName: string;
+  date: string;
+  items: PTRItemEvaluation[];
+  finalScore: TCScore;
+  averageScore: number;
+  weakItems: string[];
+  unseenItems: string[];
+  strengths: string;
+  improvements: string;
+  homework: string;
+  instructorSignature: string;
+  studentSignature: string;
+  signedAt: string;
+};

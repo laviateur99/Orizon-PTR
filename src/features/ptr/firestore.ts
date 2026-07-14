@@ -132,3 +132,39 @@ export function subscribeInstructors(handlers: LiveHandlers<InstructorOption>): 
     return { id: item.id, name: name || item.id };
   })), handlers.error);
 }
+
+
+export async function saveProfessionalEvaluation(
+  lesson: PTRLesson,
+  evaluation: import("./types").PTRProfessionalEvaluation
+) {
+  const reference = await addDoc(
+    collection(db, "ptrEvaluations"),
+    {
+      ...evaluation,
+      createdAt: serverTimestamp()
+    }
+  );
+
+  await setDoc(
+    doc(db, "ptrLessons", lesson.id),
+    {
+      status:
+        evaluation.finalScore >= 3
+          ? "Réussi"
+          : evaluation.finalScore === 2
+            ? "À reprendre"
+            : "Échec",
+      linkedReservationId: evaluation.reservationId,
+      lastEvaluationId: reference.id,
+      lastFinalScore: evaluation.finalScore,
+      averageScore: evaluation.averageScore,
+      weakItems: evaluation.weakItems,
+      unseenItems: evaluation.unseenItems,
+      updatedAt: new Date().toISOString()
+    },
+    { merge: true }
+  );
+
+  return reference.id;
+}
