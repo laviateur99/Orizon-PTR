@@ -1,172 +1,20 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  type DocumentData,
-  type FirestoreError,
-  type Unsubscribe,
-} from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
-import type { Cancellation, SchedulerEvent, SchedulerResource } from "./types";
-
-export type LiveHandlers<T> = {
-  next: (items: T[]) => void;
-  error: (error: FirestoreError) => void;
-};
-
-function text(value: unknown, fallback = "") {
-  return typeof value === "string" ? value : fallback;
-}
-
-function optionalText(value: unknown) {
-  const result = text(value).trim();
-  return result || undefined;
-}
-
-function minutesFromTime(value: unknown, fallback: number) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value !== "string" || !/^\d{1,2}:\d{2}$/.test(value)) return fallback;
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function mapResource(id: string, data: DocumentData, kind: SchedulerResource["kind"]): SchedulerResource {
-  const name = text(data.name) || text(data.registration) || `${kind}-${id}`;
-  const detail = text(data.detail) || [text(data.type), text(data.classLevel), text(data.status)].filter(Boolean).join(" · ");
-  return { id, kind, name, detail };
-}
-
-export function subscribeResources(handlers: LiveHandlers<SchedulerResource>): Unsubscribe {
-  const values = new Map<string, SchedulerResource[]>();
-  const emit = () => handlers.next([
-    ...(values.get("aircraft") ?? []),
-    ...(values.get("instructors") ?? []),
-    ...(values.get("resources") ?? []),
-  ]);
-
-  const configs = [
-    { collectionName: "aircraft", kind: "aircraft" as const },
-    { collectionName: "instructors", kind: "instructor" as const },
-    { collectionName: "resources", kind: "room" as const },
-  ];
-
-  const unsubscribers = configs.map(({ collectionName, kind }) =>
-    onSnapshot(
-      collection(db, collectionName),
-      (snapshot) => {
-        values.set(collectionName, snapshot.docs.map((item) => mapResource(item.id, item.data(), kind)));
-        emit();
-      },
-      handlers.error,
-    ),
-  );
-
-  return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-}
-
-function mapEvent(id: string, data: DocumentData): SchedulerEvent {
-  return {
-    id,
-    date: text(data.date, new Date().toISOString().slice(0, 10)),
-    resourceId: text(data.resourceId) || text(data.aircraftId) || text(data.instructorId) || text(data.roomId),
-    aircraftId: optionalText(data.aircraftId),
-    instructorId: optionalText(data.instructorId),
-    roomId: optionalText(data.roomId),
-    studentId: optionalText(data.studentId),
-    studentName: optionalText(data.studentName) || optionalText(data.student),
-    type: text(data.type, "Double commande") as SchedulerEvent["type"],
-    startMinutes: minutesFromTime(data.startMinutes ?? data.startTime, 7 * 60),
-    endMinutes: minutesFromTime(data.endMinutes ?? data.endTime, 8 * 60),
-    title: text(data.title) || text(data.lesson) || text(data.type, "Réservation"),
-    notes: optionalText(data.notes),
-  };
-}
-
-export function subscribeReservations(handlers: LiveHandlers<SchedulerEvent>): Unsubscribe {
-  return onSnapshot(
-    collection(db, "reservations"),
-    (snapshot) => handlers.next(snapshot.docs.map((item) => mapEvent(item.id, item.data()))),
-    handlers.error,
-  );
-}
-
-export function subscribeCancellations(handlers: LiveHandlers<Cancellation>): Unsubscribe {
-  const cancellationsQuery = query(collection(db, "cancellations"), orderBy("cancelledAt", "desc"));
-  return onSnapshot(
-    cancellationsQuery,
-    (snapshot) => handlers.next(snapshot.docs.map((item) => {
-      const data = item.data();
-      return {
-        id: item.id,
-        eventId: text(data.eventId),
-        eventTitle: text(data.eventTitle) || text(data.title, "Réservation"),
-        reason: text(data.reason, "Autre"),
-        cancelledAt: text(data.cancelledAt),
-      };
-    })),
-    handlers.error,
-  );
-}
-
-function eventPayload(event: SchedulerEvent) {
-  return {
-    date: event.date,
-    resourceId: event.resourceId,
-    aircraftId: event.aircraftId ?? "",
-    instructorId: event.instructorId ?? "",
-    roomId: event.roomId ?? "",
-    studentId: event.studentId ?? "",
-    studentName: event.studentName ?? "",
-    type: event.type,
-    startMinutes: event.startMinutes,
-    endMinutes: event.endMinutes,
-    startTime: `${String(Math.floor(event.startMinutes / 60)).padStart(2, "0")}:${String(event.startMinutes % 60).padStart(2, "0")}`,
-    endTime: `${String(Math.floor(event.endMinutes / 60)).padStart(2, "0")}:${String(event.endMinutes % 60).padStart(2, "0")}`,
-    title: event.title,
-    lesson: event.title,
-    notes: event.notes ?? "",
-    status: "Planifié",
-    updatedAt: serverTimestamp(),
-  };
-}
-
-export async function saveReservation(event: SchedulerEvent, exists: boolean) {
-  const reference = doc(db, "reservations", event.id);
-  if (exists) {
-    await updateDoc(reference, eventPayload(event));
-  } else {
-    await setDoc(reference, { ...eventPayload(event), createdAt: serverTimestamp() });
-  }
-}
-
-export async function removeReservation(event: SchedulerEvent, reason: string) {
-  await addDoc(collection(db, "cancellations"), {
-    eventId: event.id,
-    eventTitle: event.title,
-    reason,
-    cancelledAt: new Date().toISOString(),
-    reservation: eventPayload(event),
-  });
-  await deleteDoc(doc(db, "reservations", event.id));
-}
-
-export type StudentOption = { id: string; name: string };
-
-export function subscribeStudents(handlers: LiveHandlers<StudentOption>): Unsubscribe {
-  return onSnapshot(
-    collection(db, "students"),
-    (snapshot) => handlers.next(snapshot.docs.map((item) => {
-      const data = item.data();
-      const name = text(data.name) || `${text(data.firstName)} ${text(data.lastName)}`.trim() || item.id;
-      return { id: item.id, name };
-    })),
-    handlers.error,
-  );
-}
+import type { Cancellation, FlightOperationUpdate, SchedulerEvent, SchedulerResource } from "./types";
+export type LiveHandlers<T>={next:(items:T[])=>void;error:(error:FirestoreError)=>void};
+const text=(v:unknown,f="")=>typeof v==="string"?v:f; const optional=(v:unknown)=>{const r=text(v).trim();return r||undefined};
+const num=(v:unknown)=>typeof v==="number"&&Number.isFinite(v)?v:undefined;
+function minutes(v:unknown,f:number){if(typeof v==="number"&&Number.isFinite(v))return v;if(typeof v!=="string"||!/^\d{1,2}:\d{2}$/.test(v))return f;const [h,m]=v.split(":").map(Number);return h*60+m;}
+function mapResource(id:string,d:DocumentData,kind:SchedulerResource["kind"]):SchedulerResource{const name=text(d.name)||text(d.registration)||`${kind}-${id}`;const detail=text(d.detail)||[text(d.typeLabel)||text(d.type),text(d.classLevel),text(d.status)].filter(Boolean).join(" · ");return {id,kind,name,detail,blocked:kind==="aircraft"&&(d.blockedForScheduling===true||["Maintenance","Hors service","SNAG"].includes(text(d.status)))};}
+export function subscribeResources(h:LiveHandlers<SchedulerResource>):Unsubscribe{const values=new Map<string,SchedulerResource[]>();const emit=()=>h.next([...(values.get("aircraft")??[]),...(values.get("instructors")??[]),...(values.get("resources")??[])]);const configs=[{name:"aircraft",kind:"aircraft" as const},{name:"instructors",kind:"instructor" as const},{name:"resources",kind:"room" as const}];const offs=configs.map(c=>onSnapshot(collection(db,c.name),s=>{values.set(c.name,s.docs.map(i=>mapResource(i.id,i.data(),c.kind)));emit();},h.error));return()=>offs.forEach(x=>x());}
+function mapEvent(id:string,d:DocumentData):SchedulerEvent{return {id,date:text(d.date,new Date().toISOString().slice(0,10)),resourceId:text(d.resourceId)||text(d.aircraftId)||text(d.instructorId)||text(d.roomId),aircraftId:optional(d.aircraftId),instructorId:optional(d.instructorId),roomId:optional(d.roomId),studentId:optional(d.studentId),studentName:optional(d.studentName)||optional(d.student),type:text(d.type,"Double commande") as SchedulerEvent["type"],startMinutes:minutes(d.startMinutes??d.startTime,420),endMinutes:minutes(d.endMinutes??d.endTime,480),title:text(d.title)||text(d.lesson)||text(d.type,"Réservation"),notes:optional(d.notes),source:"reservation",status:text(d.status,"Planifié") as SchedulerEvent["status"],checkedInAt:optional(d.checkedInAt),checkedInBy:optional(d.checkedInBy),checkedOutAt:optional(d.checkedOutAt),checkedOutBy:optional(d.checkedOutBy),hobbsStart:num(d.hobbsStart),hobbsEnd:num(d.hobbsEnd),takeoffTime:optional(d.takeoffTime),landingTime:optional(d.landingTime),airtimeMinutes:num(d.airtimeMinutes),overdueAlertMinutes:num(d.overdueAlertMinutes)};}
+export function subscribeReservations(h:LiveHandlers<SchedulerEvent>):Unsubscribe{return onSnapshot(collection(db,"reservations"),s=>h.next(s.docs.map(i=>mapEvent(i.id,i.data()))),h.error);}
+export function subscribeSnagBlocks(h:LiveHandlers<SchedulerEvent>):Unsubscribe{return onSnapshot(collection(db,"snags"),s=>h.next(s.docs.flatMap(i=>{const d=i.data();if(text(d.status)==="Fermé")return[];const start=text(d.reportedAt).slice(0,10)||new Date().toISOString().slice(0,10);return[{id:`snag-${i.id}`,date:start,rangeEndDate:text(d.estimatedReturnDate)||start,resourceId:text(d.aircraftId),aircraftId:text(d.aircraftId),type:"Maintenance" as const,startMinutes:420,endMinutes:1260,title:`SNAG — ${text(d.defectTitle,"Défectuosité")}`,notes:text(d.description),source:"snag" as const,snagId:i.id,status:"Planifié" as const}];})),h.error);}
+export function subscribeCancellations(h:LiveHandlers<Cancellation>):Unsubscribe{const q=query(collection(db,"cancellations"),orderBy("cancelledAt","desc"));return onSnapshot(q,s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,eventId:text(d.eventId),eventTitle:text(d.eventTitle)||text(d.title,"Réservation"),reason:text(d.reason,"Autre"),cancelledAt:text(d.cancelledAt)}})),h.error);}
+function time(v:number){return`${String(Math.floor(v/60)).padStart(2,"0")}:${String(v%60).padStart(2,"0")}`}
+function payload(e:SchedulerEvent){return{date:e.date,resourceId:e.resourceId,aircraftId:e.aircraftId??"",instructorId:e.instructorId??"",roomId:e.roomId??"",studentId:e.studentId??"",studentName:e.studentName??"",type:e.type,startMinutes:e.startMinutes,endMinutes:e.endMinutes,startTime:time(e.startMinutes),endTime:time(e.endMinutes),title:e.title,lesson:e.title,notes:e.notes??"",status:e.status??"Planifié",checkedInAt:e.checkedInAt??"",checkedInBy:e.checkedInBy??"",checkedOutAt:e.checkedOutAt??"",checkedOutBy:e.checkedOutBy??"",hobbsStart:e.hobbsStart??null,hobbsEnd:e.hobbsEnd??null,takeoffTime:e.takeoffTime??"",landingTime:e.landingTime??"",airtimeMinutes:e.airtimeMinutes??null,overdueAlertMinutes:e.overdueAlertMinutes??null,updatedAt:serverTimestamp()};}
+export async function saveReservation(e:SchedulerEvent,exists:boolean){const r=doc(db,"reservations",e.id);if(exists)await updateDoc(r,payload(e));else await setDoc(r,{...payload(e),createdAt:serverTimestamp()});}
+export async function updateFlightOperation(id:string,patch:FlightOperationUpdate){await updateDoc(doc(db,"reservations",id),{...patch,updatedAt:serverTimestamp()});}
+export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),{eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)});await deleteDoc(doc(db,"reservations",e.id));}
+export type StudentOption={id:string;name:string};
+export function subscribeStudents(h:LiveHandlers<StudentOption>):Unsubscribe{return onSnapshot(collection(db,"students"),s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,name:text(d.name)||`${text(d.firstName)} ${text(d.lastName)}`.trim()||i.id}})),h.error);}

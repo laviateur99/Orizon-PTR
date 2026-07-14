@@ -1,0 +1,2 @@
+export type EmergencyStatus="Ouverte"|"Surveillance"|"Services avisés"|"Résolue";
+export type EmergencyRecord={id:string;aircraftId:string;aircraftRegistration:string;reservationId?:string;openedAt:string;openedBy:string;status:EmergencyStatus;contactEstablished:string;nature:string;personsOnBoard:string;fuelEndurance:string;lastKnownPosition:string;lastContactTime:string;intentions:string;transponderCode:string;eltStatus:string;weather:string;notes:string;actions:string[];timeline:Array<{at:string;action:string;by:string}>};

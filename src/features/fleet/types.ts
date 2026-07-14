@@ -15,6 +15,7 @@ export type Aircraft = {
   maintenanceStart?: string;
   maintenanceEnd?: string;
   statusReason?: string;
+  blockedForScheduling?: boolean;
 };
 
 export type Snag = {
@@ -23,7 +24,6 @@ export type Snag = {
   aircraftRegistration: string;
   reportedAt: string;
   reportedBy: string;
-  reportedByUserId?: string;
   reportedByRole: SnagReporterRole;
   category: string;
   severity: SnagSeverity;
@@ -35,12 +35,4 @@ export type Snag = {
   estimatedReturnDate?: string;
   maintenanceNotes?: string;
   notifyRoles: NotificationRole[];
-};
-
-export type AppUserOption = {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-  active: boolean;
 };
