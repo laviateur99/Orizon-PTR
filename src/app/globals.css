@@ -263,3 +263,6 @@ textarea{min-height:90px}.icon-button{border:0;background:#eef3f8;width:36px;hei
 .resource-inside-group{display:grid;gap:7px}
 .ptr-lesson-tracking{display:grid;gap:7px;margin-top:14px;padding:12px;border-radius:14px;background:#f3f8ff;border:1px solid #cfe1f5}
 .ptr-lesson-tracking span{color:var(--muted)}
+
+/* v15.9.6 — Navigation administration */
+.sidebar{position:relative;z-index:1000;flex:0 0 260px}.sidebar nav,.sidebar nav a{position:relative;z-index:1001;pointer-events:auto}.main{position:relative;z-index:1;min-width:0}.resource-order-panel{position:relative;z-index:1}

@@ -18,6 +18,18 @@ const DEFAULT_GROUPS = [
   "Locaux"
 ];
 
+function sameList(a: string[], b: string[]) {
+  return a.length === b.length && a.every((item, index) => item === b[index]);
+}
+
+function sameOrder(
+  a: Record<string, string[]>,
+  b: Record<string, string[]>
+) {
+  const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)]));
+  return keys.every(key => sameList(a[key] || [], b[key] || []));
+}
+
 export function ResourceOrderPanel() {
   const [resources, setResources] = useState<SchedulerResource[]>([]);
   const [groups, setGroups] = useState<string[]>(DEFAULT_GROUPS);
@@ -46,38 +58,49 @@ export function ResourceOrderPanel() {
     };
   }, []);
 
-  const availableGroups = useMemo(() => {
-    const discovered = Array.from(
-      new Set(resources.map(resourceGroupKey))
-    );
-    return Array.from(
-      new Set([...groups, ...DEFAULT_GROUPS, ...discovered])
-    ).filter(group =>
-      discovered.includes(group) ||
-      ["Simulateurs", "Instructeurs", "Locaux"].includes(group)
-    );
-  }, [groups, resources]);
+  const discoveredGroups = useMemo(
+    () => Array.from(new Set(resources.map(resourceGroupKey))),
+    [resources]
+  );
 
   useEffect(() => {
-    setGroups(current => [
-      ...current.filter(group => availableGroups.includes(group)),
-      ...availableGroups.filter(group => !current.includes(group))
-    ]);
+    setGroups(current => {
+      const allowed = Array.from(
+        new Set([
+          ...DEFAULT_GROUPS,
+          ...current,
+          ...discoveredGroups
+        ])
+      ).filter(group =>
+        discoveredGroups.includes(group) ||
+        ["Simulateurs", "Instructeurs", "Locaux"].includes(group)
+      );
+
+      const next = [
+        ...current.filter(group => allowed.includes(group)),
+        ...allowed.filter(group => !current.includes(group))
+      ];
+
+      return sameList(current, next) ? current : next;
+    });
 
     setResourceOrder(current => {
-      const next = { ...current };
-      availableGroups.forEach(group => {
+      const next: Record<string, string[]> = { ...current };
+
+      discoveredGroups.forEach(group => {
         const ids = resources
           .filter(item => resourceGroupKey(item) === group)
           .map(item => item.id);
+        const previous = current[group] || [];
         next[group] = [
-          ...(next[group] || []).filter(id => ids.includes(id)),
-          ...ids.filter(id => !(next[group] || []).includes(id))
+          ...previous.filter(id => ids.includes(id)),
+          ...ids.filter(id => !previous.includes(id))
         ];
       });
-      return next;
+
+      return sameOrder(current, next) ? current : next;
     });
-  }, [availableGroups, resources]);
+  }, [discoveredGroups, resources]);
 
   function moveGroup(index: number, direction: -1 | 1) {
     const target = index + direction;
@@ -87,34 +110,29 @@ export function ResourceOrderPanel() {
     setGroups(copy);
   }
 
-  function moveResource(
-    group: string,
-    index: number,
-    direction: -1 | 1
-  ) {
+  function moveResource(group: string, index: number, direction: -1 | 1) {
     const items = [...(resourceOrder[group] || [])];
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
     [items[index], items[target]] = [items[target], items[index]];
-    setResourceOrder(current => ({
-      ...current,
-      [group]: items
-    }));
+    setResourceOrder(current => ({ ...current, [group]: items }));
   }
 
   async function save() {
-    await saveResourceOrderSettings({
-      groups,
-      resources: resourceOrder
-    });
-    setMessage("Ordre des groupes et des ressources enregistré.");
+    try {
+      setError("");
+      await saveResourceOrderSettings({ groups, resources: resourceOrder });
+      setMessage("Ordre des groupes et des ressources enregistré.");
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Erreur d’enregistrement");
+    }
   }
 
   return (
     <section className="card resource-order-panel">
       <h2>Ordre de l’horaire</h2>
       <p className="muted">
-        Modifie l’ordre des groupes, puis l’ordre des ressources à l’intérieur de chaque groupe.
+        Modifie l’ordre des groupes, puis celui des ressources dans chaque groupe.
       </p>
 
       {error && <div className="notice error">{error}</div>}
@@ -122,8 +140,7 @@ export function ResourceOrderPanel() {
 
       <div className="resource-groups-admin">
         {groups.map((group, groupIndex) => {
-          const ids = resourceOrder[group] || [];
-          const groupResources = ids
+          const groupResources = (resourceOrder[group] || [])
             .map(id => resources.find(item => item.id === id))
             .filter((item): item is SchedulerResource => Boolean(item));
 
@@ -135,52 +152,22 @@ export function ResourceOrderPanel() {
                   <small>{groupResources.length} ressource(s)</small>
                 </div>
                 <div>
-                  <button
-                    className="button secondary small"
-                    disabled={groupIndex === 0}
-                    onClick={() => moveGroup(groupIndex, -1)}
-                  >
-                    Groupe ↑
-                  </button>
-                  <button
-                    className="button secondary small"
-                    disabled={groupIndex === groups.length - 1}
-                    onClick={() => moveGroup(groupIndex, 1)}
-                  >
-                    Groupe ↓
-                  </button>
+                  <button type="button" className="button secondary small" disabled={groupIndex === 0} onClick={() => moveGroup(groupIndex, -1)}>Groupe ↑</button>
+                  <button type="button" className="button secondary small" disabled={groupIndex === groups.length - 1} onClick={() => moveGroup(groupIndex, 1)}>Groupe ↓</button>
                 </div>
               </header>
 
               <div className="resource-inside-group">
                 {groupResources.map((resource, index) => (
                   <div className="resource-order-row" key={resource.id}>
-                    <span className="resource-order-number">
-                      {index + 1}
-                    </span>
+                    <span className="resource-order-number">{index + 1}</span>
                     <div>
                       <strong>{resource.name}</strong>
                       <small>{resource.detail}</small>
                     </div>
                     <div>
-                      <button
-                        className="button secondary small"
-                        disabled={index === 0}
-                        onClick={() =>
-                          moveResource(group, index, -1)
-                        }
-                      >
-                        ↑
-                      </button>
-                      <button
-                        className="button secondary small"
-                        disabled={index === groupResources.length - 1}
-                        onClick={() =>
-                          moveResource(group, index, 1)
-                        }
-                      >
-                        ↓
-                      </button>
+                      <button type="button" className="button secondary small" disabled={index === 0} onClick={() => moveResource(group, index, -1)}>↑</button>
+                      <button type="button" className="button secondary small" disabled={index === groupResources.length - 1} onClick={() => moveResource(group, index, 1)}>↓</button>
                     </div>
                   </div>
                 ))}
@@ -190,7 +177,7 @@ export function ResourceOrderPanel() {
         })}
       </div>
 
-      <button className="button" onClick={save}>
+      <button type="button" className="button" onClick={save}>
         Enregistrer l’ordre complet
       </button>
     </section>

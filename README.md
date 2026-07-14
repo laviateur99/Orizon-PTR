@@ -1,38 +1,23 @@
-# Orizon Aviation - Flight Director v15.9.5
+# Orizon Aviation - Flight Director v15.9.6
 
-## Horaire et plans de leçon
-- la leçon demeure attachée à la réservation;
-- le check-in et le check-out ne contiennent plus l’évaluation TC;
-- le check-out conserve uniquement le lien entre le vol et la leçon;
-- l’évaluation se fait exclusivement dans le PTR de l’élève.
+## Correctif navigation Administration
 
-## PTR
-Dans le PTR de l’élève, l’instructeur voit :
-- la leçon sélectionnée;
-- le vol lié;
-- le PDF original du plan;
-- la grille d’évaluation Transport Canada;
-- les commentaires, signatures et le statut.
-
-L’enregistrement de l’évaluation met directement à jour la leçon dans le PTR.
-
-## Ordre de l’horaire
-Administration → Horaire permet maintenant de modifier :
-- l’ordre des groupes;
-- l’ordre de chaque avion dans son groupe;
-- l’ordre des simulateurs;
-- l’ordre des instructeurs;
-- l’ordre des locaux.
+- correction d’une boucle de mise à jour dans le panneau d’ordre;
+- les liens du menu bleu restent cliquables après l’enregistrement;
+- ordre des groupes et des ressources conservé;
+- boutons définis explicitement comme `type="button"`;
+- priorité d’affichage du menu latéral renforcée.
 
 ## Installation
+
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.5-PTR-Reservation-Ordre-Ressources
+cd ~/Downloads/Orizon-Flight-Director-v15.9.6-Correctif-Navigation-Administration
 ./install-foundation.sh
 ```
 
 Puis :
+
 ```bash
 cd ~/Documents/Orizon-PTR
-git push
 npm run dev
 ```
