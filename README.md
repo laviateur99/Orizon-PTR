@@ -1,20 +1,31 @@
-# Orizon Aviation - Flight Director v15.8.0
+# Orizon Aviation - Flight Director v15.8.1
 
-- Nom de programme modifiable.
-- Manuel original PDF intégré.
-- 146 plans/composantes PDF originaux.
-- Heures Sol, DEV, DC et Solo corrigées depuis le manuel.
-- Avions regroupés par type.
-- Simulateurs DCX et 737MAX.
-- Fenêtre de gestion des vols affectés par un SNAG.
-- Déplacement, avis, annulation ou décision ultérieure.
+## Correctifs Horaire
+- un clic simple sur une réservation ouvre de nouveau la fenêtre de modification;
+- les boutons Check-in et Check-out fonctionnent de nouveau;
+- les boutons IN/OUT ne déclenchent plus le déplacement du bloc;
+- petite poignée dédiée pour déplacer une réservation;
+- poignées gauche et droite conservées pour modifier les heures;
+- interaction plus claire : clic pour modifier, poignée pour déplacer.
+
+## Programmes étudiants
+La fiche étudiante propose maintenant :
+- Modulaire;
+- ATP(A) intégré;
+- CPL IR/ME intégré;
+- CPL intégré.
+
+Le champ Type est calculé automatiquement :
+- Modulaire → Modulaire;
+- les trois autres programmes → Intégré.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.8.0-Programmes-Simulateurs-Impact-SNAG
+cd ~/Downloads/Orizon-Flight-Director-v15.8.1-Correctif-Horaire-Programmes-Etudiants
 ./install-foundation.sh
 ```
-Puis:
+
+Puis :
 ```bash
 cd ~/Documents/Orizon-PTR
 git push

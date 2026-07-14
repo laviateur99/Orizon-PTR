@@ -6,7 +6,7 @@ import {
 import { db } from "@/services/firebase/client";
 import type {
   InstructorOption, Student, StudentDocument, StudentHistoryItem,
-  StudentLesson, StudentNote, StudentReservation,
+  StudentLesson, StudentNote, StudentReservation, StudentProgram,
 } from "./types";
 
 export type LiveHandlers<T> = { next: (items: T[]) => void; error: (error: FirestoreError) => void };
@@ -21,7 +21,13 @@ function mapStudent(id: string, data: DocumentData): Student {
     lastName: text(data.lastName) || splitName.slice(1).join(" "),
     email: text(data.email), phone: text(data.phone), address: text(data.address),
     emergencyContact: text(data.emergencyContact), emergencyPhone: text(data.emergencyPhone),
-    program: text(data.program) || text(data.path) || "PPL",
+    program: (() => {
+      const value = text(data.program) || text(data.path);
+      if (value === "Modulaire") return "Modulaire";
+      if (value === "CPL IR/ME intégré") return "CPL IR/ME intégré";
+      if (value === "CPL intégré") return "CPL intégré";
+      return "ATP(A) intégré";
+    })() as StudentProgram,
     programType: (text(data.programType) || text(data.pathType) || "Intégré") as Student["programType"],
     language: (text(data.language) || "Français") as Student["language"],
     status: (text(data.status) || "Actif") as Student["status"],

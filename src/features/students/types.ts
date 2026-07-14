@@ -1,4 +1,10 @@
 export type StudentStatus = "Actif" | "En pause" | "Diplômé" | "Retiré";
+export type StudentProgram =
+  | "Modulaire"
+  | "ATP(A) intégré"
+  | "CPL IR/ME intégré"
+  | "CPL intégré";
+
 export type ProgramType = "Intégré" | "Modulaire";
 export type StudentDocumentType =
   | "Certificat médical"
@@ -20,7 +26,7 @@ export type Student = {
   address: string;
   emergencyContact: string;
   emergencyPhone: string;
-  program: string;
+  program: StudentProgram;
   programType: ProgramType;
   language: "Français" | "Anglais";
   status: StudentStatus;
