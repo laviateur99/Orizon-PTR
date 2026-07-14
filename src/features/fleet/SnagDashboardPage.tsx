@@ -52,7 +52,7 @@ export function SnagDashboardPage() {
   const [deleteTarget, setDeleteTarget] = useState<Snag | null>(null);
   const [adminName, setAdminName] = useState("");
   const [deleteReason, setDeleteReason] = useState("");
-  const [history, setHistory] = useState<Array<{id:string;aircraftRegistration:string;defectTitle:string;deletedBy:string;reason:string;deletedAt:string}>>([]);
+  const [history, setHistory] = useState<Array<{id:string;snagNumber:string;aircraftRegistration:string;defectTitle:string;action:string;actor:string;details:string;eventAt:string;deletedBy:string;reason:string;deletedAt:string}>>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -139,7 +139,7 @@ export function SnagDashboardPage() {
         </div>
         {filtered.map(item => (
           <article className="snag-table-row" key={item.id}>
-            <div><strong>{item.aircraftRegistration} — {item.defectTitle}</strong><p>{item.description}</p><small>{item.category} · {item.reportedAt.slice(0, 16).replace("T", " ")}</small></div>
+            <div><strong>{item.snagNumber ? `${item.snagNumber} · ` : ""}{item.aircraftRegistration} — {item.defectTitle}</strong><p>{item.description}</p><small>{item.category} · {item.reportedAt.slice(0, 16).replace("T", " ")}</small></div>
             <span className={`snag-severity ${item.severity.includes("Critique") ? "critical" : item.severity.includes("prochain") ? "before-flight" : "normal"}`}>{item.severity}</span>
             <div><strong>{item.reportedBy}</strong><small>{item.reportedByRole}</small></div>
             <select value={item.status} onChange={event => updateSnag(item.id, { status: event.target.value as SnagStatus })}>{STATUSES.map(value => <option key={value}>{value}</option>)}</select>
@@ -151,12 +151,15 @@ export function SnagDashboardPage() {
       </section>
 
       <section className="card snag-history-card">
-        <h2>Historique des suppressions administratives</h2>
-        {history.slice(0,20).map(item=><div className="snag-history-row" key={item.id}>
-          <div><strong>{item.aircraftRegistration} — {item.defectTitle||"SNAG"}</strong><small>{item.deletedAt.slice(0,16).replace("T"," ")}</small></div>
-          <div><strong>{item.deletedBy}</strong><small>{item.reason}</small></div>
+        <h2>Historique complet des SNAG</h2>
+        {history.slice(0,40).map(item=><div className="snag-history-row" key={item.id}>
+          <div>
+            <strong>{item.snagNumber ? `${item.snagNumber} · ` : ""}{item.aircraftRegistration} — {item.defectTitle||"SNAG"}</strong>
+            <small>{item.eventAt ? item.eventAt.slice(0,16).replace("T"," ") : "—"} · {item.action}</small>
+          </div>
+          <div><strong>{item.actor||"Système"}</strong><small>{item.details||"—"}</small></div>
         </div>)}
-        {!history.length&&<p>Aucune suppression administrative.</p>}
+        {!history.length&&<p>Aucune action enregistrée.</p>}
       </section>
 
       {deleteTarget&&<div className="modal-backdrop"><section className="modal compact">

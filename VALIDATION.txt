@@ -4,14 +4,14 @@ build: OK
 
 TYPECHECK OUTPUT
 
-> orizon-flight-director-next@15.7.3 typecheck
+> orizon-flight-director-next@15.7.4 typecheck
 > tsc --noEmit
 
 
 
 BUILD OUTPUT
 
-> orizon-flight-director-next@15.7.3 build
+> orizon-flight-director-next@15.7.4 build
 > next build
 
 [33m[1m⚠[22m[39m No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
@@ -39,9 +39,9 @@ You can learn more, including how to opt-out if you'd not like to participate in
 ├ ○ /_not-found                          873 B          [37m[1m88.1 kB[22m[39m
 ├ ○ /admin/schedule                      3.35 kB         [37m[1m180 kB[22m[39m
 ├ ○ /emergency                           4.63 kB         [37m[1m182 kB[22m[39m
-├ ○ /fleet                               4.49 kB         [37m[1m182 kB[22m[39m
+├ ○ /fleet                               5.08 kB         [37m[1m182 kB[22m[39m
 ├ ○ /instructors                         2.35 kB         [37m[1m179 kB[22m[39m
-├ ○ /maintenance/snags                   3.92 kB         [37m[1m181 kB[22m[39m
+├ ○ /maintenance/snags                   4.57 kB         [37m[1m182 kB[22m[39m
 ├ ○ /programs                            1.07 kB         [37m[1m115 kB[22m[39m
 ├ ○ /ptr                                 2.05 kB         [37m[1m179 kB[22m[39m
 ├ ƒ /ptr/[studentId]                     6.83 kB         [37m[1m210 kB[22m[39m

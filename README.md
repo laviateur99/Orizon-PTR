@@ -1,20 +1,22 @@
-# Orizon Aviation - Flight Director v15.7.3
+# Orizon Aviation - Flight Director v15.7.4
 
-## Correctifs et ajouts
-- Module Instructeurs fonctionnel relié à Firestore.
-- Tableau de bord en temps réel.
-- Suppression administrative d’un SNAG.
-- Historique complet des suppressions de SNAG.
-- Suppression des notifications liées au SNAG.
-- Remise en disponibilité de l’avion lorsqu’aucun autre SNAG ouvert ne subsiste.
-- Déplacement des réservations à la souris avec Pointer Events.
-- Redimensionnement fluide par les poignées gauche et droite.
-- Déplacement entre les lignes de ressources.
-- Validation des conflits avant l’enregistrement.
+## Correctif SNAG
+- nettoyage récursif de toutes les valeurs `undefined`;
+- correction définitive de l’erreur `snagSnapshot.tach`;
+- nettoyage des tableaux et objets imbriqués;
+- conservation des objets spéciaux Firebase;
+- numéro automatique de SNAG;
+- historique lors de la création;
+- historique lors d’un changement de statut;
+- historique lors de la fermeture;
+- archivage administratif complet avant suppression;
+- suppression des notifications liées;
+- remise en disponibilité de l’avion lorsqu’aucun autre SNAG ouvert ne subsiste;
+- affichage de l’historique complet dans le tableau des SNAG.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.7.3-Correctifs-Modules
+cd ~/Downloads/Orizon-Flight-Director-v15.7.4-Correctif-SNAG-Historique
 ./install-foundation.sh
 ```
 

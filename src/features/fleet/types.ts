@@ -20,6 +20,7 @@ export type Aircraft = {
 
 export type Snag = {
   id: string;
+  snagNumber?: string;
   aircraftId: string;
   aircraftRegistration: string;
   reportedAt: string;
