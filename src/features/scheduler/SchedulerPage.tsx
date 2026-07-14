@@ -29,7 +29,50 @@ function openOps(e:SchedulerEvent,mode:"checkin"|"checkout"){
     }
   }
   setOps({event:e,mode,dispatch:"",hobbsStart:e.hobbsStart?.toString()||"",hobbsEnd:e.hobbsEnd?.toString()||"",takeoffTime:e.takeoffTime||"",landingTime:e.landingTime||"",overdueAlertMinutes:e.overdueAlertMinutes?.toString()||""});}
-async function saveOps(){if(!ops||!ops.dispatch.trim())return setMessage("Le nom du dispatch est obligatoire.");if(ops.mode==="checkin"){await updateFlightOperation(ops.event.id,{status:"Check-in",checkedInAt:new Date().toISOString(),checkedInBy:ops.dispatch,hobbsStart:ops.hobbsStart?Number(ops.hobbsStart):undefined,overdueAlertMinutes:ops.overdueAlertMinutes?Number(ops.overdueAlertMinutes):undefined});}else{if(!ops.hobbsEnd||!ops.takeoffTime||!ops.landingTime)return setMessage("Hobbs fin, décollage et atterrissage sont obligatoires au check-out.");await updateFlightOperation(ops.event.id,{status:"Complété",checkedOutAt:new Date().toISOString(),checkedOutBy:ops.dispatch,hobbsStart:ops.hobbsStart?Number(ops.hobbsStart):undefined,hobbsEnd:Number(ops.hobbsEnd),takeoffTime:ops.takeoffTime,landingTime:ops.landingTime,airtimeMinutes:airtime(ops.takeoffTime,ops.landingTime)});await markLinkedPTRLessonAfterCheckout(ops.event);}setOps(null);setMessage(`${ops.mode==="checkin"?"Check-in":"Check-out"} enregistré.`);}
+async function saveOps(){
+  if(!ops||!ops.dispatch.trim()){
+    setMessage("Le nom du dispatch est obligatoire.");
+    return;
+  }
+
+  if(ops.mode==="checkin"){
+    if(!ops.hobbsStart){
+      setMessage("Le Hobbs de départ est obligatoire au check-in.");
+      return;
+    }
+
+    await updateFlightOperation(ops.event.id,{
+      status:"Check-in",
+      checkedInAt:new Date().toISOString(),
+      checkedInBy:ops.dispatch.trim(),
+      hobbsStart:Number(ops.hobbsStart),
+      ...(ops.overdueAlertMinutes
+        ? {overdueAlertMinutes:Number(ops.overdueAlertMinutes)}
+        : {})
+    });
+  }else{
+    if(!ops.hobbsEnd||!ops.takeoffTime||!ops.landingTime){
+      setMessage("Hobbs fin, décollage et atterrissage sont obligatoires au check-out.");
+      return;
+    }
+
+    await updateFlightOperation(ops.event.id,{
+      status:"Complété",
+      checkedOutAt:new Date().toISOString(),
+      checkedOutBy:ops.dispatch.trim(),
+      hobbsEnd:Number(ops.hobbsEnd),
+      takeoffTime:ops.takeoffTime,
+      landingTime:ops.landingTime,
+      airtimeMinutes:airtime(ops.takeoffTime,ops.landingTime)
+    });
+
+    await markLinkedPTRLessonAfterCheckout(ops.event);
+  }
+
+  const completedMode=ops.mode;
+  setOps(null);
+  setMessage(`${completedMode==="checkin"?"Check-in":"Check-out"} enregistré.`);
+}
 
 function beginPointerDrag(event:React.PointerEvent, item:SchedulerEvent, mode:"move"|"start"|"end"){
   if(item.source==="snag")return;

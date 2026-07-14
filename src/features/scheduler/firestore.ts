@@ -5,6 +5,28 @@ import { DEFAULT_SCHEDULER_SETTINGS, type SchedulerSettings } from "./settings";
 export type LiveHandlers<T>={next:(items:T[])=>void;error:(error:FirestoreError)=>void};
 const text=(v:unknown,f="")=>typeof v==="string"?v:f; const optional=(v:unknown)=>{const r=text(v).trim();return r||undefined};
 const num=(v:unknown)=>typeof v==="number"&&Number.isFinite(v)?v:undefined;
+
+function cleanFirestoreData<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter(item => item !== undefined)
+      .map(item => cleanFirestoreData(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype === Object.prototype || prototype === null) {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .filter(([, item]) => item !== undefined)
+          .map(([key, item]) => [key, cleanFirestoreData(item)])
+      ) as T;
+    }
+  }
+
+  return value;
+}
+
 function minutes(v:unknown,f:number){if(typeof v==="number"&&Number.isFinite(v))return v;if(typeof v!=="string"||!/^\d{1,2}:\d{2}$/.test(v))return f;const [h,m]=v.split(":").map(Number);return h*60+m;}
 function mapResource(id:string,d:DocumentData,kind:SchedulerResource["kind"]):SchedulerResource{const effective:SchedulerResource["kind"]=kind==="room"&&text(d.resourceKind)==="simulator"?"simulator":kind;const name=text(d.name)||text(d.registration)||`${effective}-${id}`;const typeLabel=text(d.typeLabel)||text(d.type);const detail=text(d.detail)||[typeLabel,text(d.classLevel),text(d.status)].filter(Boolean).join(" · ");const groupLabel=effective==="aircraft"?(typeLabel||"Autres avions"):effective==="simulator"?"Simulateurs":effective==="instructor"?"Instructeurs":"Locaux";return{id,kind:effective,name,detail,groupLabel,order:typeof d.scheduleOrder==="number"?d.scheduleOrder:9999,blocked:effective==="aircraft"&&(d.blockedForScheduling===true||["Maintenance","Hors service","SNAG"].includes(text(d.status)))}}
 export function subscribeResources(h:LiveHandlers<SchedulerResource>):Unsubscribe{const values=new Map<string,SchedulerResource[]>();const emit=()=>h.next([...(values.get("aircraft")??[]),...(values.get("instructors")??[]),...(values.get("resources")??[])]);const configs=[{name:"aircraft",kind:"aircraft" as const},{name:"instructors",kind:"instructor" as const},{name:"resources",kind:"room" as const}];const offs=configs.map(c=>onSnapshot(collection(db,c.name),s=>{values.set(c.name,s.docs.map(i=>mapResource(i.id,i.data(),c.kind)));emit();},h.error));return()=>offs.forEach(x=>x());}
@@ -63,9 +85,16 @@ lessonTitle:e.lessonTitle??"",
 lessonPdfPath:e.lessonPdfPath??"",
 lessonComponentId:e.lessonComponentId??"",
 updatedAt:serverTimestamp()};}
-export async function saveReservation(e:SchedulerEvent,exists:boolean){const r=doc(db,"reservations",e.id);if(exists)await updateDoc(r,payload(e));else await setDoc(r,{...payload(e),createdAt:serverTimestamp()});}
-export async function updateFlightOperation(id:string,patch:FlightOperationUpdate){
-  await updateDoc(doc(db,"reservations",id),{...patch,updatedAt:serverTimestamp()});
+export async function saveReservation(e:SchedulerEvent,exists:boolean){const r=doc(db,"reservations",e.id);if(exists)await updateDoc(r,cleanFirestoreData(payload(e)));else await setDoc(r,cleanFirestoreData({...payload(e),createdAt:serverTimestamp()}));}
+export async function updateFlightOperation(
+  id: string,
+  patch: FlightOperationUpdate
+) {
+  const payload = cleanFirestoreData({
+    ...patch,
+    updatedAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, "reservations", id), payload);
 }
 
 export async function markLinkedPTRLessonAfterCheckout(event: SchedulerEvent) {
@@ -86,7 +115,7 @@ export async function markLinkedPTRLessonAfterCheckout(event: SchedulerEvent) {
     { merge: true }
   );
 }
-export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),{eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)});await deleteDoc(doc(db,"reservations",e.id));}
+export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),cleanFirestoreData({eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)}));await deleteDoc(doc(db,"reservations",e.id));}
 export type StudentOption={id:string;name:string};
 export function subscribeStudents(h:LiveHandlers<StudentOption>):Unsubscribe{return onSnapshot(collection(db,"students"),s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,name:text(d.name)||`${text(d.firstName)} ${text(d.lastName)}`.trim()||i.id}})),h.error);}
 

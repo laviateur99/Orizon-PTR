@@ -1,36 +1,34 @@
-# Orizon Aviation - Flight Director v15.9.2
+# Orizon Aviation - Flight Director v15.9.3
 
-## PTR et check-out
-- le check-out met la leçon liée au statut **En cours**;
-- le dossier étudiant lit maintenant la note `lastFinalScore`;
-- lien vers le PDF original dans la progression PTR;
-- lien direct vers la bonne leçon dans le PTR;
-- l’évaluation TC demeure requise pour passer la leçon à Réussi ou À reprendre.
+## Correctif Check-in / Check-out
 
-## SNAG
-- check-in impossible sur un avion bloqué par un SNAG ou une maintenance;
-- l’heure exacte du début du SNAG apparaît dans l’horaire;
-- le bandeau SNAG est généré pour chaque journée de la période;
-- les vols demeurent visibles sous le bandeau;
-- options : changement d’avion, avis, annulation, report ou attente;
-- statut des SNAG corrigé avec mise à jour de l’avion;
-- fermeture du dernier SNAG remet l’avion disponible.
+Correction de l’erreur Firestore :
 
-## Ordre de l’horaire
-Dans Administration → Horaire :
-- réordonner les avions;
-- réordonner les simulateurs;
-- réordonner les instructeurs;
-- réordonner les locaux;
-- ordre sauvegardé dans Firestore.
+```text
+Unsupported field value: undefined
+found in field hobbsStart
+```
+
+### Changements
+
+- aucun champ `undefined` n’est envoyé à Firestore;
+- nettoyage récursif des données;
+- le check-out n’envoie plus `hobbsStart`;
+- le check-in n’envoie plus de délai d’alerte vide;
+- Hobbs départ obligatoire au check-in;
+- Hobbs fin, décollage et atterrissage obligatoires au check-out;
+- mise à jour du PTR après le check-out conservée;
+- protection ajoutée aux réservations et annulations.
 
 ## Installation
+
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.2-PTR-SNAG-Ordre-Horaire
+cd ~/Downloads/Orizon-Flight-Director-v15.9.3-Correctif-Checkin-Checkout
 ./install-foundation.sh
 ```
 
 Puis :
+
 ```bash
 cd ~/Documents/Orizon-PTR
 git push
