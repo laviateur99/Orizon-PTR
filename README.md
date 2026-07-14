@@ -1,34 +1,36 @@
-# Orizon Aviation - Flight Director v15.9.3
+# Orizon Aviation - Flight Director v15.9.5
 
-## Correctif Check-in / Check-out
+## Horaire et plans de leçon
+- la leçon demeure attachée à la réservation;
+- le check-in et le check-out ne contiennent plus l’évaluation TC;
+- le check-out conserve uniquement le lien entre le vol et la leçon;
+- l’évaluation se fait exclusivement dans le PTR de l’élève.
 
-Correction de l’erreur Firestore :
+## PTR
+Dans le PTR de l’élève, l’instructeur voit :
+- la leçon sélectionnée;
+- le vol lié;
+- le PDF original du plan;
+- la grille d’évaluation Transport Canada;
+- les commentaires, signatures et le statut.
 
-```text
-Unsupported field value: undefined
-found in field hobbsStart
-```
+L’enregistrement de l’évaluation met directement à jour la leçon dans le PTR.
 
-### Changements
-
-- aucun champ `undefined` n’est envoyé à Firestore;
-- nettoyage récursif des données;
-- le check-out n’envoie plus `hobbsStart`;
-- le check-in n’envoie plus de délai d’alerte vide;
-- Hobbs départ obligatoire au check-in;
-- Hobbs fin, décollage et atterrissage obligatoires au check-out;
-- mise à jour du PTR après le check-out conservée;
-- protection ajoutée aux réservations et annulations.
+## Ordre de l’horaire
+Administration → Horaire permet maintenant de modifier :
+- l’ordre des groupes;
+- l’ordre de chaque avion dans son groupe;
+- l’ordre des simulateurs;
+- l’ordre des instructeurs;
+- l’ordre des locaux.
 
 ## Installation
-
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.3-Correctif-Checkin-Checkout
+cd ~/Downloads/Orizon-Flight-Director-v15.9.5-PTR-Reservation-Ordre-Ressources
 ./install-foundation.sh
 ```
 
 Puis :
-
 ```bash
 cd ~/Documents/Orizon-PTR
 git push

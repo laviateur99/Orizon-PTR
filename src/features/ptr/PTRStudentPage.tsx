@@ -269,7 +269,29 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
               )}
 
               {(!selected.components || selected.components.length === 0) && (
+                <>
                 <div className="lesson-exercises">{selected.exercises.map(item => <span key={item}>{item}</span>)}</div>
+              <div className="ptr-lesson-tracking">
+                <strong>Suivi de la leçon</strong>
+                <span>
+                  Vol associé à cette leçon : {
+                    reservations.find(item => item.id === selected.linkedReservationId)
+                      ? `${reservations.find(item => item.id === selected.linkedReservationId)?.date} · ${reservations.find(item => item.id === selected.linkedReservationId)?.title}`
+                      : "Aucun vol lié"
+                  }
+                </span>
+                {selected.lessonPdfPath && (
+                  <a
+                    className="button secondary small"
+                    href={selected.lessonPdfPath}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ouvrir le plan de leçon PDF
+                  </a>
+                )}
+              </div>
+                </>
               )}
             </section>
 

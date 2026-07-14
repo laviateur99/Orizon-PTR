@@ -97,12 +97,12 @@ export async function updateFlightOperation(
   await updateDoc(doc(db, "reservations", id), payload);
 }
 
+
 export async function markLinkedPTRLessonAfterCheckout(
   event: SchedulerEvent
 ) {
-  if (!event.studentId) return;
+  if (!event.studentId || !event.lessonPlanId) return;
 
-  const now = new Date().toISOString();
   const snapshot = await getDocs(
     query(
       collection(db, "ptrLessons"),
@@ -113,47 +113,33 @@ export async function markLinkedPTRLessonAfterCheckout(
   const matching = snapshot.docs.filter(item => {
     const data = item.data();
     return (
-      data.linkedReservationId === event.id ||
-      (Boolean(event.lessonPlanId) && data.lessonPlanId === event.lessonPlanId)
+      data.lessonPlanId === event.lessonPlanId ||
+      data.linkedReservationId === event.id
     );
   });
 
-  const update = cleanFirestoreData({
+  const linkage = cleanFirestoreData({
     studentId: event.studentId,
-    lessonPlanId: event.lessonPlanId || "",
+    lessonPlanId: event.lessonPlanId,
     lessonPdfPath: event.lessonPdfPath || "",
     linkedReservationId: event.id,
-    status: "En cours",
     lastFlightStatus: "Complété",
-    lastCheckoutAt: now,
-    lastReservationTitle: event.title,
-    updatedAt: now
+    lastCheckoutAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 
-  if (matching.length > 0) {
+  if (matching.length) {
     const batch = writeBatch(db);
-    matching.forEach(item => batch.set(item.ref, update, { merge: true }));
+    matching.forEach(item => batch.set(item.ref, linkage, { merge: true }));
     await batch.commit();
-    return;
+  } else {
+    await assignLessonToStudentPTR(event);
+    await setDoc(
+      doc(db, "ptrLessons", `${event.studentId}-${event.lessonPlanId}`),
+      linkage,
+      { merge: true }
+    );
   }
-
-  const fallbackId = event.lessonPlanId
-    ? `${event.studentId}-${event.lessonPlanId}`
-    : `${event.studentId}-reservation-${event.id}`;
-
-  await setDoc(
-    doc(db, "ptrLessons", fallbackId),
-    cleanFirestoreData({
-      ...update,
-      phase: "Programme",
-      lessonNumber: event.lessonPlanId || event.id,
-      title: event.lessonTitle || event.title || "Leçon liée au vol",
-      objective: "Voir le plan de leçon associé à la réservation.",
-      exercises: [],
-      createdAt: serverTimestamp()
-    }),
-    { merge: true }
-  );
 }
 
 export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),cleanFirestoreData({eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)}));await deleteDoc(doc(db,"reservations",e.id));}
@@ -170,10 +156,10 @@ export function subscribeSchedulerSettings(h:LiveHandlers<SchedulerSettings>):Un
     h.next([{startHour:start,endHour:end,slotMinutes:slot,updatedAt:text(d.updatedAt),updatedBy:text(d.updatedBy)}]);
   },h.error);
 }
-export type ResourceGroupOrderSettings = {
+
+export type ResourceOrderSettings = {
   groups: string[];
-  updatedAt?: string;
-  updatedBy?: string;
+  resources: Record<string, string[]>;
 };
 
 export function resourceGroupKey(resource: SchedulerResource) {
@@ -185,35 +171,36 @@ export function resourceGroupKey(resource: SchedulerResource) {
   return "Locaux";
 }
 
-export function subscribeResourceGroupOrder(
-  next: (value: ResourceGroupOrderSettings) => void,
+export function subscribeResourceOrderSettings(
+  next: (value: ResourceOrderSettings) => void,
   error: (value: FirestoreError) => void
 ): Unsubscribe {
   return onSnapshot(
-    doc(db, "appSettings", "schedulerResourceGroups"),
+    doc(db, "appSettings", "schedulerResourceOrder"),
     snapshot => {
       const data = snapshot.data();
       next({
         groups: Array.isArray(data?.groups)
           ? data.groups.filter((item): item is string => typeof item === "string")
           : [],
-        updatedAt: text(data?.updatedAt),
-        updatedBy: text(data?.updatedBy)
+        resources:
+          data?.resources && typeof data.resources === "object"
+            ? data.resources as Record<string, string[]>
+            : {}
       });
     },
     error
   );
 }
 
-export async function saveResourceGroupOrder(
-  groups: string[],
-  updatedBy: string
+export async function saveResourceOrderSettings(
+  value: ResourceOrderSettings
 ) {
   await setDoc(
-    doc(db, "appSettings", "schedulerResourceGroups"),
+    doc(db, "appSettings", "schedulerResourceOrder"),
     {
-      groups,
-      updatedBy: updatedBy.trim() || "Administrateur",
+      groups: value.groups,
+      resources: value.resources,
       updatedAt: new Date().toISOString()
     },
     { merge: true }
