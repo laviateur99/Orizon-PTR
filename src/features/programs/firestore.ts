@@ -1,9 +1,11 @@
-import { collection, doc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { ATPA_PROGRAM } from "./data";
 
 export async function initializeAtpaForStudent(studentId: string) {
   const batch = writeBatch(db);
+  const settings = await getDoc(doc(db, "trainingPrograms", ATPA_PROGRAM.id));
+  const displayName = typeof settings.data()?.displayName === "string" ? settings.data()!.displayName : ATPA_PROGRAM.name;
 
   for (const template of ATPA_PROGRAM.lessons) {
     const ref = doc(collection(db, "ptrLessons"), `atpa-${studentId}-${template.number}`);
@@ -22,6 +24,7 @@ export async function initializeAtpaForStudent(studentId: string) {
     batch.set(ref, {
       studentId,
       programId: ATPA_PROGRAM.id,
+      programName: displayName,
       programRevision: ATPA_PROGRAM.revision,
       programEffectiveDate: ATPA_PROGRAM.effectiveDate,
       sourceManual: ATPA_PROGRAM.source,

@@ -76,9 +76,9 @@
           "title": "Familiarisation",
           "objective": "Court vol de navigation vers la zone d'entraînement et survol de la Ville de Québec.",
           "hours": {
-            "sol": 0.0,
+            "sol": 0.5,
             "dev": 0.0,
-            "doubleCommande": 0.5,
+            "doubleCommande": 1.0,
             "solo": 0.0
           },
           "exercises": [
@@ -89,7 +89,10 @@
           ],
           "nextLesson": "Connaissance de l’aéronef.",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 49
+          "manualPage": 49,
+          "pdfPath": "/docs/plans/lecon-001-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 50
         }
       ]
     },
@@ -122,7 +125,7 @@
           "title": "Connaissance de l’aéronef",
           "objective": "Familiariser l'élève avec la raison d'être de documents nécessaires, avec l'avion et avec la façon de déterminer si ce dernier est prêt à voler. Expliquer le fonctionnement des commandes auxiliaires de l’appareil tel que le réchauffe carburateur, de la commande de mélange et des autres commandes de servitude.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -138,7 +141,10 @@
           ],
           "nextLesson": "Assiettes et mouvements et décollage",
           "successCriteria": "Connaitre les différents documents obligatoires à bord, comment utiliser les commandes auxiliaires et effectuer l’inspection pré- vol de l’appareil.",
-          "manualPage": 50
+          "manualPage": 50,
+          "pdfPath": "/docs/plans/lecon-002-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 51
         }
       ]
     },
@@ -178,7 +184,7 @@
           "title": "Assiettes et mouvements et décollage",
           "objective": "Comprendre les assiettes normales de l'avion ainsi que produire et contrôler les différents mouvements nécessaires à la production et au maintien de ces assiettes. Comment décoller en toute sécurité dans des conditions normales de piste et de vent.",
           "hours": {
-            "sol": 0.0,
+            "sol": 0.5,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -193,7 +199,10 @@
           ],
           "nextLesson": "Vol rectiligne en palier.",
           "successCriteria": "Être capable de produire et reconnaitre les différentes assiettes et mouvements, de corriger les mouvements indésirables (lacet) et être capable d’utiliser la carte pour se rendre et revenir de la zone d’entrainement",
-          "manualPage": 51
+          "manualPage": 51,
+          "pdfPath": "/docs/plans/lecon-003-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 52
         },
         {
           "number": 3,
@@ -205,7 +214,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -218,7 +227,10 @@
           ],
           "nextLesson": "Vol rectiligne en palier et atterrissage",
           "successCriteria": "Maintenir produire les différents mouvements sans aide et produire les assiettes demandées par l’instructeur, comprendre les effets du lacet et être capable de compenser l’aéronef en tangage.",
-          "manualPage": 52
+          "manualPage": 52,
+          "pdfPath": "/docs/plans/lecon-003-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 53
         }
       ]
     },
@@ -271,7 +283,10 @@
           ],
           "nextLesson": "Montées et descentes",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 53
+          "manualPage": 53,
+          "pdfPath": "/docs/plans/lecon-004-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 54
         },
         {
           "number": 4,
@@ -283,7 +298,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -296,7 +311,10 @@
           ],
           "nextLesson": "Montées et descentes",
           "successCriteria": "Il doit maintenir un vol rectiligne en palier sans aide et dans les tolérances de l'instructeur. Il doit aussi utiliser adéquatement le compensateur.",
-          "manualPage": 54
+          "manualPage": 54,
+          "pdfPath": "/docs/plans/lecon-004-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 55
         }
       ]
     },
@@ -364,7 +382,10 @@
           ],
           "nextLesson": "Montées, descentes et virages",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 55
+          "manualPage": 55,
+          "pdfPath": "/docs/plans/lecon-005-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 56
         },
         {
           "number": 5,
@@ -376,7 +397,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -392,7 +413,10 @@
           ],
           "nextLesson": "Montées, descentes et virages",
           "successCriteria": "Il doit maintenir une montée sans aide et dans les tolérances de l'instructeur. Il doit également bien comprendre les procédures à suivre pour joindre et quitter le circuit.",
-          "manualPage": 56
+          "manualPage": 56,
+          "pdfPath": "/docs/plans/lecon-005-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 57
         }
       ]
     },
@@ -446,7 +470,10 @@
           ],
           "nextLesson": "Distance franchissable et autonomie maximale, vol lent et circuit.",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 57
+          "manualPage": 57,
+          "pdfPath": "/docs/plans/lecon-006-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 58
         },
         {
           "number": 6,
@@ -458,7 +485,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -474,7 +501,10 @@
           ],
           "nextLesson": "Distance franchissable et autonomie maximale, vol lent et circuit",
           "successCriteria": "Il doit maintenir différentes configurations de descente sans aide et dans les tolérances de l'instructeur. Il doit également effectuer des virages coordonnés en palier, en montée et en descente.",
-          "manualPage": 58
+          "manualPage": 58,
+          "pdfPath": "/docs/plans/lecon-006-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 59
         }
       ]
     },
@@ -498,7 +528,7 @@
           "title": "Distance franchissable, autonomie maximale, vol lent et circuit",
           "objective": "Enseigner comment couvrir la plus grande distance possible par unité de carburant consommé ainsi que rester en vol le plus longtemps possible par unité de carburant consommé. Enseigner la technique de pilotage essentielle à la maîtrise précise de l'avion dans la plage de vitesses de vol lent. Apprendre à reconnaître les symptômes à l'approche de la plage de vitesses de vol lent pour éviter d'y entrer par inadv ertance. Enseigner l’intégration du circuit et l’exécution d’un circuit à un aéroport.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.5,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -506,7 +536,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 59
+          "manualPage": 59,
+          "pdfPath": "/docs/plans/lecon-007-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 60
         },
         {
           "number": 7,
@@ -524,7 +557,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 61
+          "manualPage": 61,
+          "pdfPath": "/docs/plans/lecon-007-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 62
         }
       ]
     },
@@ -548,7 +584,7 @@
           "title": "Décrochages, glissade et circuit avec urgences",
           "objective": "Enseigner à reconnaître les symptômes de l'approche du décrochage, reconnaitre le décrochage et s’en sortir. Enseigner le virage serré. Aborder les urgences dans le circuit notamment les pannes de moteur, feux moteurs, problèmes de radio, rebonds et approches interrompues, etc.",
           "hours": {
-            "sol": 1.0,
+            "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -556,7 +592,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 63
+          "manualPage": 63,
+          "pdfPath": "/docs/plans/lecon-008-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 64
         },
         {
           "number": 8,
@@ -574,7 +613,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 65
+          "manualPage": 65,
+          "pdfPath": "/docs/plans/lecon-008-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 66
         }
       ]
     },
@@ -635,7 +677,10 @@
           ],
           "nextLesson": "Pré-solo",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 67
+          "manualPage": 67,
+          "pdfPath": "/docs/plans/lecon-009-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 68
         },
         {
           "number": 9,
@@ -660,7 +705,10 @@
           ],
           "nextLesson": "Perfectionnement dans le circuit, vent de travers et illusion dans le circuit",
           "successCriteria": "• À la fin de ce plan de leçon, l'élève devrait être capable d’effectuer des sorties de décrochage, d’effectuer des virages serrés en évitant la spirale, d’effectuer des amorces de vrilles et d’en sortir et d’effectuer des sorties de spirale sans aide de l’instructeur.",
-          "manualPage": 68
+          "manualPage": 68,
+          "pdfPath": "/docs/plans/lecon-009-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 69
         }
       ]
     },
@@ -692,7 +740,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -703,7 +751,10 @@
           ],
           "nextLesson": "Pré-solo (instructeur-vérificateur)",
           "successCriteria": "À l'issue de ce plan de leçon, l'élève devrait être capable d'atterrir l'avion sans l'aide de l'instructeur à un degré acceptable de sécurité.",
-          "manualPage": 69
+          "manualPage": 69,
+          "pdfPath": "/docs/plans/lecon-010-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 70
         }
       ]
     },
@@ -754,7 +805,10 @@
           ],
           "nextLesson": "Premier solo",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 70
+          "manualPage": 70,
+          "pdfPath": "/docs/plans/lecon-011-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 71
         },
         {
           "number": 11,
@@ -766,7 +820,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -779,7 +833,10 @@
           ],
           "nextLesson": "Vol de correction des procédures dans le circuit (au besoin seulement) ou premier solo si l’instructeur-vérificateur juge que l’étudiant est recommandé au premier solo.",
           "successCriteria": "À l'issue de ce plan de leçon, l'élève devrait être prêt pour son premier vol de contrôle en Solo et atterrir l'avion sans l'aide de l'instructeur à un degré acceptable de sécurité. Il pourrait avoir à faire un vol pour corriger les petites lacunes identifiées par le vérificateur.",
-          "manualPage": 71
+          "manualPage": 71,
+          "pdfPath": "/docs/plans/lecon-011-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 72
         }
       ]
     },
@@ -813,7 +870,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.2,
             "solo": 0.0
           },
           "exercises": [
@@ -826,7 +883,10 @@
           ],
           "nextLesson": "Vol de réserve (au besoin seulement)",
           "successCriteria": "À l'issue de ce plan de leçon, l'élève devrait être prêt pour son premier vol de contrôle en Solo et atterrir l'avion sans l'aide de l'instructeur à un degré acceptable de sécurité.",
-          "manualPage": 72
+          "manualPage": 72,
+          "pdfPath": "/docs/plans/lecon-012-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 73
         }
       ]
     },
@@ -860,7 +920,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.0,
             "solo": 0.0
           },
           "exercises": [
@@ -873,7 +933,10 @@
           ],
           "nextLesson": "Premier solo",
           "successCriteria": "À l'issue de ce plan de leçon, l'élève devrait être prêt pour son premier vol de contrôle en Solo et atterrir l'avion sans l'aide de l'instructeur à un degré acceptable de sécurité.",
-          "manualPage": 73
+          "manualPage": 73,
+          "pdfPath": "/docs/plans/lecon-013-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 74
         }
       ]
     },
@@ -925,7 +988,10 @@
           ],
           "nextLesson": "Retour zone, vol lent et précaution. Décollage et atterrissage spécialisé.",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 74
+          "manualPage": 74,
+          "pdfPath": "/docs/plans/lecon-014-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 75
         },
         {
           "number": 14,
@@ -946,7 +1012,10 @@
           ],
           "nextLesson": "Premier solo",
           "successCriteria": "Avant d'autoriser le vol en Solo, l'élève devra très bien comprendre les mesures qu'il devra prendre concernant un changement de piste, une panne radio, l'espacement des aéronefs, une remise des gaz, l'évitement de la turbulence de sillage, car il devra dorénavant prendre ses propres décisions.",
-          "manualPage": 75
+          "manualPage": 75,
+          "pdfPath": "/docs/plans/lecon-014-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 76
         },
         {
           "number": 14,
@@ -966,7 +1035,10 @@
           ],
           "nextLesson": "Deuxième solo",
           "successCriteria": "Vol bref consistant en un décollage, un circuit et un atterrissage.",
-          "manualPage": 76
+          "manualPage": 76,
+          "pdfPath": "/docs/plans/lecon-014-03-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 77
         }
       ]
     },
@@ -1007,7 +1079,10 @@
           ],
           "nextLesson": "Deuxième solo.",
           "successCriteria": "Les conditions météorologiques et de circulation existantes et à venir permettent le vol en Solo. L'étudiant démontre une amélioration dans la précision des décollages, circuits et atterrissages.",
-          "manualPage": 77
+          "manualPage": 77,
+          "pdfPath": "/docs/plans/lecon-015-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 78
         },
         {
           "number": 15,
@@ -1020,14 +1095,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.0
           },
           "exercises": [
             "Décollages, circuits et atterrissages"
           ],
           "nextLesson": "Retour zone, vol lent et atterrissage de précaution. Décollage et atterrissage spécialisé.",
           "successCriteria": "L'élève doit démontrer de plus en plus de précisions et d'habiletés afin de passer aux décollages et atterrissages plus complexes.",
-          "manualPage": 78
+          "manualPage": 78,
+          "pdfPath": "/docs/plans/lecon-015-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 79
         }
       ]
     },
@@ -1051,7 +1129,7 @@
           "title": "Retour zone, vol lent et atterrissage de précaution. Décollage et atterrissage spécialisé.",
           "objective": "Enseigner à l’élève les procédures à suivre en vue d’un atterrissage à un aérodrome ou les conditions à la surface sont inconnues, à un aérodrome ou à une aire d’atterrissage inconnue, ou sur une surface non aménagée. Enseigner comment décoller et atterrir en toute sécurité dans des conditions de piste courte, avec et sans obstacles. Enseigner comment décoller et atterrir en toute sécurité dans des conditions de pistes molles et/ou cahoteuses. Enseigner aussi comment prendre une décision réfléchie par rapport au type de décollage et/ou atterrissage à effectuer compte tenu des conditions existantes",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -1059,7 +1137,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 79
+          "manualPage": 79,
+          "pdfPath": "/docs/plans/lecon-016-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 80
         },
         {
           "number": 16,
@@ -1077,7 +1158,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 81
+          "manualPage": 81,
+          "pdfPath": "/docs/plans/lecon-016-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 82
         }
       ]
     },
@@ -1125,7 +1209,10 @@
           ],
           "nextLesson": "Déroutement, virages serrés et illusions créés par la dérive",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 83
+          "manualPage": 83,
+          "pdfPath": "/docs/plans/lecon-017-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 84
         },
         {
           "number": 17,
@@ -1149,7 +1236,10 @@
           ],
           "nextLesson": "Troisième solo",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d'effectuer des atterrissages de précautions en gérant l'approche et la cabine à un niveau acceptable justifiant un vol Solo en navigation.",
-          "manualPage": 84
+          "manualPage": 84,
+          "pdfPath": "/docs/plans/lecon-017-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 85
         }
       ]
     },
@@ -1179,14 +1269,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.0
           },
           "exercises": [
             "Décollages, circuits et atterrissages"
           ],
           "nextLesson": "Solo circuit spécialisé",
           "successCriteria": "L'élève doit démontrer un niveau de compétence plus élevé permettant de commencer les décollages et atterrissages plus complexes.",
-          "manualPage": 85
+          "manualPage": 85,
+          "pdfPath": "/docs/plans/lecon-018-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 86
         }
       ]
     },
@@ -1220,7 +1313,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.3
           },
           "exercises": [
             "Décollage terrain court",
@@ -1231,7 +1324,10 @@
           ],
           "nextLesson": "Déroutement, virage serré et illusion créé par la dérive",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait faire preuve d'un niveau de compétence pour effectuer des décollages et atterrissages spécialisés dans les normes de test en vol privé.",
-          "manualPage": 86
+          "manualPage": 86,
+          "pdfPath": "/docs/plans/lecon-019-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 87
         }
       ]
     },
@@ -1282,7 +1378,10 @@
           ],
           "nextLesson": "Départ de navigation et révision des manouvres",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 87
+          "manualPage": 87,
+          "pdfPath": "/docs/plans/lecon-020-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 88
         },
         {
           "number": 20,
@@ -1294,7 +1393,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -1304,7 +1403,10 @@
           ],
           "nextLesson": "Premier solo zone",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d'effectuer de rejoindre, de revenir et de naviguer dans la zone d’entrainement sans assistance de l’instructeur. Il devra être également capable de rejoindre un champ de manière sécuritaire en cas de panne moteur",
-          "manualPage": 88
+          "manualPage": 88,
+          "pdfPath": "/docs/plans/lecon-020-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 89
         }
       ]
     },
@@ -1337,7 +1439,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.3
           },
           "exercises": [
             "Décollage et atterrissage court Décollage et atterrissage mou",
@@ -1347,7 +1449,10 @@
           ],
           "nextLesson": "Départ de navigation et révision des manœuvres",
           "successCriteria": "À l'issue du plan de leçon, l’élève devrait être capable de se repérer et se diriger dans la zone d’entrainement.",
-          "manualPage": 89
+          "manualPage": 89,
+          "pdfPath": "/docs/plans/lecon-021-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 90
         }
       ]
     },
@@ -1402,7 +1507,10 @@
           ],
           "nextLesson": "Instruments panneau complet et assiettes inhabituelle",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 90
+          "manualPage": 90,
+          "pdfPath": "/docs/plans/lecon-022-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 91
         },
         {
           "number": 22,
@@ -1414,7 +1522,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -1425,7 +1533,10 @@
           ],
           "nextLesson": "Solo - Forcé et précaution",
           "successCriteria": "À l'issue de ce plan de leçon, l'élève devrait être capable de démontrer qu’il peut effectuer les manœuvres demandées de manière sécuritaire pour aller les pratiquer en solo.",
-          "manualPage": 91
+          "manualPage": 91,
+          "pdfPath": "/docs/plans/lecon-022-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 92
         }
       ]
     },
@@ -1457,7 +1568,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.6
           },
           "exercises": [
             "Décollage et atterrissage court et mou",
@@ -1466,7 +1577,10 @@
           ],
           "nextLesson": "Solo - Déroutement et précaution",
           "successCriteria": "Le candidat devrait être capable d’effectuer les manœuvres pratiquées près des normes de test en vol privé",
-          "manualPage": 92
+          "manualPage": 92,
+          "pdfPath": "/docs/plans/lecon-023-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 93
         }
       ]
     },
@@ -1497,7 +1611,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.6
           },
           "exercises": [
             "Décollage et atterrissage court et mou",
@@ -1505,7 +1619,10 @@
           ],
           "nextLesson": "Révision des manœuvres de base",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir faire face à la plupart des situations imprévues en navigation susceptibles d'être rencontrés pendant les vols de navigation en Solo",
-          "manualPage": 93
+          "manualPage": 93,
+          "pdfPath": "/docs/plans/lecon-024-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 94
         }
       ]
     },
@@ -1536,7 +1653,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -1546,7 +1663,10 @@
           ],
           "nextLesson": "Solo – Révision des manœuvres de base",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable de faire la procédure d'atterrissage forcé au complet, incluant l'approche et la gestion de la cabine dans des paramètres proches du test en vol.",
-          "manualPage": 94
+          "manualPage": 94,
+          "pdfPath": "/docs/plans/lecon-025-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 95
         }
       ]
     },
@@ -1578,7 +1698,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.6
           },
           "exercises": [
             "Décollage et atterrissage court et mou Distance franchissable maximale/autonomie maximale",
@@ -1587,7 +1707,10 @@
           ],
           "nextLesson": "Instruments panneau complet et assiettes inhabituelles",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d’effectuer les manœuvres dans des performances près de celle du test en vol privé.",
-          "manualPage": 95
+          "manualPage": 95,
+          "pdfPath": "/docs/plans/lecon-026-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 96
         }
       ]
     },
@@ -1654,7 +1777,10 @@
           ],
           "nextLesson": "Navigation 150 NM",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 96
+          "manualPage": 96,
+          "pdfPath": "/docs/plans/lecon-027-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 97
         },
         {
           "number": 27,
@@ -1665,7 +1791,7 @@
           "objective": "Cette leçon a pour but de pratique en vol la leçon pratiquée au simulateur. À l'aide des instruments comme référence, enseigner: les assiettes de vol normalement utilisées en vol, comment produire et contrôler les mouvements nécessaires pour obtenir et maintenir les assiettes voulues, comment contrôler le lacet. De plus, un atterrissage forcé sans avertissement de la part de l’instructeur sera enseigné.",
           "hours": {
             "sol": 0.0,
-            "dev": 0.0,
+            "dev": 1.0,
             "doubleCommande": 0.0,
             "solo": 0.0
           },
@@ -1678,7 +1804,10 @@
           ],
           "nextLesson": "Instruments panneau complet, partiel et assiettes inhabituelles.",
           "successCriteria": "Il doit maintenir un vol rectiligne en palier sans aide et dans les tolérances de l'instructeur et bien contrôler le mouvement de lacet, le tout à l'aide des instruments. Il devra également l’atterrissage forcé",
-          "manualPage": 97
+          "manualPage": 97,
+          "pdfPath": "/docs/plans/lecon-027-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 98
         },
         {
           "number": 27,
@@ -1690,7 +1819,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -1702,7 +1831,10 @@
           ],
           "nextLesson": "Révision des manœuvres avancées",
           "successCriteria": "Il doit maintenir un vol rectiligne en palier sans aide et dans les tolérances de l'instructeur et bien contrôler le mouvement de lacet, le tout à l'aide des instruments. Il devra également l’atterrissage forcé",
-          "manualPage": 98
+          "manualPage": 98,
+          "pdfPath": "/docs/plans/lecon-027-03-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 99
         }
       ]
     },
@@ -1745,7 +1877,10 @@
           ],
           "nextLesson": "Solo – Révision des manœuvres",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d’effectuer l’ensemble des manœuvres en respectant les critères d’exécutions du test en vol privé.",
-          "manualPage": 99
+          "manualPage": 99,
+          "pdfPath": "/docs/plans/lecon-028-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 100
         }
       ]
     },
@@ -1786,7 +1921,10 @@
           ],
           "nextLesson": "Instruments panneau complet, partiel et assiettes inhabituelles.",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d’effectuer l’ensemble des manœuvres en respectant les critères d’exécutions du test en vol privé.",
-          "manualPage": 100
+          "manualPage": 100,
+          "pdfPath": "/docs/plans/lecon-029-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 101
         }
       ]
     },
@@ -1829,7 +1967,10 @@
           ],
           "nextLesson": "Vol de nuit",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d’effectuer l’ensemble des manœuvres en panneau complet et de sortir de manière sécuritaire des assiettes inhabituelles.",
-          "manualPage": 101
+          "manualPage": 101,
+          "pdfPath": "/docs/plans/lecon-030-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 102
         },
         {
           "number": 30,
@@ -1841,7 +1982,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -1852,7 +1993,10 @@
           ],
           "nextLesson": "Navigation 150 nm",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être capable d’effectuer l’ensemble des manœuvres en panneau complet et de sortir de manière sécuritaire des assiettes inhabituelles.",
-          "manualPage": 102
+          "manualPage": 102,
+          "pdfPath": "/docs/plans/lecon-030-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 103
         }
       ]
     },
@@ -1894,7 +2038,7 @@
           "title": "Navigation 150 nm",
           "objective": "Enseigner à l'élève comment préparer et planifier des vols de navigation en toute sécurité y compris atterrir à des aérodromes différents de celui de la base d'attache.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -1909,7 +2053,10 @@
           ],
           "nextLesson": "Révision finale",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 103
+          "manualPage": 103,
+          "pdfPath": "/docs/plans/lecon-031-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 104
         },
         {
           "number": 31,
@@ -1936,7 +2083,10 @@
           ],
           "nextLesson": "Solo – Navigation 150 nm",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être prêt à naviguer en VFR en Solo au-dessus d'un secteur étranger et pouvoir faire face aux situations courantes en vol de navigation.",
-          "manualPage": 104
+          "manualPage": 104,
+          "pdfPath": "/docs/plans/lecon-031-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 105
         }
       ]
     },
@@ -1984,7 +2134,10 @@
           ],
           "nextLesson": "Révision finale",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 105
+          "manualPage": 105,
+          "pdfPath": "/docs/plans/lecon-032-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 106
         },
         {
           "number": 32,
@@ -2006,7 +2159,10 @@
           ],
           "nextLesson": "Révision finale",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir effectuer des vols de navigation en VFR sous sa propre responsabilité.",
-          "manualPage": 106
+          "manualPage": 106,
+          "pdfPath": "/docs/plans/lecon-032-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 107
         }
       ]
     },
@@ -2038,7 +2194,7 @@
           "title": "Révision finale",
           "objective": "Lors de ce sol préparatoire, l’instructeur fera une révision des différents sujets qui seront abordé lors de la partie sol du test en vol privé. Il appliquera la grille d’évaluation et les normes inscrites dans le Guide de test en vol – Licence de pilote privé – Avion – TP 13723. Une révision du guide de test en vol sera également effectuée afin de guider l’élève à travers le processus de test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -2050,7 +2206,10 @@
           ],
           "nextLesson": "Pré-test en vol PPL",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 107
+          "manualPage": 107,
+          "pdfPath": "/docs/plans/lecon-033-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 108
         },
         {
           "number": 33,
@@ -2062,7 +2221,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -2070,7 +2229,10 @@
           ],
           "nextLesson": "Vol de correction en solo",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait être proche de pourvoir effectuer son prétest en vol avec son instructeur, seuls quelques détails devraient être à régler en vol Solo.",
-          "manualPage": 108
+          "manualPage": 108,
+          "pdfPath": "/docs/plans/lecon-033-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 109
         }
       ]
     },
@@ -2100,14 +2262,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.6
           },
           "exercises": [
             "Tous les exercices autorisés par l'instructeur"
           ],
           "nextLesson": "Pré-test en vol PPL",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait avoir corrigé une bonne partie des lacunes qui ont été révélées au plan de leçon 38.",
-          "manualPage": 109
+          "manualPage": 109,
+          "pdfPath": "/docs/plans/lecon-034-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 110
         }
       ]
     },
@@ -2138,7 +2303,7 @@
           "title": "Pré-test en vol PPL",
           "objective": "Lors de ce sol préparatoire, l’instructeur évaluera l’élève sur les sujets abordés lors de la partie sol du test en vol privé.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -2149,7 +2314,10 @@
           ],
           "nextLesson": "Sol de correction avant solo de correction en vol.",
           "successCriteria": "L’élève devrait être capable de répondre aux questions de l’instructeur sans effectuer d’erreur critique ou majeure.",
-          "manualPage": 110
+          "manualPage": 110,
+          "pdfPath": "/docs/plans/lecon-035-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 111
         },
         {
           "number": 35,
@@ -2161,7 +2329,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -2169,7 +2337,10 @@
           ],
           "nextLesson": "Vol de correction en solo (au besoin seulement)",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir se faire recommander par son instructeur pour le test en vol.",
-          "manualPage": 111
+          "manualPage": 111,
+          "pdfPath": "/docs/plans/lecon-035-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 112
         }
       ]
     },
@@ -2211,7 +2382,10 @@
           ],
           "nextLesson": "Sol de réserve : préparation au test en vol",
           "successCriteria": "L’élève devrait être capable de répondre aux questions de l’instructeur sans effectuer d’erreur critique ou majeure.",
-          "manualPage": 112
+          "manualPage": 112,
+          "pdfPath": "/docs/plans/lecon-036-01-sol.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 113
         },
         {
           "number": 36,
@@ -2224,14 +2398,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.6
           },
           "exercises": [
             "Test en vol de pilote privé"
           ],
           "nextLesson": "Vol de réserve (avant ou après le TEV PPL au besoin seulement)",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir se faire recommander par son instructeur pour le test en vol.",
-          "manualPage": 113
+          "manualPage": 113,
+          "pdfPath": "/docs/plans/lecon-036-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 114
         }
       ]
     },
@@ -2274,7 +2451,10 @@
           ],
           "nextLesson": "Vol de nuit",
           "successCriteria": "L’élève devrait être capable de répondre aux questions de l’instructeur sans effectuer d’erreur critique ou majeure.",
-          "manualPage": 114
+          "manualPage": 114,
+          "pdfPath": "/docs/plans/lecon-037-01-sol.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 115
         },
         {
           "number": 37,
@@ -2286,7 +2466,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.3,
             "solo": 0.0
           },
           "exercises": [
@@ -2294,7 +2474,10 @@
           ],
           "nextLesson": "Vol de correction en solo",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir se faire recommander par son instructeur pour le test en vol.",
-          "manualPage": 115
+          "manualPage": 115,
+          "pdfPath": "/docs/plans/lecon-037-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 116
         },
         {
           "number": 37,
@@ -2307,14 +2490,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.3
           },
           "exercises": [
             "Test en vol de pilote privé"
           ],
           "nextLesson": "Test en vol PPL",
           "successCriteria": "À l'issue du plan de leçon, l'élève devrait pouvoir se faire recommander par son instructeur pour le test en vol.",
-          "manualPage": 116
+          "manualPage": 116,
+          "pdfPath": "/docs/plans/lecon-037-03-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 117
         }
       ]
     },
@@ -2341,13 +2527,16 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [],
           "nextLesson": "Vol de nuit",
           "successCriteria": "Normes du test en vol pilote privé",
-          "manualPage": 117
+          "manualPage": 117,
+          "pdfPath": "/docs/plans/lecon-038-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 118
         }
       ]
     },
@@ -2412,7 +2601,10 @@
           ],
           "nextLesson": "Instruments en panneau complet et exploration du GPS",
           "successCriteria": "Le candidat connaît les procédures d'utilisation du VOR. Le candidat connaît et respecte les procédures a appliqué en cas de panne d’instrument gyroscopique",
-          "manualPage": 118
+          "manualPage": 118,
+          "pdfPath": "/docs/plans/lecon-039-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 119
         },
         {
           "number": 39,
@@ -2440,7 +2632,10 @@
           ],
           "nextLesson": "Mono IFR",
           "successCriteria": "",
-          "manualPage": 119
+          "manualPage": 119,
+          "pdfPath": "/docs/plans/lecon-039-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 120
         }
       ]
     },
@@ -2478,7 +2673,7 @@
           "title": "Instruments – Panneau complet / exploration du GPS et circuit vol de nuit",
           "objective": "Dans ce plan de leçon préparatoire, il faut introduire le vol de nuit en étudiant les conditions d'obtention de l'annotation, les facteurs humains et les particularités du vol de nuit notamment les illusions et les risques du circuit de nuit, des assiettes inhabituelles et de CFIT. Ce plan de leçon vise aussi à préparer l'instruction nécessaire à la radionavigation. Afin de l'assister dans son vol de nuit pour se repérer, le candidat doit maîtriser des aides à la navigation comme le GPS.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -2496,7 +2691,10 @@
           ],
           "nextLesson": "Vols voyages solo",
           "successCriteria": "Réussir un bref questionnaire à choix multiple sur les éléments vus",
-          "manualPage": 120
+          "manualPage": 120,
+          "pdfPath": "/docs/plans/lecon-040-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 121
         },
         {
           "number": 40,
@@ -2519,7 +2717,10 @@
           ],
           "nextLesson": "Panneau complet, partiel et assiettes inhabituelles / Navigation GPS / Circuit vol de nuit avec urgences.",
           "successCriteria": "",
-          "manualPage": 121
+          "manualPage": 121,
+          "pdfPath": "/docs/plans/lecon-040-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 122
         }
       ]
     },
@@ -2558,7 +2759,10 @@
           ],
           "nextLesson": "Manœuvres vol de nuit.",
           "successCriteria": "",
-          "manualPage": 122
+          "manualPage": 122,
+          "pdfPath": "/docs/plans/lecon-041-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 123
         }
       ]
     },
@@ -2587,7 +2791,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.5,
             "solo": 0.0
           },
           "exercises": [
@@ -2595,7 +2799,10 @@
           ],
           "nextLesson": "Solo - circuit de nuit",
           "successCriteria": "Être capable d’effectuer les manœuvres demandées dans les normes du guide de test en vol privé.",
-          "manualPage": 123
+          "manualPage": 123,
+          "pdfPath": "/docs/plans/lecon-042-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 124
         }
       ]
     },
@@ -2625,14 +2832,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.5
           },
           "exercises": [
             "Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit"
           ],
           "nextLesson": "",
           "successCriteria": "Aucune",
-          "manualPage": 124
+          "manualPage": 124,
+          "pdfPath": "/docs/plans/lecon-043-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 125
         }
       ]
     },
@@ -2660,14 +2870,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.5
           },
           "exercises": [
             "Circulation au sol de nuit Décollage de nuit Circuit de nuit Atterrissage de nuit Atterrissage sans électricité Urgence de nuit"
           ],
           "nextLesson": "Vol de reconnaissance de jour.",
           "successCriteria": "",
-          "manualPage": 125
+          "manualPage": 125,
+          "pdfPath": "/docs/plans/lecon-044-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 126
         }
       ]
     },
@@ -2702,7 +2915,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 126
+          "manualPage": 126,
+          "pdfPath": "/docs/plans/lecon-045-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 127
         }
       ]
     },
@@ -2733,7 +2949,10 @@
           "exercises": [],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 127
+          "manualPage": 127,
+          "pdfPath": "/docs/plans/lecon-046-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 128
         }
       ]
     },
@@ -2768,7 +2987,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 128
+          "manualPage": 128,
+          "pdfPath": "/docs/plans/lecon-047-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 129
         }
       ]
     },
@@ -2823,7 +3045,10 @@
           ],
           "nextLesson": "Introduction aux manœuvres professionnelles",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 129
+          "manualPage": 129,
+          "pdfPath": "/docs/plans/lecon-048-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 130
         },
         {
           "number": 48,
@@ -2847,7 +3072,10 @@
           ],
           "nextLesson": "Introduction aux manœuvres professionnelles",
           "successCriteria": "",
-          "manualPage": 130
+          "manualPage": 130,
+          "pdfPath": "/docs/plans/lecon-048-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 131
         }
       ]
     },
@@ -2879,7 +3107,7 @@
           "title": "Introduction aux manœuvres professionnelles",
           "objective": "Ce sol préparatoire a pour but de présenter à l’élève les nouvelles manœuvres qui sont exigé lors du test en vol professionnel. L’instructeur enseignera aussi les techniques pour effectuer les nouveaux exercices tels que l’atterrissage de précision et le cercle d’incertitude.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -2890,7 +3118,10 @@
           ],
           "nextLesson": "Vol voyage : difficulté avancée",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 131
+          "manualPage": 131,
+          "pdfPath": "/docs/plans/lecon-049-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 132
         },
         {
           "number": 49,
@@ -2902,7 +3133,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -2911,7 +3142,10 @@
           ],
           "nextLesson": "Maintien des compétences de vol VFR (en alternance avec les navigations de difficulté intermédiaire).",
           "successCriteria": "Effectuer les manœuvres dans les normes prescrites par l’instructeur, comprendre la technique du cercle d’incertitude.",
-          "manualPage": 132
+          "manualPage": 132,
+          "pdfPath": "/docs/plans/lecon-049-02-double.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 133
         }
       ]
     },
@@ -2950,7 +3184,10 @@
           ],
           "nextLesson": "Vol voyage : difficulté intermédiaires (en alternance)",
           "successCriteria": "Aucune",
-          "manualPage": 133
+          "manualPage": 133,
+          "pdfPath": "/docs/plans/lecon-050-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 134
         }
       ]
     },
@@ -2993,7 +3230,10 @@
           ],
           "nextLesson": "Vol voyage : difficulté avancée",
           "successCriteria": "",
-          "manualPage": 134
+          "manualPage": 134,
+          "pdfPath": "/docs/plans/lecon-051-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 135
         }
       ]
     },
@@ -3045,7 +3285,10 @@
           ],
           "nextLesson": "Vol-voyages : Difficulté avancées",
           "successCriteria": "Aucune norme de réussite pour ce plan de leçon.",
-          "manualPage": 135
+          "manualPage": 135,
+          "pdfPath": "/docs/plans/lecon-052-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 136
         },
         {
           "number": 52,
@@ -3070,7 +3313,10 @@
           ],
           "nextLesson": "Vol aux instruments, débuts des procédures IFR.",
           "successCriteria": "",
-          "manualPage": 136
+          "manualPage": 136,
+          "pdfPath": "/docs/plans/lecon-052-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 137
         }
       ]
     },
@@ -3107,7 +3353,10 @@
           ],
           "nextLesson": "Révision théorique",
           "successCriteria": "",
-          "manualPage": 137
+          "manualPage": 137,
+          "pdfPath": "/docs/plans/lecon-053-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 138
         }
       ]
     },
@@ -3144,7 +3393,10 @@
           ],
           "nextLesson": "Procédures d’attente",
           "successCriteria": "Le candidat connaît et respecte les procédures d’entrée de circuit d’attente et d’approche de précision",
-          "manualPage": 138
+          "manualPage": 138,
+          "pdfPath": "/docs/plans/lecon-054-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 139
         }
       ]
     },
@@ -3182,7 +3434,10 @@
           ],
           "nextLesson": "Procédure d’attente et approches de non-précision",
           "successCriteria": "",
-          "manualPage": 139
+          "manualPage": 139,
+          "pdfPath": "/docs/plans/lecon-055-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 140
         },
         {
           "number": 55,
@@ -3202,7 +3457,10 @@
           ],
           "nextLesson": "Procédures d’attente et approches de non-précision",
           "successCriteria": "Le candidat connaît et respecte les procédures en route IFR",
-          "manualPage": 140
+          "manualPage": 140,
+          "pdfPath": "/docs/plans/lecon-055-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 141
         }
       ]
     },
@@ -3241,7 +3499,10 @@
           ],
           "nextLesson": "Approche et procédures d’arrivée",
           "successCriteria": "Le candidat connaît et maîtrise les procédures de circuit d'attente VOR et d’approche de non- précision",
-          "manualPage": 141
+          "manualPage": 141,
+          "pdfPath": "/docs/plans/lecon-056-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 142
         },
         {
           "number": 56,
@@ -3261,7 +3522,10 @@
           ],
           "nextLesson": "Approche et procédure d’arrivée",
           "successCriteria": "",
-          "manualPage": 142
+          "manualPage": 142,
+          "pdfPath": "/docs/plans/lecon-056-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 143
         }
       ]
     },
@@ -3302,7 +3566,10 @@
           ],
           "nextLesson": "Multimoteur",
           "successCriteria": "Le candidat connaît les procédures d’IFR et est prêt à l’appliquer en vol.",
-          "manualPage": 143
+          "manualPage": 143,
+          "pdfPath": "/docs/plans/lecon-057-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 144
         }
       ]
     },
@@ -3341,7 +3608,10 @@
           ],
           "nextLesson": "Approches NDB, VOR, VOR/DME",
           "successCriteria": "Le candidat connaît les procédures d'approche, arrivée normalisée et approche interrompue.",
-          "manualPage": 144
+          "manualPage": 144,
+          "pdfPath": "/docs/plans/lecon-058-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 145
         },
         {
           "number": 58,
@@ -3361,7 +3631,10 @@
           ],
           "nextLesson": "Approches et procédures particulières",
           "successCriteria": "Le candidat connaît les procédures d'approche, arrivée normalisée et approche interrompue.",
-          "manualPage": 145
+          "manualPage": 145,
+          "pdfPath": "/docs/plans/lecon-058-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 146
         }
       ]
     },
@@ -3398,7 +3671,10 @@
           ],
           "nextLesson": "Multimoteur",
           "successCriteria": "Le candidat connaît et respecte les procédures d'approches VOR",
-          "manualPage": 146
+          "manualPage": 146,
+          "pdfPath": "/docs/plans/lecon-059-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 147
         }
       ]
     },
@@ -3437,7 +3713,10 @@
           ],
           "nextLesson": "Révision – plan de vol IFR à CYQB",
           "successCriteria": "",
-          "manualPage": 147
+          "manualPage": 147,
+          "pdfPath": "/docs/plans/lecon-060-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 148
         }
       ]
     },
@@ -3474,7 +3753,10 @@
           ],
           "nextLesson": "Navigation IFR 100 NM",
           "successCriteria": "Démontrer une maîtrise de l'avion et des procédures IFR vus ainsi que les urgences.",
-          "manualPage": 148
+          "manualPage": 148,
+          "pdfPath": "/docs/plans/lecon-061-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 149
         }
       ]
     },
@@ -3513,7 +3795,10 @@
           ],
           "nextLesson": "Multimoteur",
           "successCriteria": "Démontrer une maîtrise de l'avion et des procédures dans un cadre de navigation IFR.",
-          "manualPage": 149
+          "manualPage": 149,
+          "pdfPath": "/docs/plans/lecon-062-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 150
         }
       ]
     },
@@ -3561,7 +3846,10 @@
           ],
           "nextLesson": "Pré-test en vol multi VFR",
           "successCriteria": "L'élève doit préparer lui-même le vol (après démonstration de l'instructeur) avec tous les documents requis pour le vol correctement remplis. L'élève effectue correctement sa visite prévol de l'avion et connaît les systèmes à vérifier.",
-          "manualPage": 150
+          "manualPage": 150,
+          "pdfPath": "/docs/plans/lecon-063-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 151
         },
         {
           "number": 63,
@@ -3572,7 +3860,7 @@
           "objective": "Ce plan de leçon vise à familiariser l'élève et l'exercer sur les procédures de vol sur multimoteur. À la fin de ce plan de leçon, l'élève aura une vue d'ensemble sur le déroulement d'un vol sur multimoteur avec ses principaux exercices et les manœuvres qui seront abordées en vol.",
           "hours": {
             "sol": 0.0,
-            "dev": 0.0,
+            "dev": 1.0,
             "doubleCommande": 0.0,
             "solo": 0.0
           },
@@ -3581,7 +3869,10 @@
           ],
           "nextLesson": "Urgences",
           "successCriteria": "Le candidat connaît ses vitesses, réglages de puissance et procédures pour réaliser les exercices",
-          "manualPage": 151
+          "manualPage": 151,
+          "pdfPath": "/docs/plans/lecon-063-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 152
         }
       ]
     },
@@ -3610,7 +3901,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3618,7 +3909,10 @@
           ],
           "nextLesson": "Familiarisation aux pannes.",
           "successCriteria": "Démontrer une maîtrise de l'avion et des procédures sur multimoteur pour les manœuvres de base.",
-          "manualPage": 152
+          "manualPage": 152,
+          "pdfPath": "/docs/plans/lecon-064-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 153
         }
       ]
     },
@@ -3649,7 +3943,7 @@
           "objective": "Ce plan de leçon vise à profiter du DEV pour voir toutes les défaillances et urgences dans des mises en situation. À la fin de ce plan de leçon, l'élève aura une maîtrise efficace sur la gestion de ces imprévus lors d'un vol sur multimoteur ainsi que des manœuvres qui en résultent. Ce plan de leçon est essentiel pour la compréhension de l'avion et sera utile pour le test en vol. L'aspect sécuritaire doit être valorisé.",
           "hours": {
             "sol": 0.0,
-            "dev": 0.0,
+            "dev": 1.0,
             "doubleCommande": 0.0,
             "solo": 0.0
           },
@@ -3661,7 +3955,10 @@
           ],
           "nextLesson": "Sim de réserve",
           "successCriteria": "L'élève sait comment gérer les défaillances ou urgences et accomplit les actions vitales et vérifications adaptées à la situation.",
-          "manualPage": 153
+          "manualPage": 153,
+          "pdfPath": "/docs/plans/lecon-065-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 154
         }
       ]
     },
@@ -3688,7 +3985,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3696,7 +3993,10 @@
           ],
           "nextLesson": "Manœuvres avancées et pannes.",
           "successCriteria": "",
-          "manualPage": 154
+          "manualPage": 154,
+          "pdfPath": "/docs/plans/lecon-066-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 155
         }
       ]
     },
@@ -3728,7 +4028,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3739,7 +4039,10 @@
           ],
           "nextLesson": "Manœuvres avancées et pannes",
           "successCriteria": "Démontrer une maîtrise de l'avion et des procédures sur multimoteur pour les manœuvres vues dans les tolérances fixées par l'instructeur.",
-          "manualPage": 155
+          "manualPage": 155,
+          "pdfPath": "/docs/plans/lecon-067-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 156
         }
       ]
     },
@@ -3766,7 +4069,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3774,7 +4077,10 @@
           ],
           "nextLesson": "Pré-test en vol multi VFR",
           "successCriteria": "",
-          "manualPage": 156
+          "manualPage": 156,
+          "pdfPath": "/docs/plans/lecon-068-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 157
         }
       ]
     },
@@ -3801,7 +4107,7 @@
           "title": "Pré-test en vol multi VFR",
           "objective": "Ce plan de leçon consiste en une entrevue (sur les items demandés au sol lors d'un test en vol multimoteur) dirigée par l'instructeur exactement comme le ferait un inspecteur ou un examinateur de vol désigné. L'élève devrait pouvoir répondre et/expliquer convenablement toutes les procédures exigées à l'occasion du test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.5,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -3811,7 +4117,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 157
+          "manualPage": 157,
+          "pdfPath": "/docs/plans/lecon-069-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 158
         },
         {
           "number": 69,
@@ -3823,7 +4132,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3831,7 +4140,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 158
+          "manualPage": 158,
+          "pdfPath": "/docs/plans/lecon-069-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 159
         }
       ]
     },
@@ -3857,7 +4169,7 @@
           "objective": "Ce plan de leçon consiste en un test en vol multimoteur dirigé par l'instructeur exactement comme le ferait un inspecteur ou un examinateur de vol désigné. L'élève devrait pouvoir exécuter convenablement toutes les procédures et manœuvres exigées à̀ l'occasion du test en vol.",
           "hours": {
             "sol": 0.0,
-            "dev": 0.0,
+            "dev": 1.0,
             "doubleCommande": 0.0,
             "solo": 0.0
           },
@@ -3866,7 +4178,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 159
+          "manualPage": 159,
+          "pdfPath": "/docs/plans/lecon-070-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 160
         }
       ]
     },
@@ -3895,7 +4210,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -3903,7 +4218,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "Réussite du test en vol.",
-          "manualPage": 160
+          "manualPage": 160,
+          "pdfPath": "/docs/plans/lecon-071-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 161
         }
       ]
     },
@@ -3946,7 +4264,10 @@
           ],
           "nextLesson": "Pré-test en vol multi IFR",
           "successCriteria": "Le candidat connaît et respecte les procédures de départ IFR, les procédures en route, les procédures de circuits d'attente et les procédures d’approches de précision sur multimoteur.",
-          "manualPage": 161
+          "manualPage": 161,
+          "pdfPath": "/docs/plans/lecon-072-01-sol.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 162
         },
         {
           "number": 72,
@@ -3966,7 +4287,10 @@
           ],
           "nextLesson": "Approches de précision avec urgences CYQB / CYSG",
           "successCriteria": "Le candidat connaît et respecte les procédures de départ IFR, les procédures en route, les procédures de circuits d'attente et les procédures d’approches de précision sur multimoteur.",
-          "manualPage": 162
+          "manualPage": 162,
+          "pdfPath": "/docs/plans/lecon-072-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 163
         }
       ]
     },
@@ -3995,7 +4319,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4003,7 +4327,10 @@
           ],
           "nextLesson": "Approches de non-précision à CYSG",
           "successCriteria": "L'élève maîtrise les procédures sans aide de l'instructeur",
-          "manualPage": 163
+          "manualPage": 163,
+          "pdfPath": "/docs/plans/lecon-073-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 164
         }
       ]
     },
@@ -4032,7 +4359,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4040,7 +4367,10 @@
           ],
           "nextLesson": "Approches de précisions avec urgences CYQB / CYSG",
           "successCriteria": "L'élève maîtrise les procédures sans aide de l'instructeur",
-          "manualPage": 164
+          "manualPage": 164,
+          "pdfPath": "/docs/plans/lecon-074-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 165
         }
       ]
     },
@@ -4081,7 +4411,10 @@
           ],
           "nextLesson": "Pré-test en vol multi IFR",
           "successCriteria": "",
-          "manualPage": 165
+          "manualPage": 165,
+          "pdfPath": "/docs/plans/lecon-075-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 166
         },
         {
           "number": 75,
@@ -4093,7 +4426,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4101,7 +4434,10 @@
           ],
           "nextLesson": "Approches de non-précision avec urgences CYQB",
           "successCriteria": "L'élève maîtrise les procédures sans aide de l'instructeur",
-          "manualPage": 166
+          "manualPage": 166,
+          "pdfPath": "/docs/plans/lecon-075-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 167
         }
       ]
     },
@@ -4128,7 +4464,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4136,7 +4472,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "",
-          "manualPage": 167
+          "manualPage": 167,
+          "pdfPath": "/docs/plans/lecon-076-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 168
         }
       ]
     },
@@ -4170,7 +4509,7 @@
           "title": "Pré-test en vol multi IFR",
           "objective": "Ce plan de leçon consiste en une entrevue (sur les items demandés au sol lors d'un test en vol IFR) dirigée par l'instructeur exactement comme le ferait un inspecteur ou un examinateur de vol désigné. L'élève devrait pouvoir répondre et/expliquer convenablement toutes les procédures exigées à l'occasion du test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.5,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -4181,7 +4520,10 @@
           ],
           "nextLesson": "Prog nav",
           "successCriteria": "Le candidat répond aux normes pour la réussite de la partie sol du test en vol, conformément à la publication TP 9939-Guide de test en vol-Qualification de vol aux instruments et des normes associées.",
-          "manualPage": 168
+          "manualPage": 168,
+          "pdfPath": "/docs/plans/lecon-077-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 169
         },
         {
           "number": 77,
@@ -4201,7 +4543,10 @@
           ],
           "nextLesson": "Vol / Sim de réserve (au besoin seulement)",
           "successCriteria": "L'élève maîtrise les procédures sans aide de l'instructeur",
-          "manualPage": 169
+          "manualPage": 169,
+          "pdfPath": "/docs/plans/lecon-077-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 170
         },
         {
           "number": 77,
@@ -4213,7 +4558,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4221,7 +4566,10 @@
           ],
           "nextLesson": "Test en vol multi IFR",
           "successCriteria": "Exécuter convenablement toutes les procédures et manœuvres exigées à l'occasion du test en vol IFR, conformément à la publication TP 9939-Guide de test en vol-Qualification de vol aux instruments et des normes associées.",
-          "manualPage": 170
+          "manualPage": 170,
+          "pdfPath": "/docs/plans/lecon-077-03-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 171
         }
       ]
     },
@@ -4249,7 +4597,7 @@
           "objective": "Ce plan de leçon sert à effectuer une première fois le scénario en vol du test en vol de qualification de vol aux instruments groupe 1 ou pratiquer les points où des difficultés ont été rencontrées.",
           "hours": {
             "sol": 0.0,
-            "dev": 0.0,
+            "dev": 1.0,
             "doubleCommande": 0.0,
             "solo": 0.0
           },
@@ -4258,7 +4606,10 @@
           ],
           "nextLesson": "Avion complexe",
           "successCriteria": "L'élève maîtrise les procédures sans aide de l'instructeur",
-          "manualPage": 171
+          "manualPage": 171,
+          "pdfPath": "/docs/plans/lecon-078-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 172
         }
       ]
     },
@@ -4287,7 +4638,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4295,7 +4646,10 @@
           ],
           "nextLesson": "Manœuvres pilote professionnel",
           "successCriteria": "Réussite du test en vol",
-          "manualPage": 172
+          "manualPage": 172,
+          "pdfPath": "/docs/plans/lecon-079-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 173
         }
       ]
     },
@@ -4323,7 +4677,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4332,7 +4686,10 @@
           ],
           "nextLesson": "Solo – manœuvre du pilote professionnel",
           "successCriteria": "",
-          "manualPage": 173
+          "manualPage": 173,
+          "pdfPath": "/docs/plans/lecon-080-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 174
         }
       ]
     },
@@ -4360,14 +4717,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Solo – Manœuvres du pilote professionnel",
           "successCriteria": "",
-          "manualPage": 174
+          "manualPage": 174,
+          "pdfPath": "/docs/plans/lecon-081-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 175
         }
       ]
     },
@@ -4395,14 +4755,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Solo – Manœuvres du pilote professionnel",
           "successCriteria": "",
-          "manualPage": 175
+          "manualPage": 175,
+          "pdfPath": "/docs/plans/lecon-082-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 176
         }
       ]
     },
@@ -4430,14 +4793,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Déroutement, cercle d’incertitude et radionavigation",
           "successCriteria": "",
-          "manualPage": 176
+          "manualPage": 176,
+          "pdfPath": "/docs/plans/lecon-083-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 177
         }
       ]
     },
@@ -4465,7 +4831,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4474,7 +4840,10 @@
           ],
           "nextLesson": "Solo – départ de navigation, forcé, déroutement et précaution.",
           "successCriteria": "",
-          "manualPage": 177
+          "manualPage": 177,
+          "pdfPath": "/docs/plans/lecon-084-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 178
         }
       ]
     },
@@ -4503,7 +4872,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Déroutement",
@@ -4511,7 +4880,10 @@
           ],
           "nextLesson": "Pré-Prog nav",
           "successCriteria": "",
-          "manualPage": 178
+          "manualPage": 178,
+          "pdfPath": "/docs/plans/lecon-085-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 179
         }
       ]
     },
@@ -4542,7 +4914,7 @@
           "title": "Pré-Prog nav",
           "objective": "Ce plan de leçon consiste en une entrevue (sur les items demandés au sol lors du test de progression en navigation VFR) dirigée par l'instructeur exactement comme le ferait un inspecteur ou un examinateur de vol désigné. L'élève devrait pouvoir répondre et/expliquer convenablement toutes les procédures exigées à l'occasion du test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -4553,7 +4925,10 @@
           ],
           "nextLesson": "Test de progression en navigation VFR dirigé par l’instructeur-vérificateur",
           "successCriteria": "Le candidat répond aux normes pour la réussite de la partie sol du test en vol, conformément à la publication TP13779 – Guide de test de progression en navigation VFR et des normes associées.",
-          "manualPage": 179
+          "manualPage": 179,
+          "pdfPath": "/docs/plans/lecon-086-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 180
         },
         {
           "number": 86,
@@ -4574,7 +4949,10 @@
           ],
           "nextLesson": "Solo pré-prog nav",
           "successCriteria": "",
-          "manualPage": 180
+          "manualPage": 180,
+          "pdfPath": "/docs/plans/lecon-086-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 181
         }
       ]
     },
@@ -4603,7 +4981,7 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédure de départ Procédure en route",
@@ -4611,7 +4989,10 @@
           ],
           "nextLesson": "Test de progression en navigation VFR dirigé par l’instructeur-vérificateur.",
           "successCriteria": "",
-          "manualPage": 181
+          "manualPage": 181,
+          "pdfPath": "/docs/plans/lecon-087-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 182
         }
       ]
     },
@@ -4642,7 +5023,7 @@
           "title": "Test de progression en navigation VFR",
           "objective": "Ce plan de leçon consiste en une entrevue (sur les items demandés au sol lors du test de progression en navigation VFR) dirigée par l'instructeur-vérificateur. L'élève devrait pouvoir répondre et/expliquer convenablement toutes les procédures exigées à l'occasion du test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -4653,7 +5034,10 @@
           ],
           "nextLesson": "Pré-test en vol CPL",
           "successCriteria": "Le candidat répond aux normes pour la réussite de la partie sol du test en vol, conformément à la publication TP13779 – Guide de test de progression en navigation VFR et des normes associées.",
-          "manualPage": 182
+          "manualPage": 182,
+          "pdfPath": "/docs/plans/lecon-088-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 183
         },
         {
           "number": 88,
@@ -4674,7 +5058,10 @@
           ],
           "nextLesson": "Révision des manœuvres",
           "successCriteria": "",
-          "manualPage": 183
+          "manualPage": 183,
+          "pdfPath": "/docs/plans/lecon-088-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 184
         }
       ]
     },
@@ -4701,7 +5088,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4709,7 +5096,10 @@
           ],
           "nextLesson": "Solo – révision des manœuvres",
           "successCriteria": "",
-          "manualPage": 184
+          "manualPage": 184,
+          "pdfPath": "/docs/plans/lecon-089-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 185
         }
       ]
     },
@@ -4737,14 +5127,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Déroutement, cercle d’incertitude et radio navigation",
           "successCriteria": "",
-          "manualPage": 185
+          "manualPage": 185,
+          "pdfPath": "/docs/plans/lecon-090-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 186
         }
       ]
     },
@@ -4772,14 +5165,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.8
           },
           "exercises": [
             "Procédures de départs VFR Procédure en route Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Pré-test en vol CPL",
           "successCriteria": "",
-          "manualPage": 186
+          "manualPage": 186,
+          "pdfPath": "/docs/plans/lecon-091-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 187
         }
       ]
     },
@@ -4810,7 +5206,7 @@
           "title": "Pré-test en vol CPL",
           "objective": "Ce plan de leçon consiste en une entrevue (sur les items demandés au sol lors d'un test en vol professionnel) dirigée par l'instructeur exactement comme le ferait un inspecteur ou un examinateur de vol désigné. L'élève devrait pouvoir répondre et/expliquer convenablement toutes les procédures exigées à̀ l'occasion du test en vol.",
           "hours": {
-            "sol": 0.0,
+            "sol": 1.5,
             "dev": 0.0,
             "doubleCommande": 0.0,
             "solo": 0.0
@@ -4821,7 +5217,10 @@
           ],
           "nextLesson": "Avion complexe",
           "successCriteria": "Le candidat répond aux normes pour la réussite de la partie sol du test en vol, conformément à la publication TP 13462F-Guide de test en vol-licence de pilote professionnel et des normes associées.",
-          "manualPage": 187
+          "manualPage": 187,
+          "pdfPath": "/docs/plans/lecon-092-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 188
         },
         {
           "number": 92,
@@ -4833,7 +5232,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.8,
             "solo": 0.0
           },
           "exercises": [
@@ -4841,7 +5240,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "Exécuter convenablement toutes les procédures et manœuvres exigées à l'occasion du test en vol commercial, conformément à la publication TP 13462F-Guide de test en vol-licence de pilote professionnel et des normes associées.",
-          "manualPage": 188
+          "manualPage": 188,
+          "pdfPath": "/docs/plans/lecon-092-02-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 189
         }
       ]
     },
@@ -4869,14 +5271,17 @@
             "sol": 0.0,
             "dev": 0.0,
             "doubleCommande": 0.0,
-            "solo": 0.0
+            "solo": 1.4
           },
           "exercises": [
             "Virages à grande inclinaison Vol lent Décrochage Vrille Glissade Décollage court et mous Atterrissage court et mous Atterrissage de précision Atterrissage de précaution Atterrissage forcé Déroutement"
           ],
           "nextLesson": "Test en vol CPL",
           "successCriteria": "",
-          "manualPage": 189
+          "manualPage": 189,
+          "pdfPath": "/docs/plans/lecon-093-01-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 190
         }
       ]
     },
@@ -4905,7 +5310,7 @@
           "hours": {
             "sol": 0.0,
             "dev": 0.0,
-            "doubleCommande": 0.0,
+            "doubleCommande": 1.6,
             "solo": 0.0
           },
           "exercises": [
@@ -4913,7 +5318,10 @@
           ],
           "nextLesson": "",
           "successCriteria": "Réussite du test en vol.",
-          "manualPage": 190
+          "manualPage": 190,
+          "pdfPath": "/docs/plans/lecon-094-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 191
         }
       ]
     },
@@ -4948,7 +5356,10 @@
           ],
           "nextLesson": "Vol de réserve en solo (au besoin seulement)",
           "successCriteria": "",
-          "manualPage": 191
+          "manualPage": 191,
+          "pdfPath": "/docs/plans/lecon-095-01-double-commande.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 192
         },
         {
           "number": 95,
@@ -4968,7 +5379,10 @@
           ],
           "nextLesson": "Avion complexe",
           "successCriteria": "",
-          "manualPage": 192
+          "manualPage": 192,
+          "pdfPath": "/docs/plans/lecon-095-02-solo.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 193
         }
       ]
     },
@@ -5011,7 +5425,10 @@
           ],
           "nextLesson": "Fin des sols",
           "successCriteria": "Le candidat devra comprendre et savoir comment interpréter les différents systèmes d’un avion complexe.",
-          "manualPage": 193
+          "manualPage": 193,
+          "pdfPath": "/docs/plans/lecon-096-01-sol-preparatoire.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 194
         },
         {
           "number": 96,
@@ -5034,7 +5451,10 @@
           ],
           "nextLesson": "Familiarisation 2",
           "successCriteria": "Le candidat devra comprendre et savoir comment interpréter et utiliser les différents systèmes d’un avion complexe.",
-          "manualPage": 194
+          "manualPage": 194,
+          "pdfPath": "/docs/plans/lecon-096-02-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 195
         }
       ]
     },
@@ -5075,7 +5495,10 @@
           ],
           "nextLesson": "MCC et JET",
           "successCriteria": "Être capable d’effectuer des procédures normales sur avion complexe.",
-          "manualPage": 195
+          "manualPage": 195,
+          "pdfPath": "/docs/plans/lecon-097-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 196
         }
       ]
     },
@@ -5112,7 +5535,10 @@
           ],
           "nextLesson": "MCC 2",
           "successCriteria": "Selon les normes de réussite du programme MCC Orizon aviation",
-          "manualPage": 196
+          "manualPage": 196,
+          "pdfPath": "/docs/plans/lecon-098-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 197
         }
       ]
     },
@@ -5149,7 +5575,10 @@
           ],
           "nextLesson": "MCC 3",
           "successCriteria": "Selon les normes de réussite du programme MCC Orizon aviation",
-          "manualPage": 197
+          "manualPage": 197,
+          "pdfPath": "/docs/plans/lecon-099-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 198
         }
       ]
     },
@@ -5188,7 +5617,10 @@
           ],
           "nextLesson": "MCC 4",
           "successCriteria": "Selon les normes de réussite du programme MCC Orizon aviation",
-          "manualPage": 198
+          "manualPage": 198,
+          "pdfPath": "/docs/plans/lecon-100-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 199
         }
       ]
     },
@@ -5227,7 +5659,10 @@
           ],
           "nextLesson": "MCC 5 évaluation",
           "successCriteria": "Selon les normes de réussite du programme MCC Orizon aviation",
-          "manualPage": 199
+          "manualPage": 199,
+          "pdfPath": "/docs/plans/lecon-101-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 200
         }
       ]
     },
@@ -5266,9 +5701,15 @@
           ],
           "nextLesson": "Fin du programme",
           "successCriteria": "Selon les normes de réussite du programme MCC Orizon aviation",
-          "manualPage": 200
+          "manualPage": 200,
+          "pdfPath": "/docs/plans/lecon-102-01-dev.pdf",
+          "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+          "manualPdfPage": 201
         }
       ]
     }
-  ]
+  ],
+  "manualPdfPath": "/docs/manuel-formation-atpa-mod6-2025.pdf",
+  "hoursVerifiedFromManual": true,
+  "hoursVerifiedComponentCount": 146
 }

@@ -17,6 +17,9 @@ export type ProgramLessonComponent = {
   nextLesson: string;
   successCriteria: string;
   manualPage: number;
+  pdfPath?: string;
+  manualPdfPath?: string;
+  manualPdfPage?: number;
 };
 
 export type ProgramLessonTemplate = {
@@ -40,5 +43,8 @@ export type TrainingProgram = {
   lessonCount: number;
   componentCount: number;
   phases: Array<{ number: number; name: string }>;
+  manualPdfPath?: string;
+  hoursVerifiedFromManual?: boolean;
+  hoursVerifiedComponentCount?: number;
   lessons: ProgramLessonTemplate[];
 };

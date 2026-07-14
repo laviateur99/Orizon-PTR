@@ -37,3 +37,6 @@ export type Snag = {
   maintenanceNotes?: string;
   notifyRoles: NotificationRole[];
 };
+
+export type ImpactedReservation={id:string;date:string;startMinutes:number;endMinutes:number;title:string;studentId:string;studentName:string;instructorId:string;aircraftId:string;status:string};
+export type ImpactResolutionAction="Déplacer vers un autre avion"|"Aviser l’élève"|"Aviser l’instructeur"|"Aviser l’élève et l’instructeur"|"Annuler le vol"|"À décider plus tard";

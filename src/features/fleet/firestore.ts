@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { ORIZON_AIRCRAFT } from "./seed";
-import type { Aircraft, Snag } from "./types";
+import type { Aircraft, ImpactedReservation, ImpactResolutionAction, Snag } from "./types";
 
 export type LiveHandlers<T> = {
   next: (items: T[]) => void;
@@ -226,6 +226,7 @@ export async function createSnag(
     blockedForScheduling: blocked,
     updatedAt: reportedAt
   });
+  return {id:reference.id,snagNumber,completeSnag};
 }
 
 export async function updateSnag(
@@ -452,3 +453,7 @@ export function subscribeSnagHistory(
     error
   );
 }
+
+function reservationMinutes(v:unknown,f:number){if(typeof v==="number"&&Number.isFinite(v))return v;if(typeof v!=="string"||!/^\d{1,2}:\d{2}$/.test(v))return f;const[h,m]=v.split(":").map(Number);return h*60+m}
+export async function findImpactedReservations(aircraftId:string,fromDate=new Date().toISOString().slice(0,10)):Promise<ImpactedReservation[]>{const snap=await getDocs(query(collection(db,"reservations"),where("aircraftId","==",aircraftId)));return snap.docs.map(i=>{const d=i.data();return{id:i.id,date:text(d.date),startMinutes:reservationMinutes(d.startMinutes??d.startTime,0),endMinutes:reservationMinutes(d.endMinutes??d.endTime,0),title:text(d.title)||text(d.lesson)||text(d.type,"Vol"),studentId:text(d.studentId),studentName:text(d.studentName)||text(d.student),instructorId:text(d.instructorId),aircraftId:text(d.aircraftId),status:text(d.status,"Planifié")}}).filter(x=>x.date>=fromDate&&!["Complété","Annulé"].includes(x.status)).sort((a,b)=>a.date.localeCompare(b.date)||a.startMinutes-b.startMinutes)}
+export async function resolveImpactedReservation(r:ImpactedReservation,action:ImpactResolutionAction,replacementAircraftId:string,dispatchName:string,notes:string,snagId:string,snagNumber:string){const now=new Date().toISOString(),base={disruptionAction:action,disruptionNotes:notes,disruptedBy:dispatchName,disruptedAt:now,relatedSnagId:snagId,relatedSnagNumber:snagNumber,updatedAt:serverTimestamp()};if(action==="Déplacer vers un autre avion"){if(!replacementAircraftId)throw new Error("Sélectionne un avion de remplacement.");await updateDoc(doc(db,"reservations",r.id),{...base,aircraftId:replacementAircraftId,resourceId:replacementAircraftId,disruptionStatus:"Déplacé"})}else if(action==="Annuler le vol"){await updateDoc(doc(db,"reservations",r.id),{...base,status:"Annulé",disruptionStatus:"Annulé"})}else await updateDoc(doc(db,"reservations",r.id),{...base,disruptionStatus:action==="À décider plus tard"?"En attente":"Avis envoyé"});await addDoc(collection(db,"operationalNotifications"),cleanFirestoreValue({type:"IMPACT_SNAG",reservationId:r.id,studentId:r.studentId,studentName:r.studentName,instructorId:r.instructorId,originalAircraftId:r.aircraftId,replacementAircraftId:action==="Déplacer vers un autre avion"?replacementAircraftId:"",action,title:`${snagNumber} — ${r.title}`,message:notes||action,targetStudent:action==="Aviser l’élève"||action==="Aviser l’élève et l’instructeur",targetInstructor:action==="Aviser l’instructeur"||action==="Aviser l’élève et l’instructeur",createdBy:dispatchName,createdAt:now,relatedSnagId:snagId,relatedSnagNumber:snagNumber}));await addDoc(collection(db,"snagHistory"),cleanFirestoreValue({action:"Gestion d’un vol affecté",snagId,snagNumber,aircraftId:r.aircraftId,aircraftRegistration:r.aircraftId,defectTitle:r.title,actor:dispatchName,details:`${action}${replacementAircraftId?` — ${replacementAircraftId}`:""}${notes?` — ${notes}`:""}`,reservationId:r.id,eventAt:now,createdAt:serverTimestamp()}))}

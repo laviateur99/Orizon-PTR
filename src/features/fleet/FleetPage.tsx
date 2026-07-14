@@ -5,7 +5,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import {
   closeSnag,
   createSnag,
+  findImpactedReservations,
   replaceFleet,
+  resolveImpactedReservation,
   saveAircraft,
   subscribeAircraft,
   subscribeSnags,
@@ -17,6 +19,8 @@ import type {
   NotificationRole,
   Snag,
   SnagReporterRole,
+  ImpactedReservation,
+  ImpactResolutionAction,
   SnagSeverity,
   SnagStatus,
 } from "./types";
@@ -43,6 +47,10 @@ export function FleetPage() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Aircraft | null>(null);
   const [snagAircraft, setSnagAircraft] = useState<Aircraft | null>(null);
+  const [impactSnag,setImpactSnag]=useState<{id:string;snagNumber:string;aircraft:Aircraft}|null>(null);
+  const [impactedReservations,setImpactedReservations]=useState<ImpactedReservation[]>([]);
+  const [impactDispatchName,setImpactDispatchName]=useState("");
+  const [impactActions,setImpactActions]=useState<Record<string,{action:ImpactResolutionAction;replacementAircraftId:string;notes:string;completed:boolean}>>({});
   const [form, setForm] = useState({
     reportedBy: "",
     reportedByRole: "Dispatch" as SnagReporterRole,
@@ -88,7 +96,7 @@ export function FleetPage() {
       return;
     }
     try {
-      await createSnag({
+      const result = await createSnag({
         aircraftId: snagAircraft.id,
         aircraftRegistration: snagAircraft.registration,
         reportedBy: form.reportedBy.trim(),
@@ -103,6 +111,10 @@ export function FleetPage() {
         maintenanceNotes: "",
         notifyRoles: form.notifyRoles,
       });
+      const impacted=await findImpactedReservations(snagAircraft.id);
+      setImpactedReservations(impacted);
+      setImpactActions(Object.fromEntries(impacted.map(item=>[item.id,{action:"À décider plus tard" as ImpactResolutionAction,replacementAircraftId:"",notes:"",completed:false}])));
+      setImpactSnag({id:result.id,snagNumber:result.snagNumber,aircraft:snagAircraft});
       setSnagAircraft(null);
       setForm({
         reportedBy: "", reportedByRole: "Dispatch", category: "Divers",
@@ -110,10 +122,22 @@ export function FleetPage() {
         tach: "", hobbs: "", estimatedReturnDate: "",
         notifyRoles: ["Maintenance", "Directeur de maintenance"],
       });
-      setMessage(`SNAG signalé pour ${snagAircraft.registration}. Il apparaît maintenant dans l’horaire.`);
+      setMessage(`SNAG signalé pour ${snagAircraft.registration}. ${impacted.length} vol(s) affecté(s) à traiter.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Impossible d’enregistrer le SNAG.");
     }
+  }
+
+
+
+  async function applyImpactAction(reservation:ImpactedReservation){
+    if(!impactSnag)return;
+    const value=impactActions[reservation.id];
+    if(!value)return;
+    if(!impactDispatchName.trim()){setMessage("Le nom du dispatch est obligatoire.");return;}
+    await resolveImpactedReservation(reservation,value.action,value.replacementAircraftId,impactDispatchName.trim(),value.notes,impactSnag.id,impactSnag.snagNumber);
+    setImpactActions(current=>({...current,[reservation.id]:{...current[reservation.id],completed:true}}));
+    setMessage(`Action enregistrée pour ${reservation.title}.`);
   }
 
   return (
@@ -222,6 +246,27 @@ export function FleetPage() {
           </form>
         </section></div>
       )}
+
+
+      {impactSnag && (
+        <div className="modal-backdrop"><section className="modal impact-modal">
+          <header><div><h2>Vols affectés par le SNAG</h2><p>{impactSnag.snagNumber} · {impactSnag.aircraft.registration}</p></div><button className="icon-button" onClick={()=>setImpactSnag(null)}>×</button></header>
+          <div className="modal-body">
+            <div className="impact-intro"><label>Dispatch responsable<input value={impactDispatchName} onChange={e=>setImpactDispatchName(e.target.value)} placeholder="Nom du dispatch"/></label><p>Les réservations demeurent visibles dans l’horaire jusqu’à ce qu’une action soit choisie.</p></div>
+            <div className="impacted-flight-list">{impactedReservations.map(reservation=>{const value=impactActions[reservation.id];const available=aircraft.filter(item=>item.active&&item.status==="Disponible"&&item.id!==impactSnag.aircraft.id);return <article className={`impacted-flight ${value?.completed?"completed":""}`} key={reservation.id}>
+              <div className="impacted-flight-summary"><strong>{reservation.date} · {String(Math.floor(reservation.startMinutes/60)).padStart(2,"0")}:{String(reservation.startMinutes%60).padStart(2,"0")}–{String(Math.floor(reservation.endMinutes/60)).padStart(2,"0")}:{String(reservation.endMinutes%60).padStart(2,"0")}</strong><span>{reservation.title}</span><span>Élève : {reservation.studentName||"Non assigné"}</span></div>
+              <div className="impact-controls">
+                <label>Action<select disabled={value?.completed} value={value?.action||"À décider plus tard"} onChange={e=>setImpactActions(current=>({...current,[reservation.id]:{...current[reservation.id],action:e.target.value as ImpactResolutionAction}}))}><option>Déplacer vers un autre avion</option><option>Aviser l’élève</option><option>Aviser l’instructeur</option><option>Aviser l’élève et l’instructeur</option><option>Annuler le vol</option><option>À décider plus tard</option></select></label>
+                {value?.action==="Déplacer vers un autre avion"&&<label>Nouvel avion<select disabled={value.completed} value={value.replacementAircraftId} onChange={e=>setImpactActions(current=>({...current,[reservation.id]:{...current[reservation.id],replacementAircraftId:e.target.value}}))}><option value="">Sélectionner</option>{available.map(item=><option value={item.id} key={item.id}>{item.registration} · {item.typeLabel}</option>)}</select></label>}
+                <label>Note au dossier<input disabled={value?.completed} value={value?.notes||""} onChange={e=>setImpactActions(current=>({...current,[reservation.id]:{...current[reservation.id],notes:e.target.value}}))} placeholder="Message ou suivi"/></label>
+                <button className={value?.completed?"button secondary":"button"} disabled={value?.completed} onClick={()=>applyImpactAction(reservation)}>{value?.completed?"Action enregistrée":"Appliquer"}</button>
+              </div>
+            </article>})}{!impactedReservations.length&&<div className="notice">Aucun vol futur ou en cours n’est affecté.</div>}</div>
+          </div>
+          <footer><span/><button className="button" onClick={()=>setImpactSnag(null)}>Fermer</button></footer>
+        </section></div>
+      )}
+
     </>
   );
 }
