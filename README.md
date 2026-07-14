@@ -1,18 +1,22 @@
-# Orizon Aviation - Flight Director v15.6.0 — Module Flotte
+# Orizon Aviation - Flight Director v15.6.1 — Correctif SNAG
 
-- Flotte officielle de 18 avions
-- Statuts et périodes de maintenance
-- SNAG signalés par Dispatch ou Instructeur
-- Défectuosité, description, gravité, Tach/Hobbs
-- Notifications par rôles
-- Workflow de maintenance et remise en service
+## Corrections
+- élimine les valeurs `undefined` avant écriture Firestore;
+- corrige l’erreur `Unsupported field value: undefined`;
+- ajoute une liste des utilisateurs dans **Signalé par**;
+- ajoute **Autre personne** avec saisie manuelle;
+- ajoute les rôles **Admin** et **Autre**;
+- conserve les notifications par rôle.
 
 ## Installation
+
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.6.0-Module-Flotte
+cd ~/Downloads/Orizon-Flight-Director-v15.6.1-Module-Flotte-Correctif-SNAG
 ./install-foundation.sh
 ```
-Puis:
+
+Puis :
+
 ```bash
 cd ~/Documents/Orizon-PTR
 git push
