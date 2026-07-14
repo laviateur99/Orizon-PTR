@@ -1,16 +1,17 @@
-# Orizon Aviation - Flight Director v15.7.1
+# Orizon Aviation - Flight Director v15.7.2
 
-## Correctifs et ajouts
-- Lorsqu’un autre avion est choisi dans la fenêtre de réservation, le bloc est maintenant placé sur la ligne de cet avion.
-- Nouveau Tableau des SNAG accessible depuis le menu.
-- Recherche, filtres par statut et gravité.
-- Compteurs SNAG ouverts, AOG, en réparation et fermés.
-- Modification rapide du statut.
-- Configuration des rôles autorisés, par défaut Maintenance, Directeur de maintenance et Administrateur.
+## Plage horaire administrable
+- nouvelle page **Réglages horaire**;
+- heure de début configurable de 00:00 à 23:00;
+- heure de fin configurable jusqu’à 24:00;
+- précision de 15, 30 ou 60 minutes;
+- paramètres conservés dans Firestore `appSettings/scheduler`;
+- élargissement automatique si une réservation existe en dehors de la plage configurée;
+- une réservation à 06:00 ne peut donc plus être cachée.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.7.1-Correctif-Horaire-Tableau-SNAG
+cd ~/Downloads/Orizon-Flight-Director-v15.7.2-Plage-Horaire-Admin
 ./install-foundation.sh
 ```
 Puis :

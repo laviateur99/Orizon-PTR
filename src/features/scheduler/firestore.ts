@@ -1,6 +1,7 @@
 import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import type { Cancellation, FlightOperationUpdate, SchedulerEvent, SchedulerResource } from "./types";
+import { DEFAULT_SCHEDULER_SETTINGS, type SchedulerSettings } from "./settings";
 export type LiveHandlers<T>={next:(items:T[])=>void;error:(error:FirestoreError)=>void};
 const text=(v:unknown,f="")=>typeof v==="string"?v:f; const optional=(v:unknown)=>{const r=text(v).trim();return r||undefined};
 const num=(v:unknown)=>typeof v==="number"&&Number.isFinite(v)?v:undefined;
@@ -18,3 +19,17 @@ export async function updateFlightOperation(id:string,patch:FlightOperationUpdat
 export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),{eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)});await deleteDoc(doc(db,"reservations",e.id));}
 export type StudentOption={id:string;name:string};
 export function subscribeStudents(h:LiveHandlers<StudentOption>):Unsubscribe{return onSnapshot(collection(db,"students"),s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,name:text(d.name)||`${text(d.firstName)} ${text(d.lastName)}`.trim()||i.id}})),h.error);}
+
+export function subscribeSchedulerSettings(h:LiveHandlers<SchedulerSettings>):Unsubscribe{
+  return onSnapshot(doc(db,"appSettings","scheduler"),snapshot=>{
+    if(!snapshot.exists()){h.next([DEFAULT_SCHEDULER_SETTINGS]);return;}
+    const d=snapshot.data();
+    const start=typeof d.startHour==="number"?d.startHour:DEFAULT_SCHEDULER_SETTINGS.startHour;
+    const end=typeof d.endHour==="number"?d.endHour:DEFAULT_SCHEDULER_SETTINGS.endHour;
+    const slot=(d.slotMinutes===15||d.slotMinutes===30||d.slotMinutes===60)?d.slotMinutes:DEFAULT_SCHEDULER_SETTINGS.slotMinutes;
+    h.next([{startHour:start,endHour:end,slotMinutes:slot,updatedAt:text(d.updatedAt),updatedBy:text(d.updatedBy)}]);
+  },h.error);
+}
+export async function saveSchedulerSettings(value:SchedulerSettings){
+  await setDoc(doc(db,"appSettings","scheduler"),{...value,updatedAt:new Date().toISOString()},{merge:true});
+}

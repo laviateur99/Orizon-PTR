@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { OrizonLogo } from "@/components/branding/OrizonLogo";
 
 const links = [
-  ["/", "Tableau de bord"], ["/schedule", "Horaire"], ["/students", "Étudiants"],
+  ["/", "Tableau de bord"], ["/schedule", "Horaire"], ["/admin/schedule", "Réglages horaire"], ["/students", "Étudiants"],
   ["/instructors", "Instructeurs"], ["/fleet", "Flotte"], ["/maintenance/snags", "Tableau SNAG"], ["/emergency", "Urgences"], ["/ptr", "PTR"], ["/programs", "Programmes"]
 ];
 
