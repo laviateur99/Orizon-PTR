@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -234,9 +235,8 @@ export async function updateSnag(
   patch: Partial<Snag>,
   actor = "Tableau des SNAG"
 ) {
-  const snapshot = await getDocs(query(collection(db, "snags"), where("__name__", "==", id)));
-  const currentDoc = snapshot.docs[0];
-  const currentData = currentDoc?.data();
+  const currentDoc = await getDoc(doc(db, "snags", id));
+  const currentData = currentDoc.exists() ? currentDoc.data() : undefined;
 
   await updateDoc(
     doc(db, "snags", id),
@@ -274,6 +274,32 @@ export async function updateSnag(
       actor,
       patch.status ? `Statut changé à ${patch.status}` : "Dossier modifié"
     );
+
+    if (patch.status === "Fermé") {
+      const remaining = await getDocs(
+        query(collection(db, "snags"), where("aircraftId", "==", current.aircraftId))
+      );
+      const hasOtherOpen = remaining.docs.some(
+        item => item.id !== id && text(item.data().status) !== "Fermé"
+      );
+      if (!hasOtherOpen) {
+        await updateDoc(doc(db, "aircraft", current.aircraftId), {
+          status: "Disponible",
+          statusReason: "",
+          blockedForScheduling: false,
+          maintenanceStart: "",
+          maintenanceEnd: "",
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } else if (patch.status) {
+      await updateDoc(doc(db, "aircraft", current.aircraftId), {
+        status: "SNAG",
+        blockedForScheduling: true,
+        statusReason: `${current.snagNumber || "SNAG"} · ${current.defectTitle}`,
+        updatedAt: new Date().toISOString()
+      });
+    }
   }
 }
 

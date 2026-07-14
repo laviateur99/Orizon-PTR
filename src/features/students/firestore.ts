@@ -74,5 +74,22 @@ export async function deleteStudentNote(id:string){ await deleteDoc(doc(db,"stud
 export function subscribeHistory(id:string,h:LiveHandlers<StudentHistoryItem>){ return scoped("studentHistory",id,(docId,d)=>({ id:docId,studentId:id,type:text(d.type,"Modification") as StudentHistoryItem["type"],title:text(d.title),detail:text(d.detail),createdAt:text(d.createdAt) }),h); }
 export async function addHistory(item: Omit<StudentHistoryItem,"id"|"createdAt">){ await addDoc(collection(db,"studentHistory"),{...item,createdAt:new Date().toISOString()}); }
 
-export function subscribeLessons(id:string,h:LiveHandlers<StudentLesson>){ return scoped("ptrLessons",id,(docId,d)=>({ id:docId,studentId:id,phase:text(d.phase,"Phase 1"),lessonNumber:text(d.lessonNumber),title:text(d.title,"Leçon"),status:text(d.status,"Non commencé") as StudentLesson["status"],score:typeof d.score==="number"?(d.score as 1 | 2 | 3 | 4):undefined }),h); }
+export function subscribeLessons(id:string,h:LiveHandlers<StudentLesson>){
+  return scoped("ptrLessons",id,(docId,d)=>({
+    id:docId,
+    studentId:id,
+    phase:text(d.phase,"Phase 1"),
+    lessonNumber:text(d.lessonNumber),
+    title:text(d.title,"Leçon"),
+    status:text(d.status,"Non commencé") as StudentLesson["status"],
+    score:[1,2,3,4].includes(d.lastFinalScore)
+      ? d.lastFinalScore as 1|2|3|4
+      : [1,2,3,4].includes(d.score)
+        ? d.score as 1|2|3|4
+        : undefined,
+    lessonPlanId:text(d.lessonPlanId),
+    lessonPdfPath:text(d.lessonPdfPath),
+    linkedReservationId:text(d.linkedReservationId)
+  }),h);
+}
 export function subscribeReservations(id:string,h:LiveHandlers<StudentReservation>){ return scoped("reservations",id,(docId,d)=>({ id:docId,studentId:id,date:text(d.date),startTime:text(d.startTime),endTime:text(d.endTime),type:text(d.type),title:text(d.title)||text(d.lesson),aircraftId:text(d.aircraftId),instructorId:text(d.instructorId),status:text(d.status,"Planifié") }),h); }

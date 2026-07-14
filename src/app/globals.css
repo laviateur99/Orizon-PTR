@@ -215,3 +215,39 @@ textarea{min-height:90px}.icon-button{border:0;background:#eef3f8;width:36px;hei
   .lesson-plan-summary-head{display:grid}
   .lesson-plan-frame{height:340px}
 }
+
+
+/* v15.9.2 — PTR, SNAG et ordre de l’horaire */
+.student-lesson-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+.student-lesson-links a{color:#0b66c3;font-size:12px;font-weight:800;text-decoration:underline}
+.resource-order-panel{margin-top:18px}
+.resource-order-list{display:grid;gap:8px;margin:14px 0}
+.resource-order-row{
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  gap:12px;
+  align-items:center;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 12px;
+  background:#fff
+}
+.resource-order-number{
+  width:32px;height:32px;border-radius:999px;
+  background:#eaf4ff;color:#0b2f5b;
+  display:grid;place-items:center;font-weight:900
+}
+.resource-order-row strong,.resource-order-row small{display:block}
+.resource-order-row small{color:var(--muted);margin-top:3px}
+.resource-order-row>div:last-child{display:flex;gap:6px}
+.schedule-event.snag-block{
+  top:2px!important;
+  height:16px!important;
+  min-height:16px!important;
+  z-index:4!important
+}
+.schedule-event.snag-block .event-content{
+  padding:1px 8px!important;
+  line-height:12px!important
+}
+.schedule-event:not(.snag-block){z-index:8!important}

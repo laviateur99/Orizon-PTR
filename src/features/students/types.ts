@@ -73,6 +73,9 @@ export type StudentLesson = {
   title: string;
   status: "Non commencé" | "En cours" | "Réussi" | "À reprendre";
   score?: 1 | 2 | 3 | 4;
+  lessonPlanId?: string;
+  lessonPdfPath?: string;
+  linkedReservationId?: string;
 };
 
 export type StudentReservation = {

@@ -1,24 +1,32 @@
-# Orizon Aviation - Flight Director v15.9.1
+# Orizon Aviation - Flight Director v15.9.2
 
-## Correctifs PTR
-- l’évaluation d’une leçon met maintenant à jour le document `ptrLessons`;
-- le statut de la leçon est synchronisé dans le dossier étudiant;
-- la note finale TC est enregistrée dans la leçon;
-- l’identifiant de la dernière évaluation est enregistré;
-- l’historique demeure dans `ptrEvaluations`.
+## PTR et check-out
+- le check-out met la leçon liée au statut **En cours**;
+- le dossier étudiant lit maintenant la note `lastFinalScore`;
+- lien vers le PDF original dans la progression PTR;
+- lien direct vers la bonne leçon dans le PTR;
+- l’évaluation TC demeure requise pour passer la leçon à Réussi ou À reprendre.
 
-## Check-out
-- la bonne leçon est automatiquement sélectionnée;
-- le vol lié est automatiquement celui du check-out;
-- le vol lié est verrouillé pendant l’évaluation;
-- le plan de leçon original PDF apparaît directement dans la page;
-- bouton pour ouvrir le PDF dans un nouvel onglet;
-- échelle TC raccourcie en mode check-out;
-- fenêtre plus compacte et centrée sur l’évaluation.
+## SNAG
+- check-in impossible sur un avion bloqué par un SNAG ou une maintenance;
+- l’heure exacte du début du SNAG apparaît dans l’horaire;
+- le bandeau SNAG est généré pour chaque journée de la période;
+- les vols demeurent visibles sous le bandeau;
+- options : changement d’avion, avis, annulation, report ou attente;
+- statut des SNAG corrigé avec mise à jour de l’avion;
+- fermeture du dernier SNAG remet l’avion disponible.
+
+## Ordre de l’horaire
+Dans Administration → Horaire :
+- réordonner les avions;
+- réordonner les simulateurs;
+- réordonner les instructeurs;
+- réordonner les locaux;
+- ordre sauvegardé dans Firestore.
 
 ## Installation
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.9.1-Correctif-PTR-Checkout
+cd ~/Downloads/Orizon-Flight-Director-v15.9.2-PTR-SNAG-Ordre-Horaire
 ./install-foundation.sh
 ```
 

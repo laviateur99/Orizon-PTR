@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DEFAULT_SCHEDULER_SETTINGS, type SchedulerSettings } from "@/features/scheduler/settings";
 import { saveSchedulerSettings, subscribeSchedulerSettings } from "@/features/scheduler/firestore";
+import { ResourceOrderPanel } from "./ResourceOrderPanel";
 
 export function ScheduleSettingsPage(){
   const [settings,setSettings]=useState<SchedulerSettings>(DEFAULT_SCHEDULER_SETTINGS);
@@ -29,5 +30,6 @@ export function ScheduleSettingsPage(){
       <div className="schedule-preview"><strong>Aperçu</strong><span>{String(settings.startHour).padStart(2,"0")}:00</span><div></div><span>{settings.endHour===24?"24:00":`${String(settings.endHour).padStart(2,"0")}:00`}</span></div>
       <button className="button" onClick={save}>Enregistrer les paramètres</button>
     </section>
+    <ResourceOrderPanel />
   </>;
 }

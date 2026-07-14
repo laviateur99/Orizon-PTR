@@ -1,5 +1,5 @@
 export type ResourceKind = "aircraft" | "instructor" | "room" | "simulator";
-export type SchedulerResource = { id:string; kind:ResourceKind; name:string; detail:string; blocked?:boolean; groupLabel?:string };
+export type SchedulerResource = { id:string; kind:ResourceKind; name:string; detail:string; blocked?:boolean; groupLabel?:string; order?:number };
 export type ActivityType = "Double commande" | "Solo" | "Sol" | "Simulateur" | "Examen" | "Maintenance" | "Hors service";
 export type FlightStatus = "Planifié" | "Check-in" | "En vol" | "Complété" | "Annulé";
 export type SchedulerEvent = {
