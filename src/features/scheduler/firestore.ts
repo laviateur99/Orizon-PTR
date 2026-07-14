@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, writeBatch, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import type { Cancellation, FlightOperationUpdate, SchedulerEvent, SchedulerResource } from "./types";
 import { DEFAULT_SCHEDULER_SETTINGS, type SchedulerSettings } from "./settings";
@@ -97,24 +97,65 @@ export async function updateFlightOperation(
   await updateDoc(doc(db, "reservations", id), payload);
 }
 
-export async function markLinkedPTRLessonAfterCheckout(event: SchedulerEvent) {
-  if (!event.studentId || !event.lessonPlanId) return;
-  const lessonId = `${event.studentId}-${event.lessonPlanId}`;
+export async function markLinkedPTRLessonAfterCheckout(
+  event: SchedulerEvent
+) {
+  if (!event.studentId) return;
+
+  const now = new Date().toISOString();
+  const snapshot = await getDocs(
+    query(
+      collection(db, "ptrLessons"),
+      where("studentId", "==", event.studentId)
+    )
+  );
+
+  const matching = snapshot.docs.filter(item => {
+    const data = item.data();
+    return (
+      data.linkedReservationId === event.id ||
+      (Boolean(event.lessonPlanId) && data.lessonPlanId === event.lessonPlanId)
+    );
+  });
+
+  const update = cleanFirestoreData({
+    studentId: event.studentId,
+    lessonPlanId: event.lessonPlanId || "",
+    lessonPdfPath: event.lessonPdfPath || "",
+    linkedReservationId: event.id,
+    status: "En cours",
+    lastFlightStatus: "Complété",
+    lastCheckoutAt: now,
+    lastReservationTitle: event.title,
+    updatedAt: now
+  });
+
+  if (matching.length > 0) {
+    const batch = writeBatch(db);
+    matching.forEach(item => batch.set(item.ref, update, { merge: true }));
+    await batch.commit();
+    return;
+  }
+
+  const fallbackId = event.lessonPlanId
+    ? `${event.studentId}-${event.lessonPlanId}`
+    : `${event.studentId}-reservation-${event.id}`;
+
   await setDoc(
-    doc(db, "ptrLessons", lessonId),
-    {
-      studentId: event.studentId,
-      lessonPlanId: event.lessonPlanId,
-      lessonPdfPath: event.lessonPdfPath || "",
-      linkedReservationId: event.id,
-      status: "En cours",
-      lastFlightStatus: "Complété",
-      lastCheckoutAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
+    doc(db, "ptrLessons", fallbackId),
+    cleanFirestoreData({
+      ...update,
+      phase: "Programme",
+      lessonNumber: event.lessonPlanId || event.id,
+      title: event.lessonTitle || event.title || "Leçon liée au vol",
+      objective: "Voir le plan de leçon associé à la réservation.",
+      exercises: [],
+      createdAt: serverTimestamp()
+    }),
     { merge: true }
   );
 }
+
 export async function removeReservation(e:SchedulerEvent,reason:string){await addDoc(collection(db,"cancellations"),cleanFirestoreData({eventId:e.id,eventTitle:e.title,reason,cancelledAt:new Date().toISOString(),reservation:payload(e)}));await deleteDoc(doc(db,"reservations",e.id));}
 export type StudentOption={id:string;name:string};
 export function subscribeStudents(h:LiveHandlers<StudentOption>):Unsubscribe{return onSnapshot(collection(db,"students"),s=>h.next(s.docs.map(i=>{const d=i.data();return{id:i.id,name:text(d.name)||`${text(d.firstName)} ${text(d.lastName)}`.trim()||i.id}})),h.error);}
@@ -129,6 +170,56 @@ export function subscribeSchedulerSettings(h:LiveHandlers<SchedulerSettings>):Un
     h.next([{startHour:start,endHour:end,slotMinutes:slot,updatedAt:text(d.updatedAt),updatedBy:text(d.updatedBy)}]);
   },h.error);
 }
+export type ResourceGroupOrderSettings = {
+  groups: string[];
+  updatedAt?: string;
+  updatedBy?: string;
+};
+
+export function resourceGroupKey(resource: SchedulerResource) {
+  if (resource.kind === "aircraft") {
+    return `Avions — ${resource.groupLabel || resource.detail.split(" · ")[0] || "Autres"}`;
+  }
+  if (resource.kind === "simulator") return "Simulateurs";
+  if (resource.kind === "instructor") return "Instructeurs";
+  return "Locaux";
+}
+
+export function subscribeResourceGroupOrder(
+  next: (value: ResourceGroupOrderSettings) => void,
+  error: (value: FirestoreError) => void
+): Unsubscribe {
+  return onSnapshot(
+    doc(db, "appSettings", "schedulerResourceGroups"),
+    snapshot => {
+      const data = snapshot.data();
+      next({
+        groups: Array.isArray(data?.groups)
+          ? data.groups.filter((item): item is string => typeof item === "string")
+          : [],
+        updatedAt: text(data?.updatedAt),
+        updatedBy: text(data?.updatedBy)
+      });
+    },
+    error
+  );
+}
+
+export async function saveResourceGroupOrder(
+  groups: string[],
+  updatedBy: string
+) {
+  await setDoc(
+    doc(db, "appSettings", "schedulerResourceGroups"),
+    {
+      groups,
+      updatedBy: updatedBy.trim() || "Administrateur",
+      updatedAt: new Date().toISOString()
+    },
+    { merge: true }
+  );
+}
+
 export async function saveResourceScheduleOrder(
   items: Array<{id:string;kind:SchedulerResource["kind"];order:number}>
 ){
