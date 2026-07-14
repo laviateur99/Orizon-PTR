@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc, writeBatch, type FirestoreError, type Unsubscribe } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { ORIZON_AIRCRAFT } from "./seed";
 import type { Aircraft, Snag } from "./types";
@@ -61,4 +61,59 @@ export async function saveSnagDashboardAccess(allowedRoles: string[]) {
     allowedRoles,
     updatedAt: new Date().toISOString()
   }, { merge: true });
+}
+
+
+export async function deleteSnagAsAdmin(snag: Snag, adminName: string, reason: string) {
+  const now = new Date().toISOString();
+  await addDoc(collection(db, "snagHistory"), {
+    action: "Suppression administrative",
+    snagId: snag.id,
+    aircraftId: snag.aircraftId,
+    aircraftRegistration: snag.aircraftRegistration,
+    snagSnapshot: snag,
+    deletedBy: adminName,
+    reason,
+    deletedAt: now,
+    createdAt: serverTimestamp()
+  });
+
+  const notifications = await getDocs(query(collection(db, "notifications"), where("snagId", "==", snag.id)));
+  const batch = writeBatch(db);
+  notifications.docs.forEach(item => batch.delete(item.ref));
+  batch.delete(doc(db, "snags", snag.id));
+  await batch.commit();
+
+  const remaining = await getDocs(query(collection(db, "snags"), where("aircraftId", "==", snag.aircraftId)));
+  const hasOpen = remaining.docs.some(item => item.id !== snag.id && String(item.data().status) !== "Fermé");
+  if (!hasOpen) {
+    await updateDoc(doc(db, "aircraft", snag.aircraftId), {
+      status: "Disponible",
+      statusReason: "",
+      maintenanceStart: "",
+      maintenanceEnd: "",
+      blockedForScheduling: false,
+      updatedAt: now
+    });
+  }
+}
+
+export function subscribeSnagHistory(
+  next: (items: Array<{id:string; aircraftRegistration:string; defectTitle:string; deletedBy:string; reason:string; deletedAt:string}>) => void,
+  error: (value: FirestoreError) => void
+): Unsubscribe {
+  return onSnapshot(collection(db, "snagHistory"), snapshot => {
+    next(snapshot.docs.map(item => {
+      const data = item.data();
+      const snag = data.snagSnapshot && typeof data.snagSnapshot === "object" ? data.snagSnapshot as Record<string,unknown> : {};
+      return {
+        id:item.id,
+        aircraftRegistration:text(data.aircraftRegistration),
+        defectTitle:text(snag.defectTitle),
+        deletedBy:text(data.deletedBy),
+        reason:text(data.reason),
+        deletedAt:text(data.deletedAt)
+      };
+    }).sort((a,b)=>b.deletedAt.localeCompare(a.deletedAt)));
+  }, error);
 }

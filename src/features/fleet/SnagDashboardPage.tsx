@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
+  deleteSnagAsAdmin,
   saveSnagDashboardAccess,
   subscribeSnagDashboardAccess,
+  subscribeSnagHistory,
   subscribeSnags,
   updateSnag
 } from "./firestore";
@@ -47,15 +49,20 @@ export function SnagDashboardPage() {
   const [status, setStatus] = useState<SnagStatus | "Tous">("Tous");
   const [severity, setSeverity] = useState<SnagSeverity | "Toutes">("Toutes");
   const [message, setMessage] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Snag | null>(null);
+  const [adminName, setAdminName] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
+  const [history, setHistory] = useState<Array<{id:string;aircraftRegistration:string;defectTitle:string;deletedBy:string;reason:string;deletedAt:string}>>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const offSnags = subscribeSnags({ next: setSnags, error: value => setError(value.message) });
+    const offHistory = subscribeSnagHistory(setHistory, value => setError(value.message));
     const offAccess = subscribeSnagDashboardAccess(
       value => setAllowedRoles(value.allowedRoles),
       value => setError(value.message)
     );
-    return () => { offSnags(); offAccess(); };
+    return () => { offSnags(); offAccess(); offHistory(); };
   }, []);
 
   const filtered = useMemo(() => {
@@ -128,7 +135,7 @@ export function SnagDashboardPage() {
 
       <section className="card snag-table-card">
         <div className="snag-table-head">
-          <span>Avion / défectuosité</span><span>Priorité</span><span>Signalé par</span><span>Statut</span><span>Retour prévu</span>
+          <span>Avion / défectuosité</span><span>Priorité</span><span>Signalé par</span><span>Statut</span><span>Retour prévu</span><span>Admin</span>
         </div>
         {filtered.map(item => (
           <article className="snag-table-row" key={item.id}>
@@ -137,10 +144,34 @@ export function SnagDashboardPage() {
             <div><strong>{item.reportedBy}</strong><small>{item.reportedByRole}</small></div>
             <select value={item.status} onChange={event => updateSnag(item.id, { status: event.target.value as SnagStatus })}>{STATUSES.map(value => <option key={value}>{value}</option>)}</select>
             <span>{item.estimatedReturnDate || "—"}</span>
+            <button className="button danger small" onClick={()=>setDeleteTarget(item)}>Supprimer</button>
           </article>
         ))}
         {!filtered.length && <p>Aucun SNAG ne correspond aux filtres.</p>}
       </section>
+
+      <section className="card snag-history-card">
+        <h2>Historique des suppressions administratives</h2>
+        {history.slice(0,20).map(item=><div className="snag-history-row" key={item.id}>
+          <div><strong>{item.aircraftRegistration} — {item.defectTitle||"SNAG"}</strong><small>{item.deletedAt.slice(0,16).replace("T"," ")}</small></div>
+          <div><strong>{item.deletedBy}</strong><small>{item.reason}</small></div>
+        </div>)}
+        {!history.length&&<p>Aucune suppression administrative.</p>}
+      </section>
+
+      {deleteTarget&&<div className="modal-backdrop"><section className="modal compact">
+        <header><div><h2>Supprimer définitivement le SNAG</h2><p>{deleteTarget.aircraftRegistration} — {deleteTarget.defectTitle}</p></div><button className="icon-button" onClick={()=>setDeleteTarget(null)}>×</button></header>
+        <div className="modal-body">
+          <label>Nom de l’administrateur<input value={adminName} onChange={event=>setAdminName(event.target.value)} /></label>
+          <label>Raison de la suppression<textarea value={deleteReason} onChange={event=>setDeleteReason(event.target.value)} /></label>
+          <div className="notice error">Le SNAG sera retiré du tableau et de l’horaire. Une copie complète sera conservée dans l’historique administratif.</div>
+        </div>
+        <footer><span/><button className="button secondary" onClick={()=>setDeleteTarget(null)}>Annuler</button><button className="button danger" onClick={async()=>{
+          if(!adminName.trim()||!deleteReason.trim()){setMessage("Le nom de l’administrateur et la raison sont obligatoires.");return;}
+          await deleteSnagAsAdmin(deleteTarget,adminName.trim(),deleteReason.trim());
+          setDeleteTarget(null);setAdminName("");setDeleteReason("");setMessage("SNAG supprimé et archivé dans l’historique.");
+        }}>Confirmer la suppression</button></footer>
+      </section></div>}
     </>
   );
 }
