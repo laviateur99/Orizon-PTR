@@ -1,31 +1,18 @@
-# Orizon Aviation - Flight Director v15.5.0
+# Orizon Aviation - Flight Director v15.6.0 — Module Flotte
 
-## Programme ATP(A) importé depuis le manuel officiel
-
-Cette version structure le manuel de formation d’Orizon Aviation :
-- Modification no 6;
-- entrée en vigueur le 1er juin 2025;
-- 10 phases;
-- 102 leçons;
-- 146 composantes (sol préparatoire, double commande, DEV et solo);
-- objectifs;
-- exercices;
-- normes de réussite;
-- durées;
-- aperçu de la leçon suivante;
-- page de référence du manuel.
-
-Dans le PTR d’un étudiant, clique sur **Installer le programme ATP(A)**. Les 102 leçons sont créées automatiquement dans Firestore.
+- Flotte officielle de 18 avions
+- Statuts et périodes de maintenance
+- SNAG signalés par Dispatch ou Instructeur
+- Défectuosité, description, gravité, Tach/Hobbs
+- Notifications par rôles
+- Workflow de maintenance et remise en service
 
 ## Installation
-
 ```bash
-cd ~/Downloads/Orizon-Flight-Director-v15.5.0-Programme-ATPA
+cd ~/Downloads/Orizon-Flight-Director-v15.6.0-Module-Flotte
 ./install-foundation.sh
 ```
-
-Puis :
-
+Puis:
 ```bash
 cd ~/Documents/Orizon-PTR
 git push
