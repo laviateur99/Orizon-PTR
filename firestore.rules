@@ -1,0 +1,490 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function active() { return signedIn() && profile().data.active == true; }
+    function has(module) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny([module])); }
+    function any(modules) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny(modules)); }
+    function admin() { return active() && profile().data.role == 'Administrateur'; }
+    function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
+    function maintenanceReservation(data) {
+      return data.keys().hasAny(['maintenanceWorkOrderId'])
+        && data.maintenanceWorkOrderId is string
+        && data.maintenanceWorkOrderId.size() > 0;
+    }
+    function studentRole() { return active() && profile().data.role == 'Étudiant'; }
+    function ownPtr(studentId) { return !studentRole() || profile().data.linkedStudentId == studentId; }
+    function managesInstructors() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function ptrStaff() {
+      return has('ptr') && profile().data.role in ['Administrateur','Chef instructeur','Instructeur'];
+    }
+    function employeeAccess() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Dispatch','Instructeur','Maintenance','Directeur de maintenance']; }
+    function managesCommunications() { return employeeAccess() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function managesPayroll() { return employeeAccess() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function ownEmployee(employeeId) { return employeeAccess() && (employeeId == request.auth.uid || employeeId == profile().data.linkedInstructorId); }
+    function employeeQualificationValid() {
+      return request.resource.data.keys().hasAll([
+          'employeeId','aircraftType','qualificationType','qualificationName','status',
+          'source','createdBy','createdAt','updatedBy','updatedAt'
+        ])
+        && request.resource.data.employeeId is string
+        && request.resource.data.employeeId.size() > 0
+        && request.resource.data.aircraftType is string
+        && request.resource.data.aircraftType.size() > 0
+        && request.resource.data.qualificationType in ['aircraft','flight']
+        && request.resource.data.qualificationName is string
+        && request.resource.data.status in ['valid','not-applicable']
+        && request.resource.data.source == 'employee-aircraft-qualification'
+        && request.resource.data.createdBy.uid is string
+        && request.resource.data.updatedBy.uid == request.auth.uid
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && (!request.resource.data.keys().hasAny(['completedAt']) || request.resource.data.completedAt is string)
+        && (!request.resource.data.keys().hasAny(['expiresAt']) || request.resource.data.expiresAt is string)
+        && (!request.resource.data.keys().hasAny(['notes']) || request.resource.data.notes is string);
+    }
+    function payrollPeriodOpen(periodId) { return !(periodId is string) || !exists(/databases/$(database)/documents/payPeriods/$(periodId)) || get(/databases/$(database)/documents/payPeriods/$(periodId)).data.status != 'Verrouillée'; }
+    function maintenanceManager() { return employeeAccess() && profile().data.role in ['Administrateur','Directeur de maintenance']; }
+    function maintenanceWorkStatusValid() {
+      return request.resource.data.workStatus in ['Planifiée','Assignée','En cours','Travail terminé','Inspection requise','Inspection complétée','Autorisée pour retour en service','Fermée','En attente de pièces','Suspendue','Annulée','Retour en service refusé'];
+    }
+    function maintenanceWorkOrderValid() {
+      return request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.source in ['Échéance maintenance existante','SNAG','Intervention manuelle']
+        && request.resource.data.priority in ['Critique','Haute','Normale','Basse','Surveillance','Urgente']
+        && (request.resource.data.source != 'Échéance maintenance existante' || request.resource.data.maintenanceTaskId is string)
+        && (request.resource.data.source != 'SNAG' || request.resource.data.snagId is string);
+    }
+    function maintenanceWorkTransitionValid() {
+      let before = resource.data.workStatus;
+      let after = request.resource.data.workStatus;
+      return before == after
+        || (before == 'Planifiée' && after in ['Assignée','Annulée'])
+        || (before == 'Assignée' && after in ['En cours','Suspendue','Annulée'])
+        || (before == 'En cours' && after in ['En attente de pièces','Suspendue','Travail terminé','Inspection requise','Annulée'])
+        || (before == 'Travail terminé' && after in ['Inspection requise','Autorisée pour retour en service','En cours','Annulée'])
+        || (before == 'En attente de pièces' && after in ['En cours','Suspendue','Annulée'])
+        || (before == 'Suspendue' && after in ['Assignée','En cours','Annulée'])
+        || (before == 'Inspection requise' && after in ['Inspection complétée','Retour en service refusé'])
+        || (before == 'Inspection complétée' && after in ['Autorisée pour retour en service','Retour en service refusé'])
+        || (before == 'Retour en service refusé' && after in ['En cours','Inspection requise','Annulée'])
+        || (before == 'Autorisée pour retour en service' && after in ['Fermée','Retour en service refusé']);
+    }
+    function maintenanceAccess() {
+      return active() && profile().data.role in ['Administrateur','Maintenance','Directeur de maintenance'];
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && (uid == request.auth.uid || admin());
+      allow list: if admin();
+      allow update: if admin() || (signedIn() && uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['lastLoginAt','lastLoginAtServer','mustSetPassword','passwordCreatedAt']));
+      allow create: if admin() || (signedIn() && uid == request.auth.uid
+        && exists(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email))
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.role
+        && request.resource.data.permissions == get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.permissions);
+      allow delete: if admin() && uid != request.auth.uid;
+    }
+    match /pendingInvitations/{email} {
+      allow get: if admin() || (signedIn() && request.auth.token.email == email);
+      allow list, create, update: if admin();
+      allow delete: if admin() || (signedIn() && request.auth.token.email == email);
+    }
+
+    match /reservations/{id} {
+      allow read: if any(['dashboard','students','instructors','ptr','theory']) || scheduleAccess();
+      allow create: if (maintenanceReservation(request.resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(request.resource.data));
+      allow update: if (maintenanceReservation(resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(resource.data));
+      allow delete: if (maintenanceReservation(resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(resource.data));
+    }
+    match /cancellations/{id} { allow read, write: if scheduleAccess(); }
+
+    match /students/{id} {
+      allow read: if any(['dashboard','schedule','students','ptr','theory']);
+      allow create, delete: if has('students');
+      allow update: if has('students') || (studentRole() && profile().data.linkedStudentId == id && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rentalAgreementSigned','rentalAgreementSignedAt','rentalAgreementVersion','updatedAt'])
+          && request.resource.data.rentalAgreementSigned == true
+          && existsAfter(/databases/$(database)/documents/studentAgreements/$(id))
+          && request.resource.data.rentalAgreementSignedAt == getAfter(/databases/$(database)/documents/studentAgreements/$(id)).data.signedAt
+          && request.resource.data.rentalAgreementVersion == getAfter(/databases/$(database)/documents/studentAgreements/$(id)).data.documentVersion)
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainingProgramAgreementSigned','trainingProgramAgreementSignedAt','trainingProgramAgreementVersion','trainingProgramAgreementProgram','trainingProgramAgreementKey','updatedAt'])
+          && request.resource.data.trainingProgramAgreementSigned == true
+          && request.resource.data.trainingProgramAgreementProgram == resource.data.program
+          && existsAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey))
+          && request.resource.data.trainingProgramAgreementSignedAt == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.signedAt
+          && request.resource.data.trainingProgramAgreementVersion == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.documentVersion)
+      ));
+    }
+    match /students/{studentId}/programAgreements/{agreementKey} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow create: if any(['students','ptr']) && ownPtr(request.resource.data.studentId)
+        && request.resource.data.studentId == studentId
+        && request.resource.data.documentKey == agreementKey
+        && request.resource.data.accepted == true;
+      allow update: if false;
+      allow delete: if admin();
+    }
+    match /studentDocuments/{id} { allow read, write: if has('students'); }
+    match /studentNotes/{id} { allow read, write: if has('students'); }
+    match /studentHistory/{id} {
+      allow read: if any(['students','ptr']) && ownPtr(resource.data.studentId);
+      allow write: if any(['students','ptr']) && ownPtr(request.resource.data.studentId);
+    }
+    match /preSoloChecklists/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
+    match /flightTestRecommendations/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
+    match /studentAgreements/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow create: if any(['students','ptr']) && ownPtr(request.resource.data.studentId)
+        && request.resource.data.studentId == studentId
+        && request.resource.data.accepted == true
+        && request.resource.data.privacyAccepted == true;
+      allow update: if false;
+      allow delete: if admin();
+    }
+
+    match /ptrLessons/{id} {
+      allow read: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId);
+      allow create: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(request.resource.data.studentId);
+      allow update: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId);
+      allow delete: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId);
+    }
+    match /ptrEvaluations/{id} {
+      allow read: if any(['ptr','students']) && ownPtr(resource.data.studentId);
+      allow create: if any(['ptr','students']) && ownPtr(request.resource.data.studentId);
+      allow update: if any(['ptr','students']) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId);
+      allow delete: if any(['ptr','students']) && ownPtr(resource.data.studentId);
+    }
+    match /ptrLessonHistory/{id} {
+      allow read: if ptrStaff()
+        && resource.data.studentId is string;
+      allow create: if ptrStaff()
+        && request.resource.data.studentId is string
+        && request.resource.data.lessonId is string
+        && request.resource.data.lessonTitle is string
+        && request.resource.data.activityId is string
+        && request.resource.data.action in ['Activité supprimée','Activité désassociée']
+        && request.resource.data.activityType in ['Vol','Sol','Simulateur']
+        && request.resource.data.previousStatus in ['Non commencé','En cours','Réussi','À reprendre']
+        && request.resource.data.newStatus == 'Non commencé'
+        && request.resource.data.reason is string
+        && request.resource.data.deletedBy is map
+        && request.resource.data.deletedBy.uid is string
+        && request.resource.data.deletedBy.name is string
+        && request.resource.data.deletedBy.role is string;
+      allow update, delete: if false;
+    }
+
+    match /instructors/{id} {
+      allow read: if any(['dashboard','schedule','instructors','ptr','theory']);
+      allow write: if has('instructors') && managesInstructors();
+    }
+    match /instructorDocuments/{id} {
+      allow read: if has('instructors');
+      allow write: if has('instructors') && managesInstructors();
+    }
+
+    match /employeeCommunications/{id} {
+      allow read: if employeeAccess() && (managesPayroll() || resource.data.requestedBy == request.auth.uid || resource.data.employeeId == profile().data.linkedInstructorId);
+      allow create, update, delete: if managesCommunications();
+    }
+    match /employeeAbsences/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /communicationAcknowledgements/{id} {
+      allow read: if employeeAccess() && (resource.data.uid == request.auth.uid || managesCommunications());
+      allow create: if employeeAccess()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.communicationId is string;
+      allow update, delete: if managesCommunications();
+    }
+    match /employeeLeaves/{id} {
+      allow read: if employeeAccess();
+      allow create: if employeeAccess() && (managesPayroll() || request.resource.data.requestedBy == request.auth.uid);
+      allow update, delete: if managesPayroll() || (employeeAccess() && resource.data.requestedBy == request.auth.uid && resource.data.status == 'En attente');
+    }
+    match /employeeTimeClock/{id} {
+      allow read: if employeeAccess() && (maintenanceManager() || resource.data.employeeId == request.auth.uid);
+      allow create: if employeeAccess() && request.resource.data.employeeId == request.auth.uid;
+      allow update, delete: if maintenanceManager() || (employeeAccess() && resource.data.employeeId == request.auth.uid);
+    }
+    match /timeEntries/{id} {
+      allow read: if managesPayroll()
+        || ownEmployee(resource.data.employeeId)
+        || (has('schedule') && resource.data.source == 'scheduler');
+      allow create: if request.resource.data.createdBy.uid == request.auth.uid
+        && payrollPeriodOpen(request.resource.data.payPeriodId)
+        && (managesPayroll()
+          || (ownEmployee(request.resource.data.employeeId)
+            && request.resource.data.status == 'Brouillon')
+          || (has('schedule')
+            && request.resource.data.source == 'scheduler'
+            && request.resource.data.sourceId is string
+            && request.resource.data.status in ['Brouillon','Ajustement']));
+      allow update: if request.resource.data.updatedBy.uid == request.auth.uid
+        && resource.data.status != 'Verrouillé'
+        && payrollPeriodOpen(resource.data.payPeriodId)
+        && (managesPayroll()
+          && ((resource.data.status == 'Soumis employé'
+              && request.resource.data.status in ['Approuvé administration','Correction requise','Refusé'])
+            || (resource.data.status == 'Approuvé administration'
+              && request.resource.data.status == 'Verrouillé')
+            || (resource.data.status in ['Brouillon','Correction requise','Refusé','Ajustement']
+              && request.resource.data.status in ['Brouillon','Correction requise','Refusé','Ajustement']))
+          || (ownEmployee(resource.data.employeeId)
+            && request.resource.data.employeeId == resource.data.employeeId
+            && ((resource.data.status in ['Brouillon','Ajustement']
+                && request.resource.data.status in ['Brouillon','Soumis employé','Correction requise'])
+              || (resource.data.status == 'Soumis employé'
+                && request.resource.data.status == 'Correction requise')))
+          || (has('schedule')
+            && resource.data.source == 'scheduler'
+            && resource.data.status == 'Brouillon'
+            && request.resource.data.status == 'Brouillon'
+            && request.resource.data.employeeId == resource.data.employeeId
+            && request.resource.data.sourceId == resource.data.sourceId));
+      allow delete: if managesPayroll() && resource.data.status == 'Brouillon';
+    }
+    match /timeEntryHistory/{id} {
+      allow read: if managesPayroll() || ownEmployee(resource.data.employeeId);
+      allow create: if employeeAccess()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && (managesPayroll() || ownEmployee(request.resource.data.employeeId) || has('schedule'));
+      allow update, delete: if false;
+    }
+    match /payPeriods/{id} {
+      allow read: if employeeAccess();
+      allow create: if (employeeAccess()
+          && request.resource.data.status == 'Ouverte'
+          && request.resource.data.validationMode == 'Tests internes Flight Director'
+          && request.resource.data.createdBy.uid == request.auth.uid
+          && request.resource.data.startDate is string
+          && request.resource.data.endDate is string)
+        || (managesPayroll()
+          && request.resource.data.status in ['Ouverte','Validation','Approbation administration','Approbation comptabilité','Approuvée','Exportée']);
+      allow update: if managesPayroll()
+        && resource.data.status != 'Verrouillée'
+        && request.resource.data.status in ['Ouverte','Validation','Approbation administration','Approbation comptabilité','Approuvée','Exportée','Verrouillée'];
+      allow delete: if false;
+    }
+    match /payrollExports/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.format == 'CSV'
+        && request.resource.data.generatedBy.uid == request.auth.uid
+        && request.resource.data.checksum is string
+        && request.resource.data.fileName is string;
+      allow update, delete: if false;
+    }
+    match /payrollHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    match /employeePayrollProfiles/{id} {
+      allow read: if employeeAccess() && (managesPayroll() || resource.data.employeeId == profile().data.linkedInstructorId || resource.data.employeeId == request.auth.uid);
+      allow create, update, delete: if managesPayroll();
+    }
+    match /payrollClassRates/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /employeeTraining/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /employeeQualifications/{id} {
+      allow read: if employeeAccess();
+      allow create, update: if managesPayroll() && employeeQualificationValid();
+      allow delete: if false;
+    }
+    match /employeeQualificationHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actor.uid == request.auth.uid
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+    match /employeeCompliance/{id} {
+      allow read: if employeeAccess();
+      allow create, update: if managesPayroll()
+        && request.resource.data.employeeId is string
+        && request.resource.data.recordType in ['medical','instructor-rating','ifr-recency']
+        && request.resource.data.updatedBy.uid == request.auth.uid;
+      allow delete: if false;
+    }
+    match /employeeComplianceHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actor.uid == request.auth.uid
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+
+    match /theoryCohorts/{id} { allow read, write: if has('theory'); }
+    match /theorySessions/{id} { allow read, write: if has('theory'); }
+
+    match /aircraft/{id} {
+      allow read: if any(['dashboard','schedule','fleet','maintenance','ptr']) || maintenanceAccess();
+      allow create, update: if maintenanceAccess();
+      allow update: if has('schedule') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['airTimeTotal','airTimeUpdatedAt','lastAirTimeReservationId']);
+      // Un avion ayant un historique MCM doit être désactivé, jamais supprimé.
+      allow delete: if false;
+    }
+    match /maintenanceTasks/{id} {
+      allow read: if maintenanceAccess() || scheduleAccess();
+      allow create, update: if maintenanceAccess();
+      // Le référentiel réglementaire demeure traçable même lorsqu'il est remplacé.
+      allow delete: if false;
+    }
+    match /maintenanceHistory/{id} {
+      allow read: if maintenanceAccess();
+      allow create: if maintenanceAccess()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.actorName is string
+        && request.resource.data.actorRole is string
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    match /maintenanceWorkOrders/{id} {
+      allow read: if maintenanceAccess();
+      allow create: if maintenanceAccess()
+        && maintenanceWorkStatusValid()
+        && maintenanceWorkOrderValid()
+        && request.resource.data.aircraftId is string
+        && request.resource.data.aircraftRegistration is string
+        && request.resource.data.title is string
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.workStatus == 'Planifiée';
+      allow update: if maintenanceAccess()
+        && maintenanceWorkStatusValid()
+        && maintenanceWorkOrderValid()
+        && maintenanceWorkTransitionValid()
+        && request.resource.data.aircraftId == resource.data.aircraftId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedBy.uid == request.auth.uid
+        && (!(request.resource.data.workStatus in ['Travail terminé','Inspection requise']) || resource.data.workStatus != 'En cours' || request.resource.data.workCompletedBy.uid == request.auth.uid)
+        && (request.resource.data.workStatus != 'Inspection complétée' || (maintenanceAccess() && request.resource.data.inspectionPerformedBy.uid == request.auth.uid && request.resource.data.inspectionResult == 'Accepté' && (request.resource.data.workCompletedBy.uid != request.auth.uid || admin())))
+        && (request.resource.data.workStatus != 'Autorisée pour retour en service' || (maintenanceAccess() && request.resource.data.rtsAuthorizedBy.uid == request.auth.uid && resource.data.workStatus in ['Travail terminé','Inspection complétée'] && (request.resource.data.inspectionRequired != true || request.resource.data.workCompletedBy.uid != request.auth.uid || admin())))
+        && (request.resource.data.workStatus != 'Fermée' || (maintenanceAccess() && resource.data.workStatus == 'Autorisée pour retour en service'));
+      allow delete: if false;
+    }
+    match /resources/{id} {
+      allow read: if any(['schedule','fleet','theory']);
+      allow write: if has('fleet');
+    }
+    match /snags/{id} {
+      allow read: if any(['dashboard','schedule','fleet','snags']) || maintenanceAccess();
+      allow create: if any(['fleet','snags']);
+      allow update: if (any(['fleet','snags'])
+          && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+          && request.resource.data.status != 'Fermé')
+        || (maintenanceAccess()
+          && (request.resource.data.status != 'Fermé'
+            || (request.resource.data.resolvedByWorkOrderId is string
+              && request.resource.data.returnedToServiceBy is string
+              && request.resource.data.returnedToServiceAt is timestamp)));
+      allow delete: if any(['fleet','snags'])
+        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0);
+    }
+    match /snagHistory/{id} {
+      allow read: if any(['fleet','snags']) || maintenanceAccess();
+      allow create: if (any(['fleet','snags']) || maintenanceAccess())
+        && request.resource.data.actor is string
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    match /notifications/{id} { allow read, write: if any(['fleet','snags']); }
+    match /operationalNotifications/{id} { allow read, write: if any(['schedule','fleet','snags']); }
+
+    match /emergencies/{id} { allow read, write: if has('emergency'); }
+    match /trainingPrograms/{id} {
+      allow read: if has('programs');
+      allow write: if has('programs') && profile().data.role in ['Administrateur','Chef instructeur'];
+    }
+    match /trainingProgressObjectiveHistory/{id} {
+      allow read: if managesInstructors();
+      allow create: if managesInstructors()
+        && request.resource.data.author == request.auth.uid
+        && request.resource.data.objectiveId is string
+        && request.resource.data.programId is string
+        && request.resource.data.scope in ['cohort','student']
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+    match /trainingProgressObjectives/{id} {
+      allow read: if managesInstructors();
+      allow create, update: if managesInstructors()
+        && request.resource.data.programId is string
+        && request.resource.data.scope in ['cohort','student']
+        && request.resource.data.updatedBy == request.auth.uid
+        && ((request.resource.data.scope == 'cohort'
+              && request.resource.data.cohortId is string
+              && request.resource.data.cohortId.size() > 0
+              && request.resource.data.phaseId is string
+              && request.resource.data.phaseId.size() > 0
+              && request.resource.data.milestoneType in ['Fin de phase','Examen','Évaluation','Remise de notes']
+              && request.resource.data.targetDate is string
+              && request.resource.data.targetDate.size() > 0
+              && request.resource.data.notes is string
+              && request.resource.data.notes.size() > 0)
+          || (request.resource.data.scope == 'student'
+              && request.resource.data.studentId is string
+              && request.resource.data.studentId.size() > 0));
+      allow delete: if false;
+    }
+    match /trainingCohorts/{id} {
+      allow read: if managesInstructors();
+      allow create, update: if managesInstructors()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.programId is string
+        && request.resource.data.programId.size() > 0
+        && request.resource.data.startDate is string
+        && request.resource.data.studentIds is list
+        && request.resource.data.status in ['Planifiée','Active','Terminée','Archivée']
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /trainingProgressTargets/{id} {
+      // Ancienne structure conservée pour éviter une suppression de données.
+      // Structure historique désactivée; les objectifs actifs ont leur collection dédiée.
+      allow read, write: if false;
+    }
+
+    match /appSettings/{id} {
+      allow read: if active();
+      allow write: if has('admin');
+    }
+    match /settings/{id} {
+      allow read: if any(['snags','fleet','admin']);
+      allow write: if has('admin');
+    }
+
+    match /testFeedback/{id} {
+      allow create: if active()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 5000;
+      allow read, update, delete: if admin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "orizon-flight-director-test",
+    "test": "orizon-flight-director-test",
+    "production": "orizon-flight-director"
+  }
+}

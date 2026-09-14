@@ -1,0 +1,184 @@
+export type PTRLessonStatus = "Non commencé" | "En cours" | "Réussi" | "À reprendre";
+export type TCScore = 1 | 2 | 3 | 4;
+
+export type PTRLessonHistory = {
+  id:string;
+  studentId:string;
+  lessonId:string;
+  lessonTitle:string;
+  action:"Activité supprimée"|"Activité désassociée";
+  activityType:"Vol"|"Sol"|"Simulateur";
+  activityId:string;
+  previousStatus:PTRLessonStatus;
+  newStatus:"Non commencé";
+  reason:string;
+  deletedBy:{uid:string;name:string;role:string};
+  createdAt:string;
+};
+
+export type PTRFlightRecord = {
+  reservationId:string;
+  lessonComponentId?:string;
+  simulatorTcId?:string;
+  date:string;
+  type:string;
+  aircraftId:string;
+  instructorId:string;
+  scheduledStartMinutes?:number;
+  scheduledEndMinutes?:number;
+  hobbsStart?:number;
+  hobbsEnd?:number;
+  hobbsElapsed?:number;
+  takeoffTime:string;
+  landingTime:string;
+  airtimeMinutes?:number;
+  groundTimeHours?:number;
+  flightCrewRole?:"Double"|"PIC";
+  dayHours?:number;
+  nightHours?:number;
+  instrumentAircraftHours?:number;
+  ftdHours?:number;
+  crossCountryDayHours?:number;
+  crossCountryNightHours?:number;
+  routeFrom?:string;
+  routeTo?:string;
+  checkInMetar:string;
+  checkOutMetar:string;
+  metarStation:string;
+  checkedInAt:string;
+  checkedInBy:string;
+  checkedOutAt:string;
+  checkedOutBy:string;
+  recordedAt:string;
+};
+
+export type PTRLesson = {
+  id: string;
+  studentId: string;
+  phase: string;
+  lessonNumber: string;
+  title: string;
+  objective: string;
+  exercises: string[];
+  status: PTRLessonStatus;
+  linkedReservationId: string;
+  lessonPlanId?: string;
+  lessonPdfPath?: string;
+  lastEvaluationId?: string;
+  lastFinalScore?: number;
+  updatedAt?: string;
+  programId?: string;
+  programRevision?: string;
+  sourceManual?: string;
+  successCriteria?: string[];
+  components?: Array<{
+    modality: string;
+    category: string;
+    title: string;
+    objective: string;
+    hours: { sol: number; dev: number; doubleCommande: number; solo: number };
+    exercises: string[];
+    nextLesson: string;
+    successCriteria: string;
+    manualPage: number;
+  }>;
+  componentStatuses?: Record<string, PTRLessonStatus>;
+  flightRecords?: PTRFlightRecord[];
+};
+
+export type PTREvaluation = {
+  id: string;
+  studentId: string;
+  lessonId: string;
+  reservationId: string;
+  instructorId: string;
+  instructorName: string;
+  date: string;
+  pilotage?: TCScore;
+  technical?: TCScore;
+  situationalAwareness?: TCScore;
+  flightManagement?: TCScore;
+  safetyMargins?: TCScore;
+  finalScore?: number;
+  strengths: string;
+  improvements: string;
+  comments: string;
+  actions: string[];
+  lessonStatus: PTRLessonStatus;
+  instructorSignature: string;
+  studentSignature: string;
+  signedAt: string;
+  evaluationType?: "ground" | "flight";
+  groundResult?: "Réussi" | "À reprendre";
+  componentKey?: string;
+  componentModality?: string;
+};
+
+export type ReservationOption = {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  title: string;
+  type: string;
+  instructorId: string;
+  aircraftId:string;
+  lessonPlanId:string;
+  lessonComponentId?:string;
+  simulatorTcId?:string;
+  status:string;
+  hobbsStart?:number;
+  hobbsEnd?:number;
+  takeoffTime:string;
+  landingTime:string;
+  airtimeMinutes?:number;
+  groundTimeHours?:number;
+  flightCrewRole?:"Double"|"PIC";
+  dayHours?:number;
+  nightHours?:number;
+  instrumentAircraftHours?:number;
+  ftdHours?:number;
+  crossCountryDayHours?:number;
+  crossCountryNightHours?:number;
+  routeFrom?:string;
+  routeTo?:string;
+  checkInMetar:string;
+  checkOutMetar:string;
+  metarStation:string;
+  checkedInAt:string;
+  checkedInBy:string;
+  checkedOutAt:string;
+  checkedOutBy:string;
+};
+
+export type InstructorOption = { id: string; name: string };
+export type AircraftOption = {id:string;registration:string;type:string};
+
+
+export type PTRItemEvaluation = {
+  id: string;
+  label: string;
+  score: TCScore | 0;
+  notSeen: boolean;
+  comment: string;
+};
+
+export type PTRProfessionalEvaluation = {
+  lessonId: string;
+  studentId: string;
+  reservationId: string;
+  instructorId: string;
+  instructorName: string;
+  date: string;
+  items: PTRItemEvaluation[];
+  finalScore: TCScore;
+  averageScore: number;
+  weakItems: string[];
+  unseenItems: string[];
+  strengths: string;
+  improvements: string;
+  homework: string;
+  instructorSignature: string;
+  studentSignature: string;
+  signedAt: string;
+};

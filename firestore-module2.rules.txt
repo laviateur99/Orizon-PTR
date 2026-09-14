@@ -1,0 +1,8 @@
+// Ajouter ces règles à firestore.rules dans le bloc match /databases/{database}/documents
+match /students/{id} { allow read, write: if true; }
+match /studentDocuments/{id} { allow read, write: if true; }
+match /studentNotes/{id} { allow read, write: if true; }
+match /studentHistory/{id} { allow read, write: if true; }
+match /ptrLessons/{id} { allow read, write: if true; }
+// IMPORTANT : ces règles ouvertes servent au développement seulement.
+// Avant l’utilisation réelle, ajouter Firebase Authentication et des rôles.

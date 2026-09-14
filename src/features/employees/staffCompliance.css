@@ -1,0 +1,17 @@
+.staff-table{min-width:2700px}
+.staff-table thead tr:first-child th{top:0}
+.staff-table thead tr:nth-child(2) th{top:35px}
+.staff-group-head th{background:#dbeafe;text-align:center;border-bottom:1px solid #a9c5df}
+.staff-group-head th[rowspan]{text-align:left}
+.staff-vertical-head{min-width:88px;max-width:115px;white-space:normal!important;text-align:center!important;line-height:1.2}
+.staff-indicator-cell{text-align:center!important}
+.staff-compliance-badge.compact{justify-content:center;width:26px;height:26px;padding:0}
+.staff-compliance-badge.compact i{width:11px;height:11px}
+.staff-class-valid{display:inline-flex;padding:6px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:900}
+.staff-deadline{display:grid;gap:3px;min-width:185px;padding-left:9px;border-left:4px solid #22c55e}
+.staff-deadline strong,.staff-deadline span{display:block}
+.staff-deadline span{color:var(--muted);font-size:11px}
+.staff-deadline.expiring{border-color:#f59e0b}
+.staff-deadline.expired{border-color:#ef4444}
+.staff-deadline.expired strong,.staff-deadline.expired span{color:#991b1b}
+.staff-deadline.empty{border-color:#94a3b8;color:var(--muted)}

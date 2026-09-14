@@ -1,0 +1,20 @@
+import type {TimeEntry} from "./types";
+
+export const PAYROLL_EXPORT_VERSION="1.0";
+export type PayrollExportRow={employeeId:string;employeeName:string;payPeriodId:string;periodStart:string;periodEnd:string;workDate:string;category:string;durationHours:number;hourlyRate:number;supervisionPremium:number;otherBonus:number;totalAmount:number;source:string;sourceId:string;status:string};
+export type PayrollExportPreparation={rows:PayrollExportRow[];employeeCount:number;pendingEmployeeCount:number;entryCount:number;totalHours:number;totalPremiums:number;totalAmount:number;anomalies:string[];criticalAnomalies:string[];periodStart:string;periodEnd:string};
+
+const round=(value:number)=>Math.round(value*100)/100;
+const eligible=(entry:TimeEntry)=>entry.status==="Approuvé administration"||entry.status==="Verrouillé";
+export function preparePayrollExport(entries:TimeEntry[],payPeriodId:string,payrollIds:Record<string,string>):PayrollExportPreparation{
+ const periodEntries=entries.filter(item=>item.payPeriodId===payPeriodId),approved=periodEntries.filter(eligible),dates=periodEntries.map(item=>item.workDate).filter(Boolean).sort(),periodStart=dates[0]||"",periodEnd=dates.at(-1)||"";
+ const pending=periodEntries.filter(item=>!["Approuvé administration","Verrouillé","Refusé"].includes(item.status));
+ const missingRates=approved.filter(item=>item.rateSnapshot===undefined||item.amountSnapshot===undefined||(item.category!=="Sans solde"&&item.rateSnapshot<=0));
+ const missingPayrollIds=[...new Set(approved.filter(item=>!payrollIds[item.employeeId]?.trim()).map(item=>item.employeeName||item.employeeId))];
+ const anomalies:string[]=[];if(pending.length)anomalies.push(`${pending.length} entrée(s) encore en attente de validation.`);if(periodEntries.some(item=>item.status==="Refusé"))anomalies.push("La période contient des entrées refusées non exportées.");if(missingRates.length)anomalies.push(`${missingRates.length} entrée(s) approuvée(s) sans taux figé.`);if(missingPayrollIds.length)anomalies.push(`Identifiant de paie manquant : ${missingPayrollIds.join(", ")}.`);
+ const rows=approved.map(item=>({employeeId:payrollIds[item.employeeId]||item.employeeId,employeeName:item.employeeName,payPeriodId,periodStart,periodEnd,workDate:item.workDate,category:item.category,durationHours:round(item.durationHours),hourlyRate:round(item.rateSnapshot||0),supervisionPremium:round(item.bonusSnapshot||0),otherBonus:0,totalAmount:round(item.amountSnapshot||0),source:item.source,sourceId:item.sourceId,status:item.status})).sort((a,b)=>a.employeeName.localeCompare(b.employeeName)||a.workDate.localeCompare(b.workDate)||a.category.localeCompare(b.category));
+ return{rows,employeeCount:new Set(rows.map(item=>item.employeeId)).size,pendingEmployeeCount:new Set(pending.map(item=>item.employeeId)).size,entryCount:rows.length,totalHours:round(rows.reduce((sum,item)=>sum+item.durationHours,0)),totalPremiums:round(rows.reduce((sum,item)=>(sum+item.durationHours*(item.supervisionPremium+item.otherBonus)),0)),totalAmount:round(rows.reduce((sum,item)=>sum+item.totalAmount,0)),anomalies,criticalAnomalies:[...pending.length?[`${pending.length} entrée(s) non approuvée(s).`]:[],...missingRates.length?["Des taux figés sont manquants."]:[],...missingPayrollIds.length?["Des identifiants de paie sont manquants."]:[]],periodStart,periodEnd};
+}
+const csvCell=(value:string|number)=>`"${String(value).replaceAll('"','""')}"`;
+export function generatePayrollCsv(rows:PayrollExportRow[]){const columns:(keyof PayrollExportRow)[]=["employeeId","employeeName","payPeriodId","periodStart","periodEnd","workDate","category","durationHours","hourlyRate","supervisionPremium","otherBonus","totalAmount","source","sourceId","status"];return `\uFEFF${columns.join(",")}\r\n${rows.map(row=>columns.map(column=>csvCell(row[column])).join(",")).join("\r\n")}\r\n`;}
+export async function payrollChecksum(csv:string){const bytes=new TextEncoder().encode(csv),digest=await crypto.subtle.digest("SHA-256",bytes);return[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,"0")).join("");}

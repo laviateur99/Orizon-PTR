@@ -1,0 +1,5 @@
+// À intégrer dans les règles existantes selon votre système d’authentification.
+// Exemple de collections utilisées par le Scheduler v15.2 :
+// aircraft, instructors, students, resources, reservations, cancellations
+//
+// Ne remplacez pas vos règles actuelles sans les vérifier.

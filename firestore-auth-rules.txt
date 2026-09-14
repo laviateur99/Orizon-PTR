@@ -1,0 +1,24 @@
+// Règles à intégrer dans firestore.rules lors de l’activation de Firebase Authentication.
+// Les permissions d’interface sont conservées dans /users/{uid}; les règles ci-dessous
+// empêchent un utilisateur ordinaire de modifier son rôle ou celui d’un collègue.
+function signedIn() { return request.auth != null; }
+function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+function active() { return signedIn() && me().data.active == true; }
+function admin() { return active() && me().data.role == "Administrateur"; }
+
+match /users/{uid} {
+  allow read: if active();
+  allow create, update: if admin();
+  // Un compte inconnu ne peut jamais s’accorder lui-même un rôle privilégié.
+  allow create: if signedIn() && uid == request.auth.uid
+    && !exists(/databases/$(database)/documents/users/$(uid))
+    && request.resource.data.role == "Étudiant"
+    && request.resource.data.active == false
+    && request.resource.data.permissions.size() == 0;
+  allow delete: if false;
+}
+
+// Remplacer les anciens « if true » par au minimum :
+// allow read, write: if active();
+// Les collections administratives sensibles peuvent utiliser :
+// allow read, write: if admin();

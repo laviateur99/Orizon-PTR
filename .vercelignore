@@ -1,0 +1,10 @@
+.git
+.next
+.vercel
+node_modules
+.env.local
+.installer-backups
+tmp
+*.zip
+*.tsbuildinfo
+firebase-debug.log
