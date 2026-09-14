@@ -418,6 +418,22 @@ service cloud.firestore {
       allow read: if has('programs');
       allow write: if has('programs') && profile().data.role in ['Administrateur','Chef instructeur'];
     }
+    match /trainingRates/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingQuotes/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingQuoteTemplates/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingQuoteSettings/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
     match /trainingProgressObjectiveHistory/{id} {
       allow read: if managesInstructors();
       allow create: if managesInstructors()
