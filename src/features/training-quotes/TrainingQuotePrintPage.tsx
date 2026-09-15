@@ -12,10 +12,6 @@ export function TrainingQuotePrintPage({quoteId}:{quoteId:string}){
  const[quote,setQuote]=useState<TrainingQuote|null|undefined>(undefined);
  const[error,setError]=useState("");
  useEffect(()=>{
-  document.body.classList.add("training-quote-print-mode");
-  return()=>document.body.classList.remove("training-quote-print-mode");
- },[]);
- useEffect(()=>{
   if(profile?.role!=="Administrateur")return;
   return subscribeTrainingQuote(quoteId,setQuote,e=>setError(e.message));
  },[quoteId,profile?.role]);
@@ -48,10 +44,7 @@ export function TrainingQuotePrintPage({quoteId}:{quoteId:string}){
    .quote-print-footer{margin-top:30px;border-top:1px solid #ccd9e4;padding-top:12px;color:#52677e;font-size:11px}
    .quote-print-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:190mm;margin:0 auto 16px}
    @media print{
-    .no-print{display:none!important}
-    body.training-quote-print-mode *{visibility:hidden!important}
-    body.training-quote-print-mode .quote-print-sheet,body.training-quote-print-mode .quote-print-sheet *{visibility:visible!important}
-    body.training-quote-print-mode .quote-print-sheet{display:block!important;position:absolute;inset:0;width:100%;max-width:none;margin:0}
+    .no-print,.sidebar{display:none!important}
    }
   `}</style>
   <div className="quote-print-toolbar no-print">
