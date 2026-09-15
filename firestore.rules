@@ -424,13 +424,17 @@ service cloud.firestore {
     }
     match /trainingQuotes/{id} {
       allow read, create, update: if admin();
-      allow delete: if false;
+      allow delete: if admin();
     }
     match /trainingQuoteTemplates/{id} {
       allow read, create, update: if admin();
       allow delete: if false;
     }
     match /trainingQuoteSettings/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingEmailTemplates/{id} {
       allow read, create, update: if admin();
       allow delete: if false;
     }
