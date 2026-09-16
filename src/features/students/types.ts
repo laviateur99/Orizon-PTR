@@ -113,6 +113,8 @@ export type StudentReservation = {
   airtimeMinutes?:number;
   groundTimeHours?:number;
   attendanceStatus?:"Présent"|"Absent";
+  resourceId?:string;
+  simulatorTcId?:string;
 };
 
 export type InstructorOption = { id: string; name: string };
