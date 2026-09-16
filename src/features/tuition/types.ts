@@ -77,6 +77,43 @@ export type TuitionInstitutionSnapshot = {
   craT2202FilerAccountNumber: string;
 };
 
+// Moteur fiscal — ventilation détaillée par activité, jamais un seul total opaque.
+// "calculated" = montant fiable ; les trois autres signalent un problème (montant toujours 0,
+// jamais deviné) que le futur formulaire devra traiter comme "à confirmer".
+export type PricingLineStatus = "calculated" | "rate_missing" | "rate_ambiguous" | "source_unconfirmed";
+
+export type PricingLine = {
+  description: string;
+  sourceDate: string;
+  rateId?: string;
+  rateName?: string;
+  unitPrice?: number;
+  quantity: number;
+  unit: string;
+  amount: number;
+  status: PricingLineStatus;
+  note?: string;
+};
+
+export type CalculatedPricingTotals = {
+  theory: number;
+  ground: number;
+  dualFlight: number;
+  soloFlight: number;
+  simulator: number;
+  grandTotal: number;
+};
+
+export type CalculatedPricing = {
+  theory: PricingLine[];
+  ground: PricingLine[];
+  dualFlight: PricingLine[];
+  soloFlight: PricingLine[];
+  simulator: PricingLine[];
+  totals: CalculatedPricingTotals;
+  issues: PricingLine[];
+};
+
 export type TuitionTaxForm = {
   id: string;
   studentId: string;
@@ -92,6 +129,9 @@ export type TuitionTaxForm = {
   programName?: string;
   amountPaid: number;
   t2202: TuitionT2202;
+  // Recalculé en direct tant que le dossier est un Brouillon ; figé (jamais recalculé) une fois
+  // Finalisé — voir pricingEngine.ts.
+  calculatedPricing?: CalculatedPricing;
   // Présent uniquement une fois le dossier finalisé (voir point 12 de la demande).
   institutionSnapshot?: TuitionInstitutionSnapshot;
   finalizedAt?: unknown;

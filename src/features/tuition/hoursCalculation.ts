@@ -3,7 +3,7 @@ import type { TheorySession } from "@/features/theory/types";
 import type { TuitionCalculatedHours, TuitionPeriod } from "./types";
 
 // Reprend scheduledHours() de StudentDetailPage.tsx : durée planifiée HH:MM en heures décimales.
-const scheduledHours = (start: string, end: string) => {
+export const scheduledHours = (start: string, end: string) => {
   const parse = (value: string) => {
     const match = value.match(/^(\d{1,2}):(\d{2})$/);
     return match ? Number(match[1]) * 60 + Number(match[2]) : undefined;
@@ -13,20 +13,20 @@ const scheduledHours = (start: string, end: string) => {
 };
 
 // Reprend la logique de PTRPrintPage.tsx : Hobbs réel, repli sur airtimeMinutes/60.
-const flightHours = (item: StudentReservation) =>
+export const flightHours = (item: StudentReservation) =>
   item.hobbsStart !== undefined && item.hobbsEnd !== undefined
     ? Math.max(0, item.hobbsEnd - item.hobbsStart)
     : (item.airtimeMinutes || 0) / 60;
 
-const round = (value: number) => Math.round(value * 10) / 10;
-const inYear = (date: string, taxYear: number) => date.slice(0, 4) === String(taxYear);
+export const round = (value: number) => Math.round(value * 10) / 10;
+export const inYear = (date: string, taxYear: number) => date.slice(0, 4) === String(taxYear);
 
 // Classification confirmée (règle métier) : types de réservation comptant comme double
 // commande / solo pour le calcul fiscal. "Supervision solo" reste volontairement exclu.
-const dualFlightTypes = ["Double commande", "Vol de P/D double"];
-const soloFlightTypes = ["Solo", "Vol de P/D solo", "Test en vol", "Vol de navigation AEC DEC"];
+export const dualFlightTypes = ["Double commande", "Vol de P/D double"];
+export const soloFlightTypes = ["Solo", "Vol de P/D solo", "Test en vol", "Vol de navigation AEC DEC"];
 
-const isGroundPreparation = (item: StudentReservation) => item.type === "Sol" && item.attendanceStatus === undefined;
+export const isGroundPreparation = (item: StudentReservation) => item.type === "Sol" && item.attendanceStatus === undefined;
 
 /**
  * Calcule les heures d'une année fiscale pour un étudiant, à partir des données

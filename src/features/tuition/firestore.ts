@@ -1,6 +1,6 @@
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
-import type { TuitionInstitutionSnapshot, TuitionT2202, TuitionTaxForm, TuitionTaxSettings } from "./types";
+import type { CalculatedPricing, PricingLine, PricingLineStatus, TuitionInstitutionSnapshot, TuitionT2202, TuitionTaxForm, TuitionTaxSettings } from "./types";
 
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
 const number = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -39,6 +39,37 @@ function mapInstitutionSnapshot(value: unknown): TuitionInstitutionSnapshot | un
   };
 }
 
+const pricingStatuses: PricingLineStatus[] = ["calculated", "rate_missing", "rate_ambiguous", "source_unconfirmed"];
+function mapPricingLine(value: unknown): PricingLine | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const d = value as Record<string, unknown>;
+  const status = pricingStatuses.includes(d.status as PricingLineStatus) ? (d.status as PricingLineStatus) : "source_unconfirmed";
+  return {
+    description: text(d.description), sourceDate: text(d.sourceDate),
+    rateId: text(d.rateId) || undefined, rateName: text(d.rateName) || undefined,
+    unitPrice: typeof d.unitPrice === "number" ? d.unitPrice : undefined,
+    quantity: number(d.quantity), unit: text(d.unit), amount: number(d.amount), status,
+    note: text(d.note) || undefined
+  };
+}
+function mapPricingLines(value: unknown): PricingLine[] {
+  return Array.isArray(value) ? value.map(mapPricingLine).filter((item): item is PricingLine => Boolean(item)) : [];
+}
+function mapCalculatedPricing(value: unknown): CalculatedPricing | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const d = value as Record<string, unknown>;
+  const totals = (d.totals as Record<string, unknown>) || {};
+  return {
+    theory: mapPricingLines(d.theory), ground: mapPricingLines(d.ground), dualFlight: mapPricingLines(d.dualFlight),
+    soloFlight: mapPricingLines(d.soloFlight), simulator: mapPricingLines(d.simulator),
+    totals: {
+      theory: number(totals.theory), ground: number(totals.ground), dualFlight: number(totals.dualFlight),
+      soloFlight: number(totals.soloFlight), simulator: number(totals.simulator), grandTotal: number(totals.grandTotal)
+    },
+    issues: mapPricingLines(d.issues)
+  };
+}
+
 function mapForm(id: string, data: DocumentData): TuitionTaxForm {
   const snapshot = (data.studentSnapshot as Record<string, unknown>) || {};
   const calculated = (data.calculatedHours as Record<string, unknown>) || {};
@@ -71,6 +102,7 @@ function mapForm(id: string, data: DocumentData): TuitionTaxForm {
     programName: text(data.programName) || undefined,
     amountPaid: number(data.amountPaid),
     t2202: mapT2202(data.t2202),
+    calculatedPricing: mapCalculatedPricing(data.calculatedPricing),
     institutionSnapshot: mapInstitutionSnapshot(data.institutionSnapshot),
     finalizedAt: data.finalizedAt,
     finalizedBy: finalizedBy ? { uid: text(finalizedBy.uid), name: text(finalizedBy.name) } : undefined,

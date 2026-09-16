@@ -7,7 +7,8 @@ import type{TheoryCohort,TheorySession}from"./types";
 const text=(value:unknown)=>typeof value==="string"?value:"";
 const strings=(value:unknown)=>Array.isArray(value)?value.filter((item):item is string=>typeof item==="string"):[];
 const attendance=(value:unknown)=>value&&typeof value==="object"?Object.fromEntries(Object.entries(value).filter(([,status])=>status==="Présent"||status==="Absent")) as Record<string,"Présent"|"Absent">:{};
-const mapCohort=(id:string,data:DocumentData):TheoryCohort=>({id,name:text(data.name),program:text(data.program),studentIds:strings(data.studentIds)});
+const withoutUndefined=(value:Record<string,unknown>)=>Object.fromEntries(Object.entries(value).filter(([,item])=>item!==undefined));
+const mapCohort=(id:string,data:DocumentData):TheoryCohort=>({id,name:text(data.name),program:text(data.program),studentIds:strings(data.studentIds),...(data.theoryCourseType==="PPL"||data.theoryCourseType==="CPL"||data.theoryCourseType==="OTHER"?{theoryCourseType:data.theoryCourseType}:{})});
 const mapSession=(id:string,data:DocumentData):TheorySession=>({id,title:text(data.title),program:text(data.program),topic:text(data.topic),date:text(data.date),startTime:text(data.startTime),endTime:text(data.endTime),instructorId:text(data.instructorId),instructorName:text(data.instructorName),roomId:text(data.roomId),roomName:text(data.roomName),cohortId:text(data.cohortId),cohortName:text(data.cohortName),studentIds:strings(data.studentIds),studentNames:strings(data.studentNames),additionalStudentIds:strings(data.additionalStudentIds),additionalParticipantsVersion:typeof data.additionalParticipantsVersion==="number"?data.additionalParticipantsVersion:undefined,attendance:attendance(data.attendance),status:(text(data.status)||"Planifiée") as TheorySession["status"],notes:text(data.notes)});
 export function subscribeTheoryCohorts(next:(values:TheoryCohort[])=>void,error:(value:FirestoreError)=>void):Unsubscribe{return onSnapshot(collection(db,"theoryCohorts"),snapshot=>next(snapshot.docs.map(item=>mapCohort(item.id,item.data()))),error);}
 export function subscribeTheorySessions(next:(values:TheorySession[])=>void,error:(value:FirestoreError)=>void):Unsubscribe{return onSnapshot(collection(db,"theorySessions"),snapshot=>next(snapshot.docs.map(item=>mapSession(item.id,item.data()))),error);}
@@ -16,7 +17,7 @@ export async function saveTheoryCohort(value:TheoryCohort){
   const [sessionsSnapshot,studentsSnapshot]=await Promise.all([getDocs(collection(db,"theorySessions")),getDocs(collection(db,"students"))]);
   const studentNames=new Map(studentsSnapshot.docs.map(item=>{const data=item.data();return[item.id,text(data.name)||`${text(data.firstName)} ${text(data.lastName)}`.trim()||item.id]}));
   const batch=writeBatch(db);
-  batch.set(cohortRef,{...value,updatedAt:serverTimestamp()},{merge:true});
+  batch.set(cohortRef,{...withoutUndefined(value as unknown as Record<string,unknown>),updatedAt:serverTimestamp()},{merge:true});
   sessionsSnapshot.docs.forEach(item=>{
     const data=item.data();
     if(text(data.cohortId)!==value.id||text(data.status)==="Complétée")return;

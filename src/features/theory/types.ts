@@ -1,8 +1,13 @@
+// Identification structurée du forfait fiscal correspondant — jamais déduite du texte libre
+// `program`. Absent = "À confirmer" pour le futur moteur fiscal, pas présumé PPL/CPL.
+export type TheoryCourseType="PPL"|"CPL"|"OTHER";
+
 export type TheoryCohort={
   id:string;
   name:string;
   program:string;
   studentIds:string[];
+  theoryCourseType?:TheoryCourseType;
 };
 
 export type TheorySession={

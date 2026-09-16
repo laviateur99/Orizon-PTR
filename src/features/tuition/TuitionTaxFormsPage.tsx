@@ -1,17 +1,26 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { subscribeAircraft } from "@/features/fleet/firestore";
+import type { Aircraft } from "@/features/fleet/types";
 import { subscribeReservations, subscribeStudents } from "@/features/students/firestore";
 import type { Student, StudentReservation } from "@/features/students/types";
-import { subscribeTheorySessions } from "@/features/theory/firestore";
-import type { TheorySession } from "@/features/theory/types";
+import { subscribeTheoryCohorts, subscribeTheorySessions } from "@/features/theory/firestore";
+import type { TheoryCohort, TheorySession } from "@/features/theory/types";
+import { subscribeTrainingRates } from "@/features/training-quotes/firestore";
+import type { TrainingRate } from "@/features/training-quotes/types";
 import { finalizeTuitionTaxForm, saveTuitionTaxForm, saveTuitionTaxSettings, subscribeTuitionTaxForm, subscribeTuitionTaxSettings, tuitionFormId } from "./firestore";
 import { calculateTuitionHours, calculateTuitionPeriod } from "./hoursCalculation";
-import { t2202CourseTypes, trainingTypesDeclared, type TuitionInstitutionSnapshot, type TuitionTaxForm, type TuitionTaxSettings } from "./types";
+import { calculateTuitionPricing } from "./pricingEngine";
+import { t2202CourseTypes, trainingTypesDeclared, type CalculatedPricing, type PricingLine, type TuitionInstitutionSnapshot, type TuitionTaxForm, type TuitionTaxSettings } from "./types";
 
 const currentYear = () => new Date().getFullYear();
 const hoursLabel = (value: number) => `${value.toFixed(1)} h`;
 const wholeNumber = (value: string) => Math.max(0, Math.round(Number(value) || 0));
+const money = (value: number) => value.toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+const statusLabel: Record<PricingLine["status"], string> = { calculated: "Calculé", rate_missing: "Tarif manquant", rate_ambiguous: "Tarif ambigu", source_unconfirmed: "À confirmer" };
+const pricingCategories = ["theory", "ground", "dualFlight", "soloFlight", "simulator"] as const;
+const pricingCategoryLabel: Record<typeof pricingCategories[number], string> = { theory: "Théorie", ground: "Sol individuel", dualFlight: "Double commande", soloFlight: "Solo", simulator: "Simulateur" };
 
 const formatTimestamp = (value: unknown) => {
   const withToDate = value as { toDate?: () => Date } | null | undefined;
@@ -59,8 +68,14 @@ export function TuitionTaxFormsPage() {
   const [search, setSearch] = useState("");
   const [reservations, setReservations] = useState<StudentReservation[]>([]);
   const [theorySessions, setTheorySessions] = useState<TheorySession[]>([]);
+  const [theoryCohorts, setTheoryCohorts] = useState<TheoryCohort[]>([]);
+  const [aircraft, setAircraft] = useState<Aircraft[]>([]);
+  const [rates, setRates] = useState<TrainingRate[]>([]);
   const [reservationsLoaded, setReservationsLoaded] = useState(false);
   const [theoryLoaded, setTheoryLoaded] = useState(false);
+  const [theoryCohortsLoaded, setTheoryCohortsLoaded] = useState(false);
+  const [aircraftLoaded, setAircraftLoaded] = useState(false);
+  const [ratesLoaded, setRatesLoaded] = useState(false);
   const [savedForm, setSavedForm] = useState<TuitionTaxForm | null | undefined>(undefined);
   const [form, setForm] = useState<TuitionTaxForm | null>(null);
   const [settings, setSettings] = useState<TuitionTaxSettings | undefined>(undefined);
@@ -81,6 +96,21 @@ export function TuitionTaxFormsPage() {
     return subscribeTuitionTaxSettings(setSettings, e => setError(e.message));
   }, [profile?.role]);
 
+  // Listes globales nécessaires au moteur de calcul tarifaire (cohortes pour le type de cours
+  // théorique, avions pour résoudre le type d'appareil) — indépendantes de l'étudiant sélectionné.
+  useEffect(() => {
+    if (profile?.role !== "Administrateur") return;
+    return subscribeTheoryCohorts(value => { setTheoryCohorts(value); setTheoryCohortsLoaded(true); }, e => setError(e.message));
+  }, [profile?.role]);
+  useEffect(() => {
+    if (profile?.role !== "Administrateur") return;
+    return subscribeAircraft({ next: value => { setAircraft(value); setAircraftLoaded(true); }, error: e => setError(e.message) });
+  }, [profile?.role]);
+  useEffect(() => {
+    if (profile?.role !== "Administrateur") return;
+    return subscribeTrainingRates({ next: value => { setRates(value); setRatesLoaded(true); }, error: e => setError(e.message) });
+  }, [profile?.role]);
+
   // Réinitialise tout au changement d'étudiant ou d'année — chaque combinaison a son propre dossier.
   useEffect(() => {
     setReservations([]); setTheorySessions([]); setReservationsLoaded(false); setTheoryLoaded(false);
@@ -98,7 +128,7 @@ export function TuitionTaxFormsPage() {
   // Seule source de vérité pour l'admissibilité fiscale : la décision explicite dans le
   // dossier étudiant. true = admissible ; false = exclu ; undefined = à confirmer (jamais présumé true).
   const eligible = selectedStudent?.generateTuitionTaxForms === true;
-  const sourceDataReady = reservationsLoaded && theoryLoaded;
+  const sourceDataReady = reservationsLoaded && theoryLoaded && theoryCohortsLoaded && aircraftLoaded && ratesLoaded;
   const locked = form?.status === "Finalisé";
 
   // Toujours recalculées en direct depuis les PTR/théorie — jamais figées dans l'état local.
@@ -110,6 +140,13 @@ export function TuitionTaxFormsPage() {
     () => selectedId && sourceDataReady ? calculateTuitionPeriod(selectedId, taxYear, reservations, theorySessions) : null,
     [selectedId, taxYear, reservations, theorySessions, sourceDataReady]
   );
+  // Moteur fiscal : jamais recalculé une fois le dossier Finalisé (aucun nouveau priceAt()) —
+  // dans ce cas, l'affichage utilise calculatedPricing figé dans le dossier chargé.
+  const livePricing: CalculatedPricing | null = useMemo(
+    () => selectedId && sourceDataReady && !locked ? calculateTuitionPricing(selectedId, taxYear, reservations, theorySessions, theoryCohorts, rates, aircraft) : null,
+    [selectedId, taxYear, reservations, theorySessions, theoryCohorts, rates, aircraft, sourceDataReady, locked]
+  );
+  const displayPricing = locked ? form?.calculatedPricing : livePricing || undefined;
 
   // Charge un dossier existant tel quel (jamais écrasé par un recalcul — surtout une fois finalisé).
   useEffect(() => { if (savedForm) setForm(savedForm); }, [savedForm]);
@@ -137,6 +174,7 @@ export function TuitionTaxFormsPage() {
       programId: selectedStudent.trainingProgramId || undefined,
       programName: selectedStudent.trainingProgramName || undefined,
       amountPaid: 0,
+      calculatedPricing: livePricing || undefined,
       t2202: {
         courseType: "",
         programName: selectedStudent.trainingProgramName || "",
@@ -164,7 +202,7 @@ export function TuitionTaxFormsPage() {
     if (!form || !eligible || locked) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      await saveTuitionTaxForm(form, Boolean(savedForm));
+      await saveTuitionTaxForm({ ...form, calculatedPricing: livePricing || form.calculatedPricing }, Boolean(savedForm));
       setMessage("Brouillon enregistré.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Enregistrement impossible.");
@@ -185,7 +223,7 @@ export function TuitionTaxFormsPage() {
         responsibleName: settings.institutionResponsibleName, responsibleTitle: settings.institutionResponsibleTitle,
         craT2202FilerAccountNumber: settings.craT2202FilerAccountNumber
       };
-      await finalizeTuitionTaxForm(form, Boolean(savedForm), institutionSnapshot, { uid: user?.uid || "", name: profile?.name || profile?.email || "" });
+      await finalizeTuitionTaxForm({ ...form, calculatedPricing: livePricing || form.calculatedPricing }, Boolean(savedForm), institutionSnapshot, { uid: user?.uid || "", name: profile?.name || profile?.email || "" });
       setMessage("Dossier fiscal finalisé.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Finalisation impossible.");
@@ -254,6 +292,28 @@ export function TuitionTaxFormsPage() {
               <div><span>Simulateur</span><strong>{hoursLabel(calculatedHours.simulator)}</strong></div>
             </div>
             <p>Période calculée : {calculatedPeriod ? `${calculatedPeriod.start} → ${calculatedPeriod.end}` : "aucune activité trouvée pour cette année."}</p>
+          </div>
+
+          <div className="notice tuition-calculated">
+            <h3>Calcul tarifaire automatique</h3>
+            {!displayPricing && <p>Calcul en cours…</p>}
+            {displayPricing && pricingCategories.map(key => <div key={key} className="tuition-pricing-category">
+              <h4>{pricingCategoryLabel[key]} — {money(displayPricing.totals[key])}</h4>
+              {displayPricing[key].length
+                ? <table className="tuition-pricing-table"><thead><tr><th>Activité</th><th>Date</th><th>Quantité</th><th>Tarif</th><th>Montant</th><th>Statut</th></tr></thead>
+                  <tbody>{displayPricing[key].map((line, i) => <tr key={i}>
+                    <td>{line.description}{line.note ? <small> — {line.note}</small> : null}</td>
+                    <td>{line.sourceDate}</td>
+                    <td>{line.quantity} {line.unit}</td>
+                    <td>{line.rateName || "—"}{line.unitPrice !== undefined ? ` (${money(line.unitPrice)})` : ""}</td>
+                    <td>{line.status === "calculated" ? money(line.amount) : "—"}</td>
+                    <td><span className={`status-badge ${line.status === "calculated" ? "actif" : "retiré"}`}>{statusLabel[line.status]}</span></td>
+                  </tr>)}</tbody>
+                </table>
+                : <p>Aucune activité.</p>}
+            </div>)}
+            {displayPricing && <p className="tuition-pricing-grand-total">Total automatique (activités calculées uniquement) : <strong>{money(displayPricing.totals.grandTotal)}</strong></p>}
+            {displayPricing && displayPricing.issues.length > 0 && <div className="notice error">{displayPricing.issues.length} ligne(s) « à confirmer » exclue(s) du total ci-dessus — voir le statut de chaque activité dans les tableaux.</div>}
           </div>
 
           <div className="form-grid">
