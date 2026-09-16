@@ -40,6 +40,58 @@ export async function saveTrainingRate(rate:TrainingRate){
   return ref.id;
 }
 export async function setTrainingRateActive(id:string,active:boolean){await updateDoc(doc(db,"trainingRates",id),{active,updatedAt:serverTimestamp()})}
+type HistoryTarget={effectiveDate:string;recordedAt:string};
+// Corrige le palier COURANT (price/effectiveDate) sans passer par saveTrainingRate : un vrai
+// changement de prix doit créer un palier d'historique, mais corriger une erreur de saisie sur
+// le palier actuel ne doit jamais générer une fausse entrée d'historique.
+export async function correctCurrentTrainingRatePalier(id:string,patch:{price:number;effectiveDate:string}){
+  const ref=doc(db,"trainingRates",id),snap=await getDoc(ref);
+  if(!snap.exists())throw new Error("Tarif introuvable.");
+  const rate=mapRate(snap.id,snap.data()),history=rate.priceHistory||[];
+  if(history.some(entry=>entry.effectiveDate===patch.effectiveDate))throw new Error("Un palier de l’historique existe déjà à cette date. Modifiez ce palier plutôt que de dupliquer la date.");
+  await updateDoc(ref,{price:Number(patch.price),effectiveDate:patch.effectiveDate,updatedAt:serverTimestamp()});
+  return{price:Number(patch.price),effectiveDate:patch.effectiveDate};
+}
+// Supprime le palier courant en promouvant le palier historique le plus récent au rang de palier
+// courant. Refuse si aucun historique n'existe : il resterait alors 0 palier connu, ce qui est
+// invalide (utiliser plutôt la suppression complète du tarif dans ce cas).
+export async function deleteCurrentTrainingRatePalier(id:string){
+  const ref=doc(db,"trainingRates",id),snap=await getDoc(ref);
+  if(!snap.exists())throw new Error("Tarif introuvable.");
+  const rate=mapRate(snap.id,snap.data()),history=rate.priceHistory||[];
+  if(!history.length)throw new Error("Impossible de supprimer le seul palier tarifaire connu de ce tarif. Utilisez plutôt « Supprimer le tarif » pour retirer ce tarif complètement.");
+  const sorted=[...history].sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate)),promoted=sorted[sorted.length-1];
+  const remaining=history.filter(entry=>!(entry.effectiveDate===promoted.effectiveDate&&entry.recordedAt===promoted.recordedAt));
+  await updateDoc(ref,{price:promoted.price,effectiveDate:promoted.effectiveDate,priceHistory:remaining,updatedAt:serverTimestamp()});
+  return{price:promoted.price,effectiveDate:promoted.effectiveDate,priceHistory:remaining};
+}
+export async function updateTrainingRateHistoryEntry(id:string,target:HistoryTarget,patch:{price:number;effectiveDate:string}){
+  const ref=doc(db,"trainingRates",id),snap=await getDoc(ref);
+  if(!snap.exists())throw new Error("Tarif introuvable.");
+  const rate=mapRate(snap.id,snap.data()),history=rate.priceHistory||[];
+  const index=history.findIndex(entry=>entry.effectiveDate===target.effectiveDate&&entry.recordedAt===target.recordedAt);
+  if(index===-1)throw new Error("Palier introuvable (il a peut-être déjà été modifié).");
+  const others=history.filter((_,i)=>i!==index);
+  if(patch.effectiveDate===rate.effectiveDate||others.some(entry=>entry.effectiveDate===patch.effectiveDate))throw new Error("Un autre palier existe déjà à cette date d’entrée en vigueur.");
+  const updated=[...history];
+  updated[index]={price:Number(patch.price),effectiveDate:patch.effectiveDate,recordedAt:history[index].recordedAt};
+  await updateDoc(ref,{priceHistory:updated,updatedAt:serverTimestamp()});
+  return{priceHistory:updated};
+}
+export async function deleteTrainingRateHistoryEntry(id:string,target:HistoryTarget){
+  const ref=doc(db,"trainingRates",id),snap=await getDoc(ref);
+  if(!snap.exists())throw new Error("Tarif introuvable.");
+  const rate=mapRate(snap.id,snap.data()),history=rate.priceHistory||[];
+  const index=history.findIndex(entry=>entry.effectiveDate===target.effectiveDate&&entry.recordedAt===target.recordedAt);
+  if(index===-1)throw new Error("Palier introuvable (il a peut-être déjà été modifié).");
+  const remaining=history.filter((_,i)=>i!==index);
+  await updateDoc(ref,{priceHistory:remaining,updatedAt:serverTimestamp()});
+  return{priceHistory:remaining};
+}
+// Suppression définitive du document TrainingRate (et donc de tout son historique) — réservée aux
+// tarifs créés par erreur. La vérification des références (modèles, etc.) se fait côté appelant,
+// qui dispose déjà des collections nécessaires en mémoire.
+export async function deleteTrainingRate(id:string){await deleteDoc(doc(db,"trainingRates",id))}
 export async function saveTrainingEmailTemplate(template:TrainingEmailTemplate){const{id,...data}=template;await setDoc(doc(db,"trainingEmailTemplates",id),{...withoutUndefined(data) as Record<string,unknown>,updatedAt:serverTimestamp()},{merge:true})}
 export async function saveTrainingQuote(quote:TrainingQuote){const{id,...data}=quote,payload=withoutUndefined(data) as Record<string,unknown>;if(id){await setDoc(doc(db,"trainingQuotes",id),{...payload,updatedAt:serverTimestamp()},{merge:true});return id}const ref=await addDoc(collection(db,"trainingQuotes"),{...payload,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return ref.id}
 export async function deleteTrainingQuote(id:string){await deleteDoc(doc(db,"trainingQuotes",id))}
