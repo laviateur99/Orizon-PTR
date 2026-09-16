@@ -36,6 +36,8 @@ function mapStudent(id: string, data: DocumentData): Student {
     status: (text(data.status) || "Actif") as Student["status"],
     primaryInstructorId: text(data.primaryInstructorId), theoryCohortId:text(data.theoryCohortId), startDate: text(data.startDate),
     flightHours: number(data.flightHours), groundHours: number(data.groundHours), notes: text(data.notes),
+    // Champ omis (jamais mis à `undefined` explicitement) tant qu'aucune valeur booléenne n'a été enregistrée.
+    ...(typeof data.generateTuitionTaxForms === "boolean" ? { generateTuitionTaxForms: data.generateTuitionTaxForms } : {}),
   };
 }
 

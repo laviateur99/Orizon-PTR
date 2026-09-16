@@ -48,6 +48,10 @@ export type Student = {
   flightHours: number;
   groundHours: number;
   notes: string;
+  // Décision administrative explicite. true = Orizon produit les formulaires fiscaux de
+  // frais de scolarité; false = exclu (ex. programme géré par un autre établissement);
+  // absent/undefined = pas encore configuré (ne jamais présumer true automatiquement).
+  generateTuitionTaxForms?: boolean;
 };
 
 export type StudentDocument = {
