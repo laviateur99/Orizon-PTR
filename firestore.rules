@@ -420,7 +420,7 @@ service cloud.firestore {
     }
     match /trainingRates/{id} {
       allow read, create, update: if admin();
-      allow delete: if false;
+      allow delete: if admin();
     }
     match /trainingQuotes/{id} {
       allow read, create, update: if admin();
