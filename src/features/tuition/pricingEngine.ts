@@ -12,18 +12,15 @@ const issue = (description: string, sourceDate: string, quantity: number, unit: 
   ({ description, sourceDate, quantity: round(quantity), unit, amount: 0, status, note });
 
 /**
- * Résout le(s) TrainingRate correspondant à un avion PAR IDENTITÉ STRUCTURELLE UNIQUEMENT
- * (aircraftId en priorité, sinon aircraftType) — sans filtrer sur `active`. Un tarif retiré
- * aujourd'hui (active:false) reste un candidat légitime pour une activité antérieure à son
- * retrait : c'est priceAt(rate, activityDate), pas le statut actif, qui détermine s'il
- * s'applique à cette date précise.
+ * Résout le(s) TrainingRate correspondant à un TYPE d'avion (ex. "Cessna 152") PAR IDENTITÉ
+ * STRUCTURELLE UNIQUEMENT (aircraftType), jamais par immatriculation — chez Orizon, un tarif
+ * s'applique à un type de flotte, pas à un appareil précis. `aircraftId` sur TrainingRate n'est
+ * plus utilisé comme mécanisme de résolution ici (conservé sur le modèle pour compatibilité,
+ * sans migration destructive). Pas de filtre `active` : c'est priceAt(rate, activityDate),
+ * pas le statut actif, qui détermine si un tarif s'applique à cette date précise.
  */
-function matchingAircraftRates(rates: TrainingRate[], aircraftId: string, aircraftTypeLabel: string | undefined): TrainingRate[] {
-  const category = rates.filter(r => r.category === "Avion");
-  const byId = aircraftId ? category.filter(r => r.aircraftId === aircraftId) : [];
-  if (byId.length) return byId;
-  if (!aircraftTypeLabel) return [];
-  return category.filter(r => r.aircraftType === aircraftTypeLabel);
+function matchingAircraftRates(rates: TrainingRate[], aircraftTypeLabel: string): TrainingRate[] {
+  return rates.filter(r => r.category === "Avion" && r.aircraftType === aircraftTypeLabel);
 }
 
 const matchingInstructorRates = (rates: TrainingRate[]): TrainingRate[] => rates.filter(r => r.category === "Instructeur");
@@ -39,15 +36,21 @@ function resolveAtDate(candidates: TrainingRate[], date: string): Array<{ rate: 
     .filter((entry): entry is { rate: TrainingRate; price: number } => entry.price !== undefined);
 }
 
-/** Résout un seul tarif "avion" pour une réservation, avec ses trois issues possibles. */
+/**
+ * Résout un seul tarif "avion" pour une réservation, par TYPE de flotte :
+ * reservation.aircraftId → aircraft → aircraft.typeLabel → TrainingRate.aircraftType.
+ * Aucune comparaison textuelle approximative — correspondance exacte uniquement.
+ */
 function priceAircraft(reservation: StudentReservation, date: string, rates: TrainingRate[], aircraftList: Aircraft[]): { price: number; rate: TrainingRate } | { status: Exclude<PricingLineStatus, "calculated">; note: string } {
   if (!reservation.aircraftId) return { status: "source_unconfirmed", note: "Aucun avion identifié sur cette réservation." };
   const plane = aircraftList.find(a => a.id === reservation.aircraftId);
-  const structural = matchingAircraftRates(rates, reservation.aircraftId, plane?.typeLabel);
-  if (structural.length === 0) return { status: "rate_missing", note: `Aucun tarif « Avion » (actuel ou historique) pour ${plane?.typeLabel || reservation.aircraftId}.` };
+  if (!plane) return { status: "source_unconfirmed", note: "Avion introuvable dans la flotte." };
+  if (!plane.typeLabel) return { status: "source_unconfirmed", note: "Type d'avion non renseigné dans la flotte pour cet appareil." };
+  const structural = matchingAircraftRates(rates, plane.typeLabel);
+  if (structural.length === 0) return { status: "rate_missing", note: `Aucun tarif « Avion » (actuel ou historique) pour le type ${plane.typeLabel}.` };
   const resolved = resolveAtDate(structural, date);
-  if (resolved.length === 0) return { status: "rate_missing", note: "Aucun tarif historique connu à cette date pour cet avion." };
-  if (resolved.length > 1) return { status: "rate_ambiguous", note: `Plusieurs tarifs « Avion » ont un prix connu à cette date pour ${plane?.typeLabel || reservation.aircraftId}.` };
+  if (resolved.length === 0) return { status: "rate_missing", note: `Aucun tarif historique connu à cette date pour le type ${plane.typeLabel}.` };
+  if (resolved.length > 1) return { status: "rate_ambiguous", note: `Plusieurs tarifs « Avion » ont un prix connu à cette date pour le type ${plane.typeLabel}.` };
   return { price: resolved[0].price, rate: resolved[0].rate };
 }
 
