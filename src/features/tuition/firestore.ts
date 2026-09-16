@@ -1,6 +1,6 @@
 import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc, type DocumentData, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
-import type { TuitionTaxForm } from "./types";
+import type { TuitionInstitutionSnapshot, TuitionT2202, TuitionTaxForm, TuitionTaxSettings } from "./types";
 
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
 const number = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -14,6 +14,31 @@ const withoutUndefined = (value: unknown): unknown =>
 // (studentId_taxYear) plutôt qu'auto-généré, ce qui rend un doublon involontaire impossible.
 export const tuitionFormId = (studentId: string, taxYear: number) => `${studentId}_${taxYear}`;
 
+function mapT2202(value: unknown): TuitionT2202 {
+  const data = (value as Record<string, unknown>) || {};
+  const courseType = text(data.courseType);
+  return {
+    courseType: (courseType === "Pilote privé" || courseType === "Pilote professionnel" || courseType === "Instructeur de vol" || courseType === "Vol aux instruments" || courseType === "Autre" ? courseType : "") as TuitionT2202["courseType"],
+    programName: text(data.programName),
+    sessionStart: text(data.sessionStart),
+    sessionEnd: text(data.sessionEnd),
+    partTimeMonths: number(data.partTimeMonths),
+    fullTimeMonths: number(data.fullTimeMonths),
+    eligibleTuitionFees: number(data.eligibleTuitionFees)
+  };
+}
+
+function mapInstitutionSnapshot(value: unknown): TuitionInstitutionSnapshot | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const data = value as Record<string, unknown>;
+  return {
+    name: text(data.name), address: text(data.address), city: text(data.city), province: text(data.province), postalCode: text(data.postalCode),
+    phone: text(data.phone), quebecIdentificationNumber: text(data.quebecIdentificationNumber),
+    responsibleName: text(data.responsibleName), responsibleTitle: text(data.responsibleTitle),
+    craT2202FilerAccountNumber: text(data.craT2202FilerAccountNumber)
+  };
+}
+
 function mapForm(id: string, data: DocumentData): TuitionTaxForm {
   const snapshot = (data.studentSnapshot as Record<string, unknown>) || {};
   const calculated = (data.calculatedHours as Record<string, unknown>) || {};
@@ -21,6 +46,7 @@ function mapForm(id: string, data: DocumentData): TuitionTaxForm {
   const periodCalculated = data.periodCalculated as Record<string, unknown> | null | undefined;
   const periodDeclared = (data.periodDeclared as Record<string, unknown>) || {};
   const preparedBy = (data.preparedBy as Record<string, unknown>) || {};
+  const finalizedBy = data.finalizedBy as Record<string, unknown> | undefined;
   return {
     id,
     studentId: text(data.studentId),
@@ -44,6 +70,10 @@ function mapForm(id: string, data: DocumentData): TuitionTaxForm {
     programId: text(data.programId) || undefined,
     programName: text(data.programName) || undefined,
     amountPaid: number(data.amountPaid),
+    t2202: mapT2202(data.t2202),
+    institutionSnapshot: mapInstitutionSnapshot(data.institutionSnapshot),
+    finalizedAt: data.finalizedAt,
+    finalizedBy: finalizedBy ? { uid: text(finalizedBy.uid), name: text(finalizedBy.name) } : undefined,
     preparedBy: { uid: text(preparedBy.uid), name: text(preparedBy.name) },
     createdAt: data.createdAt,
     updatedAt: data.updatedAt
@@ -68,4 +98,48 @@ export async function saveTuitionTaxForm(form: TuitionTaxForm, exists: boolean) 
   if (exists) await updateDoc(ref, { ...payload, updatedAt: serverTimestamp() });
   else await setDoc(ref, { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
   return id;
+}
+
+/**
+ * Finalise un dossier : fige un institutionSnapshot (les paramètres institutionnels actuels)
+ * dans le document, marque le statut "Finalisé" avec finalizedAt/finalizedBy. Les valeurs
+ * calculatedHours/declaredHours déjà présentes dans `form` sont écrites telles quelles —
+ * aucun recalcul depuis les PTR n'a lieu ici.
+ */
+export async function finalizeTuitionTaxForm(form: TuitionTaxForm, exists: boolean, institutionSnapshot: TuitionInstitutionSnapshot, finalizedBy: { uid: string; name: string }) {
+  const id = tuitionFormId(form.studentId, form.taxYear);
+  const { id: _omit, ...data } = form;
+  void _omit;
+  const payload = withoutUndefined({ ...data, status: "Finalisé", institutionSnapshot, finalizedAt: serverTimestamp(), finalizedBy }) as Record<string, unknown>;
+  const ref = doc(db, "tuitionTaxForms", id);
+  if (exists) await updateDoc(ref, { ...payload, updatedAt: serverTimestamp() });
+  else await setDoc(ref, { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  return id;
+}
+
+// Paramètres institutionnels — document singleton, sur le même patron que trainingQuoteSettings/taxes.
+export function subscribeTuitionTaxSettings(next: (value: TuitionTaxSettings) => void, error: (e: FirestoreError) => void): Unsubscribe {
+  return onSnapshot(doc(db, "tuitionTaxSettings", "default"), snap => {
+    const d = snap.data();
+    next({
+      institutionName: text(d?.institutionName),
+      institutionAddress: text(d?.institutionAddress),
+      institutionCity: text(d?.institutionCity),
+      institutionProvince: text(d?.institutionProvince),
+      institutionPostalCode: text(d?.institutionPostalCode),
+      institutionPhone: text(d?.institutionPhone),
+      // Valeur institutionnelle actuelle utilisée comme repli tant qu'aucun document n'a encore
+      // été enregistré — modifiable ensuite dans les paramètres, jamais codée ailleurs dans l'UI.
+      quebecIdentificationNumber: typeof d?.quebecIdentificationNumber === "string" && d.quebecIdentificationNumber ? d.quebecIdentificationNumber : "1762178024",
+      // Jamais préempli : le numéro RZ sera saisi seulement lorsqu'il sera confirmé.
+      craT2202FilerAccountNumber: text(d?.craT2202FilerAccountNumber),
+      institutionResponsibleName: text(d?.institutionResponsibleName),
+      institutionResponsibleTitle: text(d?.institutionResponsibleTitle),
+      updatedAt: d?.updatedAt
+    });
+  }, error);
+}
+
+export async function saveTuitionTaxSettings(settings: TuitionTaxSettings) {
+  await setDoc(doc(db, "tuitionTaxSettings", "default"), { ...withoutUndefined(settings) as Record<string, unknown>, updatedAt: serverTimestamp() }, { merge: true });
 }

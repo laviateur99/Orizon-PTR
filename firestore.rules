@@ -442,6 +442,10 @@ service cloud.firestore {
       allow read, create, update: if admin();
       allow delete: if false;
     }
+    match /tuitionTaxSettings/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
     match /trainingProgressObjectiveHistory/{id} {
       allow read: if managesInstructors();
       allow create: if managesInstructors()
