@@ -279,7 +279,7 @@ export function TuitionTaxFormsPage() {
 
           {!eligible && <div className="notice error">Formulaires fiscaux à confirmer — activez « Produire les formulaires de frais de scolarité » dans la fiche de cet étudiant (onglet Information) avant d'enregistrer un dossier fiscal.</div>}
 
-          {locked && <div className="notice tuition-finalized"><h3>DOSSIER FINALISÉ</h3><p>Finalisé le {formatTimestamp(form.finalizedAt) || "—"}{form.finalizedBy?.name ? ` par ${form.finalizedBy.name}` : ""}. Ce dossier n'est plus modifiable.</p></div>}
+          {locked && <div className="notice tuition-finalized"><h3>DOSSIER FINALISÉ</h3><p>Finalisé le {formatTimestamp(form.finalizedAt) || "—"}{form.finalizedBy?.name ? ` par ${form.finalizedBy.name}` : ""}. Ce dossier n'est plus modifiable.</p><div className="quote-actions"><a className="button secondary" href={`/admin/tuition-tax-forms/print/t2202/${form.id}`} target="_blank" rel="noopener noreferrer">T2202 — Fédéral</a><a className="button secondary" href={`/admin/tuition-tax-forms/print/quebec/${form.id}`} target="_blank" rel="noopener noreferrer">TP-752 — Québec</a></div></div>}
 
           <div className="notice tuition-calculated">
             <h3>Heures calculées depuis les PTR</h3>
