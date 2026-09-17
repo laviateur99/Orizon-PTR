@@ -20,15 +20,20 @@ function yearMonth(value: string): { annee: string; mois: string } {
 // zone d'écriture, convertie en coordonnée PDF (origine en bas) au moment du dessin.
 const COORD = {
   institutionName: { x: 30, yBottom: 234.1 },
-  institutionId: { x: 470, yBottom: 234.1 },
+  institutionId: { x: 470, yBottom: 228 },
   institutionAddress: { x: 30, yBottom: 260.1 },
-  institutionPostalCode: { x: 517, yBottom: 260.1 },
-  institutionResponsible: { x: 30, yBottom: 296 },
-  institutionPhone: { x: 466, yBottom: 296 },
+  institutionPostalCode: { x: 517, yBottom: 254 },
+  // Dernière ligne de la section : l'écart avant l'en-tête "2 Renseignements..." (299) est plus
+  // grand que la hauteur réelle de la case (rythme de 26pt entre lignes, comme les lignes
+  // précédentes) — utiliser ce rythme plutôt que l'écart jusqu'au prochain repère évite de
+  // dessiner trop bas, dans l'espace mort entre la case et le titre de section suivant.
+  institutionResponsible: { x: 30, yBottom: 284 },
+  institutionPhone: { x: 466, yBottom: 284 },
   studentLastName: { x: 30, yBottom: 339.9 },
   studentFirstName: { x: 330, yBottom: 339.9 },
-  studentAddress: { x: 30, yBottom: 375.7 },
-  studentPostalCode: { x: 517, yBottom: 375.7 }
+  // Même correction que ci-dessus pour la dernière ligne de la section étudiant.
+  studentAddress: { x: 30, yBottom: 364 },
+  studentPostalCode: { x: 517, yBottom: 364 }
 } as const;
 
 // Les 6 lignes officielles "Type de cours" (une seule est remplie par dossier, jamais toutes) —
