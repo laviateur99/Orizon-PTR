@@ -121,11 +121,6 @@ export function subscribeTuitionTaxForm(
   return onSnapshot(doc(db, "tuitionTaxForms", tuitionFormId(studentId, taxYear)), snap => next(snap.exists() ? mapForm(snap.id, snap.data()) : null), error);
 }
 
-// Pour les routes d'impression, qui ne connaissent que l'ID du document (déjà = studentId_taxYear).
-export function subscribeTuitionTaxFormById(id: string, next: (value: TuitionTaxForm | null) => void, error: (e: FirestoreError) => void): Unsubscribe {
-  return onSnapshot(doc(db, "tuitionTaxForms", id), snap => next(snap.exists() ? mapForm(snap.id, snap.data()) : null), error);
-}
-
 export async function saveTuitionTaxForm(form: TuitionTaxForm, exists: boolean) {
   const id = tuitionFormId(form.studentId, form.taxYear);
   const { id: _omit, ...data } = form;

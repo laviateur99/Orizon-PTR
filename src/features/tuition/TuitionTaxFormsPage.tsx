@@ -213,6 +213,9 @@ export function TuitionTaxFormsPage() {
 
   async function finalize() {
     if (!form || !settings || !eligible || locked || errors.length) return;
+    // amountPaid reste une saisie administrative manuelle — 0 $ peut être légitime (dossier de
+    // test, cas particulier), donc on avertit sans jamais bloquer une valeur explicitement confirmée.
+    if (form.amountPaid === 0 && !window.confirm("Le montant payé est actuellement à 0,00 $. Les formulaires fiscaux afficheront ce montant tel quel. Continuer la finalisation ?")) return;
     if (!window.confirm(`Finaliser le dossier fiscal ${taxYear} de ${form.studentSnapshot.firstName} ${form.studentSnapshot.lastName} ? Le dossier ne pourra plus être modifié après cette étape.`)) return;
     setBusy(true); setError(""); setMessage("");
     try {
