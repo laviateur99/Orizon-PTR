@@ -5,6 +5,6 @@ import { PersonPinPanel } from "@/features/auth/PersonPinPanel";
 
 export function InstructorPinPanel({ instructorId, instructorName }: { instructorId: string; instructorName: string }) {
   const { profile } = useAuth();
-  const isSelf = profile?.role === "Instructeur" && profile.linkedInstructorId === instructorId;
+  const isSelf = Boolean(profile?.linkedInstructorId) && profile?.linkedInstructorId === instructorId;
   return <PersonPinPanel kind="instructor" personId={instructorId} personName={instructorName} isSelf={isSelf} />;
 }
