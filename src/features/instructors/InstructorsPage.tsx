@@ -6,6 +6,7 @@ import { deleteInstructor, saveInstructor, subscribeInstructor, subscribeInstruc
 import type { Instructor, InstructorClass, InstructorStatus } from "./types";
 import { DutyRestPanel } from "@/features/duty/DutyRestPanel";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { InstructorPinPanel } from "./InstructorPinPanel";
 
 const emptyInstructor = ():Instructor => ({
   id:`instructor-${Date.now()}`,
@@ -30,6 +31,7 @@ export function InstructorsPage(){
   const [status,setStatus]=useState<InstructorStatus|"Tous">("Tous");
   const [editing,setEditing]=useState<Instructor|null>(null);
   const [dutyInstructor,setDutyInstructor]=useState<Instructor|null>(null);
+  const [pinInstructor,setPinInstructor]=useState<Instructor|null>(null);
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const [classEffectiveDate,setClassEffectiveDate]=useState(new Date().toISOString().slice(0,10));
@@ -90,6 +92,7 @@ export function InstructorsPage(){
         <div><span>{item.email||"—"}</span><small>{item.phone||"—"}</small></div>
         <div className="row-actions">
           <button className="button secondary small" onClick={()=>setDutyInstructor(item)}>Service/repos</button>
+          <button className="button secondary small" onClick={()=>setPinInstructor(item)}>NIP</button>
           {!restricted&&<button className="button secondary small" onClick={()=>{setClassEffectiveDate(new Date().toISOString().slice(0,10));setEditing(item)}}>Modifier</button>}
           {!restricted&&<button className="button danger small" onClick={async()=>{if(confirm(`Supprimer ${item.firstName} ${item.lastName}?`)){await deleteInstructor(item.id);setMessage("Instructeur supprimé.");}}}>Supprimer</button>}
         </div>
@@ -101,6 +104,12 @@ export function InstructorsPage(){
       <header><div><h2>{dutyInstructor.firstName} {dutyInstructor.lastName}</h2><p>Dossier instructeur · temps de service et de repos</p></div><button className="icon-button" onClick={()=>setDutyInstructor(null)}>×</button></header>
       <div className="modal-body"><DutyRestPanel personId={dutyInstructor.id} role="instructor"/></div>
       <footer><span/><button className="button" onClick={()=>setDutyInstructor(null)}>Fermer</button></footer>
+    </section></div>}
+
+    {pinInstructor&&<div className="modal-backdrop"><section className="modal">
+      <header><div><h2>{pinInstructor.firstName} {pinInstructor.lastName}</h2><p>NIP de signature électronique</p></div><button className="icon-button" onClick={()=>setPinInstructor(null)}>×</button></header>
+      <div className="modal-body"><InstructorPinPanel instructorId={pinInstructor.id} instructorName={`${pinInstructor.firstName} ${pinInstructor.lastName}`.trim()}/></div>
+      <footer><span/><button className="button" onClick={()=>setPinInstructor(null)}>Fermer</button></footer>
     </section></div>}
 
     {editing&&<div className="modal-backdrop"><section className="modal">
