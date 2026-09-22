@@ -1,18 +1,17 @@
 "use client";
 import { useEffect,useState } from "react";
-import { deleteApp,initializeApp } from "firebase/app";
-import { createUserWithEmailAndPassword,getAuth,sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { collection,deleteDoc,doc,onSnapshot,serverTimestamp,setDoc,updateDoc } from "firebase/firestore";
-import { auth,db,firebaseConfig } from "@/services/firebase/client";
+import { auth,db } from "@/services/firebase/client";
 import { subscribeStudents } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";
 import { subscribeInstructors } from "@/features/instructors/firestore";
 import { deleteInstructor } from "@/features/instructors/firestore";
 import type { Instructor } from "@/features/instructors/types";
+import { inviteUser } from "./inviteUser";
 import { moduleLabels,modules,rolePermissions,roles,type AppModule,type UserProfile,type UserRole } from "./types";
 
 const profile=(id:string,data:Record<string,unknown>):UserProfile=>({uid:id,name:String(data.name||""),email:String(data.email||""),role:(data.role as UserRole)||"Étudiant",permissions:Array.isArray(data.permissions)?data.permissions as AppModule[]:[],active:data.active!==false,linkedStudentId:String(data.linkedStudentId||""),linkedInstructorId:String(data.linkedInstructorId||""),createdAt:String(data.createdAt||""),lastLoginAt:String(data.lastLoginAt||"")});
-const temporaryPassword=()=>`${crypto.randomUUID()}-Aa1!`;
 
 export function UserManagementPanel(){
  const[users,setUsers]=useState<UserProfile[]>([]),[students,setStudents]=useState<Student[]>([]),[instructors,setInstructors]=useState<Instructor[]>([]),[editing,setEditing]=useState<UserProfile|null>(null);
@@ -23,21 +22,17 @@ export function UserManagementPanel(){
 
  async function invite(e:React.FormEvent){
   e.preventDefault();setBusy(true);setMessage("");
-  const email=form.email.trim().toLowerCase(),existing=users.find(item=>item.email.toLowerCase()===email),matchedInstructor=instructors.find(item=>item.email.trim().toLowerCase()===email);
-  let secondary:ReturnType<typeof initializeApp>|null=null,linkedInstructorId=matchedInstructor?.id||"";
-  const ensureInstructor=async()=>{if(form.role!=="Instructeur"||linkedInstructorId)return;linkedInstructorId=`instructor-${crypto.randomUUID()}`;const parts=form.name.trim().split(/\s+/);await setDoc(doc(db,"instructors",linkedInstructorId),{firstName:parts[0]||"Instructeur",lastName:parts.slice(1).join(" "),name:form.name.trim(),email,phone:"",classLevel:"Classe 4",status:"Actif",active:true,employeeNumber:"",hiredDate:"",notes:"",createdAt:serverTimestamp()});};
-  const invitation=()=>({name:form.name.trim(),email,role:form.role,permissions:rolePermissions[form.role],active:true,mustSetPassword:false,linkedStudentId:"",linkedInstructorId:form.role==="Instructeur"?linkedInstructorId:"",invitedAt:new Date().toISOString(),invitedBy:auth.currentUser?.email||"",createdAtServer:serverTimestamp()});
+  const email=form.email.trim().toLowerCase(),matchedInstructor=instructors.find(item=>item.email.trim().toLowerCase()===email);
+  let linkedInstructorId=matchedInstructor?.id||"";
   try{
-   if(existing){await ensureInstructor();await updateDoc(doc(db,"users",existing.uid),invitation());}
-   else{
-    secondary=initializeApp(firebaseConfig,`activation-${Date.now()}`);
-    try{const result=await createUserWithEmailAndPassword(getAuth(secondary),email,temporaryPassword());await ensureInstructor();await setDoc(doc(db,"users",result.user.uid),invitation());}
-    catch(error){if((error as {code?:string}).code!=="auth/email-already-in-use")throw error;await ensureInstructor();await setDoc(doc(db,"pendingInvitations",email),invitation());}
+   if(form.role==="Instructeur"&&!linkedInstructorId){
+    linkedInstructorId=`instructor-${crypto.randomUUID()}`;
+    const parts=form.name.trim().split(/\s+/);
+    await setDoc(doc(db,"instructors",linkedInstructorId),{firstName:parts[0]||"Instructeur",lastName:parts.slice(1).join(" "),name:form.name.trim(),email,phone:"",classLevel:"Classe 4",status:"Actif",active:true,employeeNumber:"",hiredDate:"",notes:"",createdAt:serverTimestamp()});
    }
-   await sendPasswordResetEmail(auth,email);
-   if(existing)await deleteDoc(doc(db,"pendingInvitations",email)).catch(()=>undefined);
+   await inviteUser({name:form.name,email,role:form.role,linkedInstructorId,existingUsers:users});
    setMessage(`Invitation d’activation envoyée à ${email}.${form.role==="Instructeur"?" Fiche instructeur associée automatiquement.":""}`);setForm({name:"",email:"",role:"Instructeur"});
-  }catch(error){setMessage(error instanceof Error?error.message:"Invitation impossible.");}finally{if(secondary)await deleteApp(secondary);setBusy(false)}
+  }catch(error){setMessage(error instanceof Error?error.message:"Invitation impossible.");}finally{setBusy(false)}
  }
  async function save(){if(!editing)return;const matchedInstructor=instructors.find(item=>item.email.trim().toLowerCase()===editing.email.trim().toLowerCase());const linkedInstructorId=editing.role==="Instructeur"?(editing.linkedInstructorId||matchedInstructor?.id||""):"";await updateDoc(doc(db,"users",editing.uid),{name:editing.name,role:editing.role,permissions:editing.permissions,active:editing.active,linkedStudentId:editing.role==="Étudiant"?(editing.linkedStudentId||""):"",linkedInstructorId,updatedAt:new Date().toISOString(),updatedAtServer:serverTimestamp()});setEditing(null);setMessage(editing.role==="Instructeur"&&linkedInstructorId?"Accès mis à jour et fiche instructeur associée.":"Accès utilisateur mis à jour.")}
  async function removeAccess(){if(!editing||editing.uid===auth.currentUser?.uid)return;const removesInstructor=editing.role==="Instructeur"&&Boolean(editing.linkedInstructorId);const detail=removesInstructor?"Son compte utilisateur ET sa fiche instructeur seront supprimés.":"Sa fiche de rôle et ses invitations seront supprimées. Cette action ne supprime pas ses autres dossiers de formation.";if(!window.confirm(`Supprimer définitivement l’accès de ${editing.name||editing.email}?\n\n${detail}`))return;setBusy(true);try{await deleteDoc(doc(db,"pendingInvitations",editing.email.toLowerCase())).catch(()=>undefined);if(removesInstructor)await deleteInstructor(editing.linkedInstructorId!);await deleteDoc(doc(db,"users",editing.uid));setEditing(null);setMessage(removesInstructor?`Le compte ${editing.email} et sa fiche instructeur ont été supprimés.`:`L’accès de ${editing.email} a été supprimé.`);}catch(error){setMessage(error instanceof Error?error.message:"Suppression impossible.");}finally{setBusy(false)}}
