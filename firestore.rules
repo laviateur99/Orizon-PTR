@@ -144,6 +144,13 @@ service cloud.firestore {
     }
     match /preSoloChecklists/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
     match /flightTestRecommendations/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
+    // NIP de signature électronique — même palier de permission que preSoloChecklists/
+    // flightTestRecommendations (personnel avec accès 'students'/'ptr', ou l'étudiant lui-même
+    // via son propre compte). La route serveur de vérification (api/pin/verify-student) utilise
+    // le jeton de l'appelant et est donc soumise exactement à cette même règle.
+    match /studentPins/{studentId} {
+      allow read, write: if any(['students','ptr']) && ownPtr(studentId);
+    }
     match /studentAgreements/{studentId} {
       allow read: if any(['students','ptr']) && ownPtr(studentId);
       allow create: if any(['students','ptr']) && ownPtr(request.resource.data.studentId)
