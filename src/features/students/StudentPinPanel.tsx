@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { useAuth } from "@/features/auth/AuthProvider";
 import { hashPin, isValidPin, PIN_LENGTH, randomPinSalt } from "@/features/auth/pin";
 
+type PinStatus = { exists: boolean; updatedAt?: string } | undefined;
+
 /**
- * Définit/change le NIP de signature électronique d'un étudiant. Le hachage se fait ici, côté
- * client, avant l'écriture — c'est acceptable pour la DÉFINITION (l'appelant a déjà un accès
- * d'écriture légitime, ce n'est pas une tentative de devinage) ; seule la VÉRIFICATION ultérieure
- * doit passer par la route serveur (voir PinSignaturePad).
+ * NIP de signature électronique d'un étudiant.
+ *
+ * IMPORTANT — qui peut faire quoi, et pourquoi : seul l'étudiant, connecté sur SON PROPRE compte
+ * (profile.linkedStudentId === studentId), peut définir ou changer son NIP. Le personnel
+ * (administrateur, instructeur) ne voit qu'un statut (configuré ou non) et peut seulement forcer
+ * une réinitialisation (l'étudiant devra alors en redéfinir un) — jamais choisir ni voir les
+ * chiffres. Si le personnel pouvait définir le NIP, il le connaîtrait et pourrait signer à la
+ * place de l'étudiant, ce qui viderait la signature électronique de son sens.
  */
 export function StudentPinPanel({ studentId }: { studentId: string }) {
+  const { profile } = useAuth();
+  const isSelf = profile?.role === "Étudiant" && profile.linkedStudentId === studentId;
+  const [status, setStatus] = useState<PinStatus>(undefined);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => onSnapshot(doc(db, "studentPins", studentId), snap => {
+    const data = snap.data();
+    setStatus({ exists: snap.exists(), updatedAt: typeof data?.updatedAt?.toDate === "function" ? data.updatedAt.toDate().toLocaleString("fr-CA", { dateStyle: "long", timeStyle: "short" }) : undefined });
+  }, () => setStatus(undefined)), [studentId]);
 
   async function save() {
     setError(""); setMessage("");
@@ -36,15 +51,41 @@ export function StudentPinPanel({ studentId }: { studentId: string }) {
     }
   }
 
+  async function reset() {
+    if (!window.confirm("Réinitialiser le NIP de cet étudiant ? Il ne pourra plus signer électroniquement tant qu'il n'en aura pas redéfini un lui-même, depuis son propre compte.")) return;
+    setError(""); setMessage("");
+    setBusy(true);
+    try {
+      await deleteDoc(doc(db, "studentPins", studentId));
+      setMessage("NIP réinitialisé. L'étudiant devra en définir un nouveau depuis son propre compte.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Réinitialisation impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (isSelf) {
+    return <div className="student-pin-panel">
+      <h3>Mon NIP de signature électronique</h3>
+      <p>Ce NIP remplace votre signature manuscrite pour vos ententes — vous pourrez ensuite signer sur n’importe quel appareil de l’école sans avoir à vous reconnecter. Ne le partagez avec personne.</p>
+      {error && <div className="notice error">{error}</div>}
+      {message && <div className="notice">{message}</div>}
+      {status?.exists && <p className="muted">NIP actuellement configuré{status.updatedAt ? ` (dernière modification : ${status.updatedAt})` : ""}.</p>}
+      <div className="form-grid">
+        <label>{status?.exists ? "Nouveau NIP" : "NIP"} ({PIN_LENGTH} chiffres)<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
+        <label>Confirmer le NIP<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
+      </div>
+      <button type="button" className="button secondary" disabled={busy} onClick={save}>{status?.exists ? "Changer mon NIP" : "Définir mon NIP"}</button>
+    </div>;
+  }
+
   return <div className="student-pin-panel">
     <h3>NIP de signature électronique</h3>
-    <p>Remplace la signature manuscrite pour les ententes signées par cet étudiant, indépendamment de la session connectée sur l’appareil.</p>
+    <p>Défini uniquement par l’étudiant, depuis son propre compte — le personnel ne peut ni le voir ni le choisir.</p>
     {error && <div className="notice error">{error}</div>}
     {message && <div className="notice">{message}</div>}
-    <div className="form-grid">
-      <label>Nouveau NIP ({PIN_LENGTH} chiffres)<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
-      <label>Confirmer le NIP<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
-    </div>
-    <button type="button" className="button secondary" disabled={busy} onClick={save}>Définir / changer le NIP</button>
+    <p className={status?.exists ? "muted" : "notice warn"}>{status === undefined ? "Chargement du statut…" : status.exists ? `NIP configuré par l’étudiant${status.updatedAt ? ` (${status.updatedAt})` : ""}.` : "Aucun NIP configuré — l’étudiant doit le définir depuis son propre compte avant de pouvoir signer électroniquement."}</p>
+    {status?.exists && <button type="button" className="button secondary small" disabled={busy} onClick={reset}>Réinitialiser le NIP</button>}
   </div>;
 }

@@ -19,6 +19,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { canAccessPtr } from "@/features/auth/ptrAccess";
 import { StudentAgreementPanel } from "@/features/students/StudentAgreementPanel";
 import { StudentProgramAgreementPanel } from "@/features/students/StudentProgramAgreementPanel";
+import { StudentPinPanel } from "@/features/students/StudentPinPanel";
 
 type ScoreKey = "pilotage" | "technical" | "situationalAwareness" | "flightManagement" | "safetyMargins";
 type LessonComponent = NonNullable<PTRLesson["components"]>[number];
@@ -489,6 +490,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       <div className="ptr-print-launch"><a className="button secondary" href={`/ptr/${studentId}/print`} target="_blank" rel="noreferrer">Imprimer le PTR - format Transports Canada</a></div>
       {error && <div className="notice error">{error}</div>}
       {message && <div className="notice">{message}</div>}
+      <section className="card"><StudentPinPanel studentId={studentId}/></section>
       <details id="rental-agreement" className="pre-solo-details" onToggle={event=>setRentalAgreementOpen(event.currentTarget.open)}>
         <summary>Contrat de location et consentement</summary>
         {rentalAgreementOpen&&<StudentAgreementPanel student={student}/>} 
