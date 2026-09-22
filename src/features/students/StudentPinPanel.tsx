@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
-import { useAuth } from "@/features/auth/AuthProvider";
 import { hashPin, isValidPin, PIN_LENGTH, randomPinSalt } from "@/features/auth/pin";
 
 type PinStatus = { exists: boolean; updatedAt?: string } | undefined;
@@ -11,17 +10,18 @@ type PinStatus = { exists: boolean; updatedAt?: string } | undefined;
 /**
  * NIP de signature électronique d'un étudiant.
  *
- * IMPORTANT — qui peut faire quoi, et pourquoi : seul l'étudiant, connecté sur SON PROPRE compte
- * (profile.linkedStudentId === studentId), peut définir ou changer son NIP. Le personnel
- * (administrateur, instructeur) ne voit qu'un statut (configuré ou non) et peut seulement forcer
- * une réinitialisation (l'étudiant devra alors en redéfinir un) — jamais choisir ni voir les
- * chiffres. Si le personnel pouvait définir le NIP, il le connaîtrait et pourrait signer à la
- * place de l'étudiant, ce qui viderait la signature électronique de son sens.
+ * IMPORTANT — pourquoi ce n'est qu'une protection PROCÉDURALE, pas cryptographique : les
+ * étudiants n'ont pas de compte Firebase distinct dans cette école (seul le personnel se
+ * connecte). Sans compte séparé, il n'existe aucun moyen technique de distinguer « l'étudiant a
+ * tapé son NIP » de « le personnel l'a tapé » — les deux passent par la même session Firestore
+ * (celle du personnel connecté sur l'appareil). La seule protection réelle est donc la même que
+ * pour un terminal de paiement : le personnel remet l'appareil à l'étudiant, qui tape lui-même
+ * son NIP dans un champ masqué que le personnel ne lit pas. D'où l'accusé de remise obligatoire
+ * ci-dessous avant de révéler les champs de saisie.
  */
-export function StudentPinPanel({ studentId }: { studentId: string }) {
-  const { profile } = useAuth();
-  const isSelf = profile?.role === "Étudiant" && profile.linkedStudentId === studentId;
+export function StudentPinPanel({ studentId, studentName }: { studentId: string; studentName: string }) {
   const [status, setStatus] = useState<PinStatus>(undefined);
+  const [handedOver, setHandedOver] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,7 +43,7 @@ export function StudentPinPanel({ studentId }: { studentId: string }) {
       const hash = await hashPin(pin, salt);
       await setDoc(doc(db, "studentPins", studentId), { hash, salt, failedAttempts: 0, lockedUntil: new Date().toISOString(), updatedAt: serverTimestamp() });
       setMessage("NIP enregistré.");
-      setPin(""); setConfirmPin("");
+      setPin(""); setConfirmPin(""); setHandedOver(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Enregistrement impossible.");
     } finally {
@@ -51,41 +51,26 @@ export function StudentPinPanel({ studentId }: { studentId: string }) {
     }
   }
 
-  async function reset() {
-    if (!window.confirm("Réinitialiser le NIP de cet étudiant ? Il ne pourra plus signer électroniquement tant qu'il n'en aura pas redéfini un lui-même, depuis son propre compte.")) return;
-    setError(""); setMessage("");
-    setBusy(true);
-    try {
-      await deleteDoc(doc(db, "studentPins", studentId));
-      setMessage("NIP réinitialisé. L'étudiant devra en définir un nouveau depuis son propre compte.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Réinitialisation impossible.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (isSelf) {
-    return <div className="student-pin-panel">
-      <h3>Mon NIP de signature électronique</h3>
-      <p>Ce NIP remplace votre signature manuscrite pour vos ententes — vous pourrez ensuite signer sur n’importe quel appareil de l’école sans avoir à vous reconnecter. Ne le partagez avec personne.</p>
-      {error && <div className="notice error">{error}</div>}
-      {message && <div className="notice">{message}</div>}
-      {status?.exists && <p className="muted">NIP actuellement configuré{status.updatedAt ? ` (dernière modification : ${status.updatedAt})` : ""}.</p>}
-      <div className="form-grid">
-        <label>{status?.exists ? "Nouveau NIP" : "NIP"} ({PIN_LENGTH} chiffres)<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
-        <label>Confirmer le NIP<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
-      </div>
-      <button type="button" className="button secondary" disabled={busy} onClick={save}>{status?.exists ? "Changer mon NIP" : "Définir mon NIP"}</button>
-    </div>;
-  }
-
   return <div className="student-pin-panel">
     <h3>NIP de signature électronique</h3>
-    <p>Défini uniquement par l’étudiant, depuis son propre compte — le personnel ne peut ni le voir ni le choisir.</p>
     {error && <div className="notice error">{error}</div>}
     {message && <div className="notice">{message}</div>}
-    <p className={status?.exists ? "muted" : "notice warn"}>{status === undefined ? "Chargement du statut…" : status.exists ? `NIP configuré par l’étudiant${status.updatedAt ? ` (${status.updatedAt})` : ""}.` : "Aucun NIP configuré — l’étudiant doit le définir depuis son propre compte avant de pouvoir signer électroniquement."}</p>
-    {status?.exists && <button type="button" className="button secondary small" disabled={busy} onClick={reset}>Réinitialiser le NIP</button>}
+    <p className={status?.exists ? "muted" : "notice warn"}>{status === undefined ? "Chargement du statut…" : status.exists ? `NIP configuré${status.updatedAt ? ` (dernière modification : ${status.updatedAt})` : ""}.` : "Aucun NIP configuré — requis avant toute signature électronique."}</p>
+
+    {!handedOver && <div className="notice pin-handoff-notice">
+      <p><strong>Remettez l’appareil à {studentName}.</strong> C’est {studentName.split(" ")[0] || "l’étudiant"} qui doit taper le NIP ci-dessous, sans le dire à voix haute — le personnel ne doit ni le choisir ni le lire à l’écran.</p>
+      <button type="button" className="button secondary small" onClick={() => setHandedOver(true)}>L’appareil a été remis à {studentName.split(" ")[0] || "l’étudiant"}</button>
+    </div>}
+
+    {handedOver && <>
+      <div className="form-grid">
+        <label>{status?.exists ? "Nouveau NIP" : "NIP"} ({PIN_LENGTH} chiffres)<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} autoFocus /></label>
+        <label>Confirmer le NIP<input type="password" inputMode="numeric" pattern="\d*" maxLength={PIN_LENGTH} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))} /></label>
+      </div>
+      <div className="signature-actions">
+        <button type="button" className="button secondary" disabled={busy} onClick={save}>{status?.exists ? "Changer le NIP" : "Définir le NIP"}</button>
+        <button type="button" className="text-button" onClick={() => { setHandedOver(false); setPin(""); setConfirmPin(""); }}>Annuler</button>
+      </div>
+    </>}
   </div>;
 }

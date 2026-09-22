@@ -490,7 +490,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       <div className="ptr-print-launch"><a className="button secondary" href={`/ptr/${studentId}/print`} target="_blank" rel="noreferrer">Imprimer le PTR - format Transports Canada</a></div>
       {error && <div className="notice error">{error}</div>}
       {message && <div className="notice">{message}</div>}
-      <section className="card"><StudentPinPanel studentId={studentId}/></section>
+      <section className="card"><StudentPinPanel studentId={studentId} studentName={`${student.firstName} ${student.lastName}`.trim()}/></section>
       <details id="rental-agreement" className="pre-solo-details" onToggle={event=>setRentalAgreementOpen(event.currentTarget.open)}>
         <summary>Contrat de location et consentement</summary>
         {rentalAgreementOpen&&<StudentAgreementPanel student={student}/>} 
