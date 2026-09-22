@@ -55,7 +55,10 @@ const minutes=(value:string)=>{const match=value.match(/^(\d{1,2}):(\d{2})$/);re
 const duration=(start:string,end:string)=>Math.max(0,Math.round((minutes(end)-minutes(start))/6)/10);
 const hours=(value:number|undefined)=>value===undefined?"":value.toFixed(1);
 const fullName=(student:Student|null)=>student?`${student.firstName} ${student.lastName}`.trim():"";
-const signature=({src,alt}:{src:string;alt:string})=>src?<img className="print-signature" src={src} alt={alt}/>:<span className="print-empty">Non signée</span>;
+// Deux formats possibles pour une signature enregistrée : une image dessinée à la main (héritage,
+// data URI base64) ou, depuis le NIP électronique, une attestation textuelle horodatée — jamais
+// une image dans ce second cas, donc à afficher comme texte plutôt que dans une balise <img>.
+const signature=({src,alt}:{src:string;alt:string})=>!src?<span className="print-empty">Non signée</span>:src.startsWith("data:image")?<img className="print-signature" src={src} alt={alt}/>:<span className="print-signature-text">{src}</span>;
 const normalized=(value:string)=>value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
 const officialLessonNumber=(lesson:PTRLesson|undefined,reservation:ReservationOption|undefined)=>{
   const stored=lesson?.lessonNumber?.trim()||"";

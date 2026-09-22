@@ -3,6 +3,9 @@ import { hashPin, isValidPin, PIN_LOCKOUT_MINUTES, PIN_MAX_ATTEMPTS } from "@/fe
 // Vérification de hash uniquement — nécessite le runtime Node.js, pas Edge.
 export const runtime = "nodejs";
 
+// Collection Firestore par type de signataire — étendre ici pour un futur type (ex. examinateur).
+const COLLECTIONS: Record<string, string> = { student: "studentPins", instructor: "instructorPins" };
+
 type FirestoreValue = { stringValue?: string; integerValue?: string; timestampValue?: string };
 function decodeFields(fields: Record<string, FirestoreValue> | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -20,11 +23,15 @@ function firestoreDocUrl(path: string): string {
 }
 
 // Le NIP n'est jamais transmis au navigateur : cette route relit le hash depuis Firestore avec le
-// jeton de l'appelant (mêmes Règles de sécurité que le SDK client — voir studentPins dans
-// firestore.rules) et compare côté serveur uniquement. Le [id] désigne uniquement quel dossier
-// vérifier ; la valeur du NIP transite dans le corps de la requête, jamais dans l'URL/les logs.
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id: studentId } = await params;
+// jeton de l'appelant (mêmes Règles de sécurité que le SDK client — voir studentPins/instructorPins
+// dans firestore.rules) et compare côté serveur uniquement. [kind]/[id] désignent uniquement quel
+// dossier vérifier (kind = "student" | "instructor") ; la valeur du NIP transite dans le corps de
+// la requête, jamais dans l'URL/les logs.
+export async function POST(request: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
+  const { kind, id: personId } = await params;
+  const collectionName = COLLECTIONS[kind];
+  if (!collectionName) return new Response("Type de signataire invalide.", { status: 400 });
+
   const authorization = request.headers.get("authorization") || "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (!token) return new Response("Missing or insufficient permissions.", { status: 401 });
@@ -39,10 +46,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!isValidPin(pin)) return new Response("NIP invalide.", { status: 400 });
 
   const headers = { Authorization: `Bearer ${token}` };
-  const docPath = `studentPins/${encodeURIComponent(studentId)}`;
+  const docPath = `${collectionName}/${encodeURIComponent(personId)}`;
 
   const getResponse = await fetch(firestoreDocUrl(docPath), { headers, cache: "no-store" });
-  if (getResponse.status === 404) return new Response("Aucun NIP configuré pour cet étudiant.", { status: 404 });
+  if (getResponse.status === 404) return new Response("Aucun NIP configuré pour cette personne.", { status: 404 });
   if (getResponse.status === 401 || getResponse.status === 403) return new Response("Missing or insufficient permissions.", { status: 403 });
   if (!getResponse.ok) return new Response("Vérification du NIP impossible.", { status: 500 });
 
@@ -51,7 +58,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const storedSalt = typeof fields.salt === "string" ? fields.salt : "";
   const failedAttempts = typeof fields.failedAttempts === "number" ? fields.failedAttempts : 0;
   const lockedUntil = typeof fields.lockedUntil === "string" ? fields.lockedUntil : undefined;
-  if (!storedHash || !storedSalt) return new Response("Aucun NIP configuré pour cet étudiant.", { status: 404 });
+  if (!storedHash || !storedSalt) return new Response("Aucun NIP configuré pour cette personne.", { status: 404 });
   if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
     return new Response(`NIP verrouillé temporairement après trop de tentatives. Réessayez après ${new Date(lockedUntil).toLocaleTimeString("fr-CA")}.`, { status: 423 });
   }

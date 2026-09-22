@@ -6,14 +6,16 @@ import { PIN_LENGTH } from "@/features/auth/pin";
 
 /**
  * Signature électronique par NIP — remplace SignaturePad (dessin à la main) pour un signataire
- * étudiant. Le NIP n'est jamais comparé côté client : il est envoyé à la route serveur
- * /api/pin/verify-student/[id], qui relit le hash depuis Firestore et compare elle-même. En cas
- * de succès, `onChange` reçoit une attestation textuelle horodatée (jamais une image) — le champ
- * cible reste un `string`, donc aucun changement de schéma n'est requis côté appelant.
+ * étudiant OU instructeur (kind). Le NIP n'est jamais comparé côté client : il est envoyé à la
+ * route serveur /api/pin/verify/[kind]/[id], qui relit le hash depuis Firestore et compare
+ * elle-même. En cas de succès, `onChange` reçoit une attestation textuelle horodatée (jamais une
+ * image) — le champ cible reste un `string`, donc aucun changement de schéma n'est requis côté
+ * appelant.
  */
-export function PinSignaturePad({ label, studentId, signerName, value, onChange }: {
+export function PinSignaturePad({ label, kind, personId, signerName, value, onChange }: {
   label: string;
-  studentId: string;
+  kind: "student" | "instructor";
+  personId: string;
   signerName: string;
   value: string;
   onChange: (value: string) => void;
@@ -29,7 +31,7 @@ export function PinSignaturePad({ label, studentId, signerName, value, onChange 
     setError("");
     try {
       const token = await user.getIdToken();
-      const response = await fetch(`/api/pin/verify-student/${studentId}`, {
+      const response = await fetch(`/api/pin/verify/${kind}/${personId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ pin })

@@ -3,7 +3,7 @@
 import { lessonProgress } from "./lessonProgress";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SignaturePad } from "@/components/ui/SignaturePad";
+import { PinSignaturePad } from "@/components/ui/PinSignaturePad";
 import { subscribeStudent } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";
 import { PreSoloChecklistPanel } from "@/features/students/PreSoloChecklistPanel";
@@ -20,6 +20,7 @@ import { canAccessPtr } from "@/features/auth/ptrAccess";
 import { StudentAgreementPanel } from "@/features/students/StudentAgreementPanel";
 import { StudentProgramAgreementPanel } from "@/features/students/StudentProgramAgreementPanel";
 import { StudentPinPanel } from "@/features/students/StudentPinPanel";
+import { InstructorPinPanel } from "@/features/instructors/InstructorPinPanel";
 
 type ScoreKey = "pilotage" | "technical" | "situationalAwareness" | "flightManagement" | "safetyMargins";
 type LessonComponent = NonNullable<PTRLesson["components"]>[number];
@@ -767,9 +768,12 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
                 <div className="action-list">{["Révision au sol","Refaire l’exercice","Poursuivre","Vol supplémentaire","Évaluation finale"].map(action => <button type="button" className={form.actions.includes(action) ? "active" : ""} onClick={() => toggleAction(action)} key={action}>{action}</button>)}</div>
 	                <label>Statut de la leçon<select value={form.lessonStatus} onChange={event => setForm({...form, lessonStatus:event.target.value as PTRLessonStatus})}><option>Non commencé</option><option>En cours</option><option disabled={cumulativeTargetHours>0&&!cumulativeReady}>Réussi</option><option>À reprendre</option></select></label>
 	                {cumulativeTargetHours>0&&!cumulativeReady&&<div className="notice">La réservation peut être évaluée, mais le plan demeurera « En cours » jusqu’à l’atteinte de {cumulativeTargetHours.toFixed(1)} h.</div>}
+                {form.instructorId&&<InstructorPinPanel instructorId={form.instructorId} instructorName={instructors.find(item=>item.id===form.instructorId)?.name||"l’instructeur"}/>}
                 <div className="form-grid">
-                  <SignaturePad label="Signature de l’instructeur" value={form.instructorSignature} onChange={value => setForm({...form, instructorSignature:value})}/>
-                  <SignaturePad label="Signature de l’élève" value={form.studentSignature} onChange={value => setForm({...form, studentSignature:value})}/>
+                  {form.instructorId
+                    ? <PinSignaturePad label="Signature de l’instructeur" kind="instructor" personId={form.instructorId} signerName={instructors.find(item => item.id === form.instructorId)?.name || "l’instructeur"} value={form.instructorSignature} onChange={value => setForm({...form, instructorSignature:value})}/>
+                    : <div className="notice">Sélectionne l’instructeur responsable ci-dessus avant de signer.</div>}
+                  <PinSignaturePad label="Signature de l’élève" kind="student" personId={studentId} signerName={`${student.firstName} ${student.lastName}`.trim()} value={form.studentSignature} onChange={value => setForm({...form, studentSignature:value})}/>
                 </div>
                 <button className="button">Enregistrer l’évaluation</button>
               </form>

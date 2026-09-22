@@ -15,6 +15,7 @@ service cloud.firestore {
     }
     function studentRole() { return active() && profile().data.role == 'Étudiant'; }
     function ownPtr(studentId) { return !studentRole() || profile().data.linkedStudentId == studentId; }
+    function ownInstructorPin(instructorId) { return profile().data.role != 'Instructeur' || profile().data.linkedInstructorId == instructorId; }
     function managesInstructors() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
     function ptrStaff() {
       return has('ptr') && profile().data.role in ['Administrateur','Chef instructeur','Instructeur'];
@@ -146,10 +147,15 @@ service cloud.firestore {
     match /flightTestRecommendations/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
     // NIP de signature électronique — même palier de permission que preSoloChecklists/
     // flightTestRecommendations (personnel avec accès 'students'/'ptr', ou l'étudiant lui-même
-    // via son propre compte). La route serveur de vérification (api/pin/verify-student) utilise
-    // le jeton de l'appelant et est donc soumise exactement à cette même règle.
+    // via son propre compte). La route serveur de vérification (api/pin/verify/[kind]/[id])
+    // utilise le jeton de l'appelant et est donc soumise exactement à cette même règle.
     match /studentPins/{studentId} {
       allow read, write: if any(['students','ptr']) && ownPtr(studentId);
+    }
+    // Même mécanisme pour le NIP d'un instructeur — accès réservé au personnel PTR, ou à
+    // l'instructeur lui-même via son propre compte.
+    match /instructorPins/{instructorId} {
+      allow read, write: if ptrStaff() && ownInstructorPin(instructorId);
     }
     match /studentAgreements/{studentId} {
       allow read: if any(['students','ptr']) && ownPtr(studentId);
