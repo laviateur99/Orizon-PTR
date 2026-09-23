@@ -540,6 +540,25 @@ service cloud.firestore {
       allow write: if has('admin');
     }
 
+    // Demande d'inscription publique (page de connexion) — écriture possible sans être connecté,
+    // strictement validée; seul un administrateur peut la consulter/l'approuver/la rejeter.
+    match /signupRequests/{id} {
+      allow create: if request.resource.data.firstName is string
+        && request.resource.data.firstName.size() > 0
+        && request.resource.data.firstName.size() <= 100
+        && request.resource.data.lastName is string
+        && request.resource.data.lastName.size() > 0
+        && request.resource.data.lastName.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('.+@.+[.].+')
+        && request.resource.data.email.size() <= 200
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.status == 'En attente'
+        && request.resource.data.keys().hasOnly(['firstName','lastName','email','phone','status','createdAt']);
+      allow read, update, delete: if admin();
+    }
+
     match /testFeedback/{id} {
       allow create: if active()
         && request.resource.data.userId == request.auth.uid
