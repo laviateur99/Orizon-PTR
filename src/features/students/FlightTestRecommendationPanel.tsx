@@ -22,7 +22,7 @@ const emptyRecommendation=(studentId:string):FlightTestRecommendation=>({
   completedAt:""
 });
 
-export function FlightTestRecommendationPanel({studentId}:{studentId:string}){
+export function FlightTestRecommendationPanel({studentId,readOnly}:{studentId:string;readOnly?:boolean}){
   const [form,setForm]=useState<FlightTestRecommendation>(()=>emptyRecommendation(studentId));
   const [message,setMessage]=useState("");
   const [error,setError]=useState("");
@@ -66,6 +66,7 @@ export function FlightTestRecommendationPanel({studentId}:{studentId:string}){
     {error&&<div className="notice error">{error}</div>}
     {message&&<div className="notice">{message}</div>}
     {!complete&&<div className="flight-test-missing"><b>Éléments requis avant validation :</b><ul>{missing.map(item=><li key={item}>{item}</li>)}</ul></div>}
+    <fieldset disabled={readOnly} style={{border:"none",padding:0,margin:0}}>
     <div className="flight-test-signers">
       <fieldset>
         <legend>Instructeur recommandant</legend>
@@ -91,5 +92,6 @@ export function FlightTestRecommendationPanel({studentId}:{studentId:string}){
       </fieldset>
     </div>
     <div className="form-actions"><span/><button className="button" type="button" onClick={save}>Enregistrer la recommandation</button></div>
+    </fieldset>
   </section>;
 }

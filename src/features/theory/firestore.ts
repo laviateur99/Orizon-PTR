@@ -1,4 +1,4 @@
-import {arrayRemove,arrayUnion,collection,deleteDoc,doc,getDocs,onSnapshot,serverTimestamp,setDoc,writeBatch,type DocumentData,type FirestoreError,type Unsubscribe} from "firebase/firestore";
+import {arrayRemove,arrayUnion,collection,deleteDoc,doc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where,writeBatch,type DocumentData,type FirestoreError,type Unsubscribe} from "firebase/firestore";
 import {db} from "@/services/firebase/client";
 import type{SchedulerEvent}from"@/features/scheduler/types";
 import{schedulerEventPayload}from"@/features/scheduler/firestore";
@@ -12,6 +12,7 @@ const mapCohort=(id:string,data:DocumentData):TheoryCohort=>({id,name:text(data.
 const mapSession=(id:string,data:DocumentData):TheorySession=>({id,title:text(data.title),program:text(data.program),topic:text(data.topic),date:text(data.date),startTime:text(data.startTime),endTime:text(data.endTime),instructorId:text(data.instructorId),instructorName:text(data.instructorName),roomId:text(data.roomId),roomName:text(data.roomName),cohortId:text(data.cohortId),cohortName:text(data.cohortName),studentIds:strings(data.studentIds),studentNames:strings(data.studentNames),additionalStudentIds:strings(data.additionalStudentIds),additionalParticipantsVersion:typeof data.additionalParticipantsVersion==="number"?data.additionalParticipantsVersion:undefined,attendance:attendance(data.attendance),status:(text(data.status)||"Planifiée") as TheorySession["status"],notes:text(data.notes)});
 export function subscribeTheoryCohorts(next:(values:TheoryCohort[])=>void,error:(value:FirestoreError)=>void):Unsubscribe{return onSnapshot(collection(db,"theoryCohorts"),snapshot=>next(snapshot.docs.map(item=>mapCohort(item.id,item.data()))),error);}
 export function subscribeTheorySessions(next:(values:TheorySession[])=>void,error:(value:FirestoreError)=>void):Unsubscribe{return onSnapshot(collection(db,"theorySessions"),snapshot=>next(snapshot.docs.map(item=>mapSession(item.id,item.data()))),error);}
+export function subscribeTheorySessionsForStudent(studentId:string,next:(values:TheorySession[])=>void,error:(value:FirestoreError)=>void):Unsubscribe{return onSnapshot(query(collection(db,"theorySessions"),where("studentIds","array-contains",studentId)),snapshot=>next(snapshot.docs.map(item=>mapSession(item.id,item.data()))),error);}
 export async function saveTheoryCohort(value:TheoryCohort){
   const cohortRef=doc(db,"theoryCohorts",value.id);
   const [sessionsSnapshot,studentsSnapshot]=await Promise.all([getDocs(collection(db,"theorySessions")),getDocs(collection(db,"students"))]);

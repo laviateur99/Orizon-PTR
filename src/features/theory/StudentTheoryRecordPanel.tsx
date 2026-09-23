@@ -1,13 +1,16 @@
 "use client";
 import{useEffect,useMemo,useState}from"react";
-import{subscribeTheorySessions}from"./firestore";
+import{subscribeTheorySessions,subscribeTheorySessionsForStudent}from"./firestore";
 import type{TheorySession}from"./types";
 
 const minutes=(value:string)=>{const match=value.match(/^(\d{1,2}):(\d{2})$/);return match?Number(match[1])*60+Number(match[2]):0;};
 const duration=(session:TheorySession)=>Math.max(0,Math.round((minutes(session.endTime)-minutes(session.startTime))/6)/10);
-export function StudentTheoryRecordPanel({studentId}:{studentId:string}){
+export function StudentTheoryRecordPanel({studentId,selfService}:{studentId:string;selfService?:boolean}){
   const[sessions,setSessions]=useState<TheorySession[]>([]),[error,setError]=useState("");
-  useEffect(()=>subscribeTheorySessions(values=>setSessions(values.filter(item=>item.studentIds.includes(studentId))),value=>setError(value.message)),[studentId]);
+  useEffect(()=>selfService
+    ?subscribeTheorySessionsForStudent(studentId,setSessions,value=>setError(value.message))
+    :subscribeTheorySessions(values=>setSessions(values.filter(item=>item.studentIds.includes(studentId))),value=>setError(value.message))
+  ,[studentId,selfService]);
   const ordered=useMemo(()=>sessions.slice().sort((a,b)=>`${b.date}${b.startTime}`.localeCompare(`${a.date}${a.startTime}`)),[sessions]);
   const completed=ordered.filter(item=>item.status==="Complétée");
   const present=completed.filter(item=>item.attendance[studentId]==="Présent");

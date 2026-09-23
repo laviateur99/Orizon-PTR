@@ -11,7 +11,7 @@ export const rolePermissions:Record<UserRole,AppModule[]>={
   Instructeur:["dashboard","schedule","ptr","students","instructors","employees","theory","programs"],
   Maintenance:["dashboard","schedule","employees","fleet","maintenance","snags","emergency"],
   "Directeur de maintenance":["dashboard","schedule","employees","fleet","maintenance","snags","emergency"],
-  Étudiant:["dashboard","schedule","ptr"]
+  Étudiant:["dashboard","schedule","students","ptr"]
 };
 export const employeeRoles:UserRole[]=["Administrateur","Chef instructeur","Dispatch","Instructeur","Maintenance","Directeur de maintenance"];
 export const hasModuleAccess=(profile:Pick<UserProfile,"active"|"role"|"permissions">|null,module:AppModule)=>Boolean(profile?.active&&(profile.role==="Administrateur"||profile.permissions.includes(module)||(module==="maintenance"&&profile.permissions.includes("fleet"))||(module==="employees"&&employeeRoles.includes(profile.role))));

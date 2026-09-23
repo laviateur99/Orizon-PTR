@@ -111,9 +111,9 @@ service cloud.firestore {
     match /cancellations/{id} { allow read, write: if scheduleAccess(); }
 
     match /students/{id} {
-      allow read: if any(['dashboard','schedule','students','ptr','theory']);
-      allow create, delete: if has('students');
-      allow update: if has('students') || (studentRole() && profile().data.linkedStudentId == id && (
+      allow read: if any(['dashboard','schedule','students','ptr','theory']) && ownPtr(id);
+      allow create, delete: if has('students') && !studentRole();
+      allow update: if (has('students') && !studentRole()) || (studentRole() && profile().data.linkedStudentId == id && (
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rentalAgreementSigned','rentalAgreementSignedAt','rentalAgreementVersion','updatedAt'])
           && request.resource.data.rentalAgreementSigned == true
           && existsAfter(/databases/$(database)/documents/studentAgreements/$(id))
@@ -126,6 +126,8 @@ service cloud.firestore {
           && existsAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey))
           && request.resource.data.trainingProgramAgreementSignedAt == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.signedAt
           && request.resource.data.trainingProgramAgreementVersion == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.documentVersion)
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone','address','emergencyContact','emergencyPhone','updatedAt']))
       ));
     }
     match /students/{studentId}/programAgreements/{agreementKey} {
@@ -137,14 +139,29 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if admin();
     }
-    match /studentDocuments/{id} { allow read, write: if has('students'); }
-    match /studentNotes/{id} { allow read, write: if has('students'); }
+    match /studentDocuments/{id} {
+      allow read: if (has('students') && !studentRole()) || (studentRole() && ownPtr(resource.data.studentId));
+      allow write: if has('students') && !studentRole();
+    }
+    match /studentNotes/{id} {
+      allow read: if (has('students') && !studentRole()) || (studentRole() && ownPtr(resource.data.studentId));
+      allow create: if (has('students') && !studentRole()) || (studentRole() && ownPtr(request.resource.data.studentId));
+      allow update, delete: if has('students') && !studentRole();
+    }
     match /studentHistory/{id} {
       allow read: if any(['students','ptr']) && ownPtr(resource.data.studentId);
-      allow write: if any(['students','ptr']) && ownPtr(request.resource.data.studentId);
+      allow write: if (any(['students','ptr']) && ownPtr(request.resource.data.studentId) && !studentRole())
+        || (studentRole() && ownPtr(request.resource.data.studentId) && request.resource.data.type == 'Note');
     }
-    match /preSoloChecklists/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
-    match /flightTestRecommendations/{studentId} { allow read, write: if any(['students','ptr']) && ownPtr(studentId); }
+    // Lecture accessible à l'élève propriétaire; l'écriture (autorisation officielle) reste réservée au personnel.
+    match /preSoloChecklists/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow write: if any(['students','ptr']) && ownPtr(studentId) && !studentRole();
+    }
+    match /flightTestRecommendations/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow write: if any(['students','ptr']) && ownPtr(studentId) && !studentRole();
+    }
     // NIP de signature électronique — même palier de permission que preSoloChecklists/
     // flightTestRecommendations (personnel avec accès 'students'/'ptr', ou l'étudiant lui-même
     // via son propre compte). La route serveur de vérification (api/pin/verify/[kind]/[id])
@@ -167,17 +184,18 @@ service cloud.firestore {
       allow delete: if admin();
     }
 
+    // Lecture accessible à l'élève propriétaire; l'écriture (évaluation officielle) reste réservée au personnel.
     match /ptrLessons/{id} {
       allow read: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId);
-      allow create: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(request.resource.data.studentId);
-      allow update: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId);
-      allow delete: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId);
+      allow create: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow update: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow delete: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && !studentRole();
     }
     match /ptrEvaluations/{id} {
       allow read: if any(['ptr','students']) && ownPtr(resource.data.studentId);
-      allow create: if any(['ptr','students']) && ownPtr(request.resource.data.studentId);
-      allow update: if any(['ptr','students']) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId);
-      allow delete: if any(['ptr','students']) && ownPtr(resource.data.studentId);
+      allow create: if any(['ptr','students']) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow update: if any(['ptr','students']) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow delete: if any(['ptr','students']) && ownPtr(resource.data.studentId) && !studentRole();
     }
     match /ptrLessonHistory/{id} {
       allow read: if ptrStaff()
@@ -351,7 +369,10 @@ service cloud.firestore {
     }
 
     match /theoryCohorts/{id} { allow read, write: if has('theory'); }
-    match /theorySessions/{id} { allow read, write: if has('theory'); }
+    match /theorySessions/{id} {
+      allow read: if has('theory') || (studentRole() && resource.data.studentIds.hasAny([profile().data.linkedStudentId]));
+      allow write: if has('theory');
+    }
 
     match /aircraft/{id} {
       allow read: if any(['dashboard','schedule','fleet','maintenance','ptr']) || maintenanceAccess();

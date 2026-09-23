@@ -52,7 +52,7 @@ export function isPreSoloComplete(value:PreSoloChecklist){
   return admin&&exercises&&recommendation&&supervision;
 }
 
-export function PreSoloChecklistPanel({studentId}:{studentId:string}){
+export function PreSoloChecklistPanel({studentId,readOnly}:{studentId:string;readOnly?:boolean}){
   const [form,setForm]=useState<PreSoloChecklist>(()=>emptyChecklist(studentId));
   const [message,setMessage]=useState("");
   const [error,setError]=useState("");
@@ -79,6 +79,7 @@ export function PreSoloChecklistPanel({studentId}:{studentId:string}){
     <header className="pre-solo-head"><div><span>Premier solo</span><h2>Liste de vérification avant le premier solo</h2><p>La réservation et le check-out Solo demeurent bloqués jusqu’à l’autorisation complète.</p></div><strong className={complete?"authorized":"incomplete"}>{complete?"Prêt pour autorisation solo":"Incomplète — solo bloqué"}</strong></header>
     {error&&<div className="notice error">{error}</div>}{message&&<div className="notice">{message}</div>}
     {!complete&&<div className="pre-solo-missing"><strong>Éléments qui empêchent actuellement l’autorisation :</strong><ul>{missingItems.map(item=><li key={item}>{item}</li>)}</ul></div>}
+    <fieldset disabled={readOnly} style={{border:"none",padding:0,margin:0}}>
     <h3>Validations administratives</h3>
     <div className="pre-solo-admin">
       <fieldset><legend>Certificat de compétence en radio</legend><label>Examinateur délégué<input value={form.radioExaminerName} onChange={e=>field("radioExaminerName",e.target.value)}/></label><label>Date d’émission<input type="date" value={form.radioIssueDate} onChange={e=>field("radioIssueDate",e.target.value)}/></label><SignaturePad label="Signature de l’examinateur" value={form.radioExaminerSignature} onChange={value=>field("radioExaminerSignature",value)}/></fieldset>
@@ -95,5 +96,6 @@ export function PreSoloChecklistPanel({studentId}:{studentId:string}){
       <fieldset className={!form.recommendingInstructorIsClass4?"optional":""}><legend>Instructeur surveillant {form.recommendingInstructorIsClass4?"(obligatoire)":"(si requis)"}</legend><label>Nom<input value={form.supervisingInstructorName} onChange={e=>field("supervisingInstructorName",e.target.value)}/></label><label>No de licence — classe<input value={form.supervisingInstructorLicenseClass} onChange={e=>field("supervisingInstructorLicenseClass",e.target.value)}/></label><label>Date<input type="date" value={form.supervisingDate} onChange={e=>field("supervisingDate",e.target.value)}/></label><SignaturePad label="Signature de l’instructeur surveillant" value={form.supervisingInstructorSignature} onChange={value=>field("supervisingInstructorSignature",value)}/></fieldset>
     </div>
     <div className="form-actions"><span/><button className="button" type="button" onClick={save}>Enregistrer la check-list</button></div>
+    </fieldset>
   </section>;
 }
