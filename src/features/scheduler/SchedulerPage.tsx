@@ -309,6 +309,7 @@ export function SchedulerPage() {
   const [resourceFilter, setResourceFilter] = useState("");
   const [resourceSearch, setResourceSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
+  const [studentSuggestOpen, setStudentSuggestOpen] = useState(false);
   const normalizeSearch = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
 
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -1841,27 +1842,27 @@ export function SchedulerPage() {
                     }}
                   />
                 </label>
-                <label>
+                <label style={{position: "relative"}}>
                   Élève
-                  <input type="search" aria-label="Rechercher un étudiant" placeholder="Rechercher un étudiant…" value={studentSearch} onChange={e => setStudentSearch(e.target.value)} style={{fontSize: 16, minHeight: 44}} />
-                  <select style={{fontSize: 16, minHeight: 44}}
-                    value={draft.studentId}
-                    onChange={(e) => {
-                      const s = students.find((x) => x.id === e.target.value);
-                      setDraft({
-                        ...draft,
-                        studentId: e.target.value,
-                        studentName: s?.name || "",
-                      });
-                    }}
-                  >
-                    <option value="">Aucun</option>
-                    {filteredStudents.map((s) => (
-                      <option value={s.id} key={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    type="text"
+                    aria-label="Rechercher un étudiant"
+                    placeholder="Rechercher un étudiant…"
+                    value={studentSearch || draft.studentName || ""}
+                    onFocus={() => { setStudentSearch(draft.studentName || ""); setStudentSuggestOpen(true); }}
+                    onChange={e => { setStudentSearch(e.target.value); setStudentSuggestOpen(true); }}
+                    onBlur={() => setTimeout(() => setStudentSuggestOpen(false), 150)}
+                    style={{fontSize: 16, minHeight: 44}}
+                  />
+                  {studentSuggestOpen && (
+                    <div className="student-suggest-list">
+                      <button type="button" onMouseDown={() => { setDraft({ ...draft, studentId: "", studentName: "" }); setStudentSearch(""); setStudentSuggestOpen(false); }}>Aucun</button>
+                      {filteredStudents.slice(0, 8).map((s) => (
+                        <button type="button" key={s.id} onMouseDown={() => { setDraft({ ...draft, studentId: s.id, studentName: s.name }); setStudentSearch(s.name); setStudentSuggestOpen(false); }}>{s.name}</button>
+                      ))}
+                      {!filteredStudents.length && <p>Aucun résultat.</p>}
+                    </div>
+                  )}
                 </label>
                 <label>
                   Avion
