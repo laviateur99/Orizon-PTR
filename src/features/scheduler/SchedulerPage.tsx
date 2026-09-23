@@ -290,7 +290,7 @@ export function SchedulerPage() {
   const { profile, user } = useAuth();
   const canManageMaintenanceSchedule = Boolean(
     profile &&
-      ["Administrateur", "Directeur de maintenance", "Maintenance"].includes(
+      ["Administrateur", "Directeur de maintenance", "Maintenance", "Instructeur", "Dispatch", "Chef instructeur"].includes(
         profile.role,
       ),
   );
