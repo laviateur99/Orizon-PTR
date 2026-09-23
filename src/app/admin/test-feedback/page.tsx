@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 
 type FeedbackStatus = "Nouveau" | "En cours" | "Résolu";
 const STATUSES: FeedbackStatus[] = ["Nouveau", "En cours", "Résolu"];
+const statusClass = (status?: FeedbackStatus) => status === "Résolu" ? "ok" : status === "En cours" ? "warn" : "danger";
 type Feedback = { id: string; message: string; page: string; userName: string; userEmail: string; status?: FeedbackStatus; createdAt?: Timestamp };
 type Reply = { id: string; text: string; authorName: string; createdAt?: Timestamp };
 
@@ -40,8 +41,8 @@ function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback;
     {error && <div className="notice error">{error}</div>}
     <div className="feedback-status-row">
       <label>Statut{canManage
-        ? <select value={item.status || "Nouveau"} onChange={e => changeStatus(e.target.value as FeedbackStatus)}>{STATUSES.map(s => <option key={s}>{s}</option>)}</select>
-        : <span className={`badge ${item.status === "Résolu" ? "ok" : item.status === "En cours" ? "warn" : ""}`}>{item.status || "Nouveau"}</span>}
+        ? <select className={`status-select ${statusClass(item.status)}`} value={item.status || "Nouveau"} onChange={e => changeStatus(e.target.value as FeedbackStatus)}>{STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+        : <span className={`badge ${statusClass(item.status)}`}>{item.status || "Nouveau"}</span>}
       </label>
       {canManage && <button className="button danger small" disabled={deleting} onClick={() => onDelete(item)}>{deleting ? "Suppression…" : "Supprimer"}</button>}
     </div>
