@@ -110,7 +110,7 @@ function assessMinimum(weather:WeatherSnapshot,minimum:WeatherMinimum,wind:WindA
 }
 
 export function DashboardPage(){
-  const{user,profile}=useAuth(),leaveManager=profile?.role==="Administrateur"||profile?.role==="Chef instructeur";
+  const{user,profile}=useAuth(),leaveManager=profile?.role==="Administrateur"||profile?.role==="Chef instructeur",restrictedStudent=profile?.role==="Étudiant";
   const [data,setData]=useState(initial);
   const [error,setError]=useState("");
   const [weather,setWeather]=useState<WeatherSnapshot|null>(null);
@@ -122,7 +122,7 @@ export function DashboardPage(){
   const[trainingRecords,setTrainingRecords]=useState<EmployeeTrainingRecord[]>([]),[trainingInstructors,setTrainingInstructors]=useState<Instructor[]>([]);
   const[creatingLeave,setCreatingLeave]=useState(false);
   const[leaveMessage,setLeaveMessage]=useState("");
-  useEffect(()=>subscribeDashboard(setData,value=>setError(value.message)),[]);
+  useEffect(()=>restrictedStudent?undefined:subscribeDashboard(setData,value=>setError(value.message)),[restrictedStudent]);
   useEffect(()=>leaveManager?subscribeEmployeeLeaves(undefined,true,items=>setPendingLeaves(items.filter(item=>item.status==="En attente").length),value=>setError(value.message)):undefined,[leaveManager]);
   useEffect(()=>leaveManager?subscribeEmployeeTraining(undefined,setTrainingRecords,value=>setError(value.message)):undefined,[leaveManager]);
   useEffect(()=>leaveManager?subscribeInstructors({next:setTrainingInstructors,error:value=>setError(value.message)}):undefined,[leaveManager]);
@@ -219,7 +219,7 @@ export function DashboardPage(){
         </div>
       </>}
     </section>
-    <div className="dashboard-kpis">
+    {!restrictedStudent&&<div className="dashboard-kpis">
       <a className="card dashboard-kpi" href="/schedule"><span>Vols aujourd’hui</span><strong>{data.todaysReservations}</strong></a>
       <a className="card dashboard-kpi" href="/fleet"><span>Avions disponibles</span><strong>{data.aircraftAvailable}/{data.aircraftTotal}</strong></a>
       <a className="card dashboard-kpi" href="/maintenance/snags"><span>SNAG ouverts</span><strong>{data.openSnags}</strong></a>
@@ -229,12 +229,12 @@ export function DashboardPage(){
       <a className="card dashboard-kpi" href="/fleet"><span>Avions indisponibles</span><strong>{data.aircraftUnavailable}</strong></a>
       {leaveManager&&<a className={`card dashboard-kpi ${pendingLeaves?"alert":""}`} href="/employees?tab=leave"><span>Congés à approuver</span><strong>{pendingLeaves}</strong></a>}
       {leaveManager&&<a className={`card dashboard-kpi training-renewal-kpi ${trainingAlerts?"alert training-danger":""}`} href="/employees?tab=training"><span>Formations à renouveler</span><strong>{trainingAlerts}</strong></a>}
-    </div>
-    <div className="dashboard-actions">
+    </div>}
+    {!restrictedStudent&&<div className="dashboard-actions">
       <a className="button" href="/schedule">Ouvrir l’horaire</a>
       <a className="button secondary" href="/fleet">Gérer la flotte</a>
       <a className="button secondary" href="/maintenance/snags">Tableau SNAG</a>
       <a className="button secondary" href="/ptr">PTR électronique</a>
-    </div>
+    </div>}
   </>;
 }
