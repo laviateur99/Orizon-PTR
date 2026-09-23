@@ -87,7 +87,7 @@ export async function saveFlightTestRecommendation(recommendation:FlightTestReco
 
 export function subscribeInstructors(handlers: LiveHandlers<InstructorOption>): Unsubscribe {
   return onSnapshot(collection(db, "instructors"), snap => handlers.next(snap.docs.map(x => {
-    const d=x.data(); return { id:x.id, name: text(d.name) || `${text(d.firstName)} ${text(d.lastName)}`.trim() || x.id, licenseNumber: text(d.licenseNumber) };
+    const d=x.data(); return { id:x.id, name: text(d.name) || `${text(d.firstName)} ${text(d.lastName)}`.trim() || x.id, licenseNumber: text(d.licenseNumber), classLevel: text(d.classLevel) };
   })), handlers.error);
 }
 

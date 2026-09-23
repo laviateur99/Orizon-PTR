@@ -117,7 +117,7 @@ export type StudentReservation = {
   simulatorTcId?:string;
 };
 
-export type InstructorOption = { id: string; name: string; licenseNumber: string };
+export type InstructorOption = { id: string; name: string; licenseNumber: string; classLevel: string };
 
 export type PreSoloExercise = {
   completed: boolean;
