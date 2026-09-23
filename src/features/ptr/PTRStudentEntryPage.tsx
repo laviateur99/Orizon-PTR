@@ -17,6 +17,7 @@ const FullPTRStudentPage = dynamic(
 export function PTRStudentEntryPage({ studentId }: { studentId: string }) {
   const { profile } = useAuth();
   const allowed = canAccessPtr(profile, studentId);
+  const canInstallProgram = Boolean(profile && ["Administrateur", "Chef instructeur", "Instructeur"].includes(profile.role));
   const [student, setStudent] = useState<Student | null>(null);
   const [lessonCount, setLessonCount] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -57,11 +58,11 @@ export function PTRStudentEntryPage({ studentId }: { studentId: string }) {
       <div>
         <span className="badge ok">Nouveau dossier PTR</span>
         <h2>{student.trainingProgramName || student.program}</h2>
-        <p>Ce dossier ne contient encore aucune leçon. Installez son programme pour créer le PTR de test.</p>
+        <p>Ce dossier ne contient encore aucune leçon.{canInstallProgram?" Installez son programme pour créer le PTR de test.":" Un instructeur, un chef instructeur ou un administrateur doit installer le programme avant que le PTR soit disponible."}</p>
       </div>
-      <button className="button" onClick={installProgram} disabled={installing}>
+      {canInstallProgram && <button className="button" onClick={installProgram} disabled={installing}>
         {installing ? "Importation…" : "Installer le programme sélectionné"}
-      </button>
+      </button>}
     </section>
     <a className="button secondary" href="/ptr">Retour à la liste des PTR</a>
   </>;
