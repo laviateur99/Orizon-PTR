@@ -32,6 +32,12 @@ const scheduledHours=(start:string,end:string)=>{
   const from=parse(start),to=parse(end);
   return from!==undefined&&to!==undefined&&to>=from?(to-from)/60:0;
 };
+const reservationDuration=(r:StudentReservation)=>{
+  if((r.type==="Double commande"||r.type==="Solo")&&r.hobbsStart!==undefined&&r.hobbsEnd!==undefined)return Math.max(0,r.hobbsEnd-r.hobbsStart);
+  if((r.type==="Double commande"||r.type==="Solo")&&r.airtimeMinutes)return r.airtimeMinutes/60;
+  if(r.groundTimeHours!==undefined)return r.groundTimeHours;
+  return scheduledHours(r.startTime,r.endTime);
+};
 const programHours=ATPA_PROGRAM.lessons.flatMap(lesson=>lesson.components).reduce((total,component)=>({
   ground:total.ground+component.hours.sol,
   simulator:total.simulator+component.hours.dev,
@@ -89,7 +95,7 @@ export function StudentDetailPage({studentId}:{studentId:string}){
  {tab==="Service et repos"&&<DutyRestPanel personId={studentId} role="student"/>}
  {tab==="Pré-solo"&&<PreSoloChecklistPanel studentId={studentId} readOnly={restricted}/>}
  {tab==="Recommandation test"&&<FlightTestRecommendationPanel studentId={studentId} readOnly={restricted}/>}
- {tab==="Réservations"&&<section className="card"><h3>Réservations</h3><div className="reservation-list">{reservations.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=><div className="reservation-row" key={r.id}><div><b>{r.date} · {r.startTime}-{r.endTime}</b><span>{r.type} · {r.title}</span></div><span className="status-badge">{r.status}</span></div>)}{!reservations.length&&<p>Aucune réservation liée.</p>}</div></section>}
+ {tab==="Réservations"&&<section className="card"><h3>Réservations</h3><div className="reservation-list">{reservations.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=><div className="reservation-row" key={r.id}><div><b>{r.date} · {r.startTime}-{r.endTime}</b><span>{r.type} · {r.title} · {roundHour(reservationDuration(r)).toFixed(1)} h</span></div><span className="status-badge">{r.status}</span></div>)}{!reservations.length&&<p>Aucune réservation liée.</p>}</div></section>}
  {tab==="Notes"&&<div className="two-column"><form className="card student-form" onSubmit={addNote}><h3>Ajouter une note</h3><textarea required value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="Observation pédagogique ou administrative…"/><button className="button">Ajouter</button></form><section className="card"><h3>Notes</h3>{notes.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(n=><div className="note-row" key={n.id}><div><b>{n.author}</b><span>{n.createdAt?new Date(n.createdAt).toLocaleString('fr-CA'):''}</span><p>{n.text}</p></div>{!restricted&&<button className="icon-button" onClick={()=>deleteStudentNote(n.id)}>×</button>}</div>)}{!notes.length&&<p>Aucune note.</p>}</section></div>}
  {tab==="Historique"&&<section className="card"><h3>Historique du dossier</h3><div className="timeline">{history.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(h=><div className="timeline-item" key={h.id}><span>{h.createdAt?new Date(h.createdAt).toLocaleString('fr-CA'):''}</span><b>{h.title}</b><p>{h.detail}</p></div>)}{!history.length&&<p>Aucun événement d’historique.</p>}</div></section>}
  </>;
