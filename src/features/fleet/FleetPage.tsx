@@ -48,6 +48,7 @@ export function FleetPage() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Aircraft | null>(null);
   const [snagAircraft, setSnagAircraft] = useState<Aircraft | null>(null);
+  const [snagSubmitting, setSnagSubmitting] = useState(false);
   const [impactSnag,setImpactSnag]=useState<{id:string;snagNumber:string;aircraft:Aircraft}|null>(null);
   const [impactedReservations,setImpactedReservations]=useState<ImpactedReservation[]>([]);
   const [impactDispatchName,setImpactDispatchName]=useState("");
@@ -91,15 +92,17 @@ export function FleetPage() {
 
   async function submitSnag(event: React.FormEvent) {
     event.preventDefault();
-    if (!snagAircraft) return;
+    if (!snagAircraft || snagSubmitting) return;
     if (!form.reportedBy.trim() || !form.defectTitle.trim() || !form.description.trim()) {
       setMessage("Signalé par, défectuosité et description sont obligatoires.");
       return;
     }
+    setSnagSubmitting(true);
+    const reportedAircraft = snagAircraft;
     try {
       const result = await createSnag({
-        aircraftId: snagAircraft.id,
-        aircraftRegistration: snagAircraft.registration,
+        aircraftId: reportedAircraft.id,
+        aircraftRegistration: reportedAircraft.registration,
         reportedBy: form.reportedBy.trim(),
         reportedByRole: form.reportedByRole,
         category: form.category,
@@ -112,10 +115,9 @@ export function FleetPage() {
         maintenanceNotes: "",
         notifyRoles: form.notifyRoles,
       });
-      const impacted=await findImpactedReservations(snagAircraft.id);
-      setImpactedReservations(impacted);
-      setImpactActions(Object.fromEntries(impacted.map(item=>[item.id,{action:"À décider plus tard" as ImpactResolutionAction,replacementAircraftId:"",notes:"",completed:false}])));
-      setImpactSnag({id:result.id,snagNumber:result.snagNumber,aircraft:snagAircraft});
+      // Le SNAG est déjà enregistré ici : on ferme et réinitialise le formulaire immédiatement
+      // plutôt que d'attendre la recherche des vols affectés (étape secondaire, non bloquante),
+      // pour éviter qu'un échec de cette étape laisse la fenêtre ouverte et pousse à re-signaler.
       setSnagAircraft(null);
       setForm({
         reportedBy: "", reportedByRole: "Dispatch", category: "Divers",
@@ -123,9 +125,16 @@ export function FleetPage() {
         tach: "", hobbs: "", estimatedReturnDate: "",
         notifyRoles: ["Maintenance", "Directeur de maintenance"],
       });
-      setMessage(`SNAG signalé pour ${snagAircraft.registration}. ${impacted.length} vol(s) affecté(s) à traiter.`);
+      setMessage(`SNAG signalé pour ${reportedAircraft.registration}.`);
+      const impacted = await findImpactedReservations(reportedAircraft.id);
+      setImpactedReservations(impacted);
+      setImpactActions(Object.fromEntries(impacted.map(item=>[item.id,{action:"À décider plus tard" as ImpactResolutionAction,replacementAircraftId:"",notes:"",completed:false}])));
+      setImpactSnag({id:result.id,snagNumber:result.snagNumber,aircraft:reportedAircraft});
+      setMessage(`SNAG signalé pour ${reportedAircraft.registration}. ${impacted.length} vol(s) affecté(s) à traiter.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Impossible d’enregistrer le SNAG.");
+    } finally {
+      setSnagSubmitting(false);
     }
   }
 
@@ -295,7 +304,7 @@ export function FleetPage() {
               <label>Date estimée de remise en service<input type="date" value={form.estimatedReturnDate} onChange={event => setForm({ ...form, estimatedReturnDate: event.target.value })} /></label>
               <div><strong>Notifier les rôles</strong><div className="role-pills">{ROLES.map(role => <button type="button" className={form.notifyRoles.includes(role) ? "active" : ""} onClick={() => toggleRole(role)} key={role}>{role}</button>)}</div></div>
             </div>
-            <footer><span /><button type="button" className="button secondary" onClick={() => setSnagAircraft(null)}>Annuler</button><button className="button danger">Signaler le SNAG</button></footer>
+            <footer><span /><button type="button" className="button secondary" onClick={() => setSnagAircraft(null)} disabled={snagSubmitting}>Annuler</button><button className="button danger" disabled={snagSubmitting}>{snagSubmitting ? "Envoi…" : "Signaler le SNAG"}</button></footer>
           </form>
         </section></div>
       )}
