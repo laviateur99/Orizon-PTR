@@ -11,7 +11,7 @@ type FeedbackStatus = "Nouveau" | "En cours" | "Résolu";
 const STATUSES: FeedbackStatus[] = ["Nouveau", "En cours", "Résolu"];
 const statusClass = (status?: FeedbackStatus) => status === "Résolu" ? "ok" : status === "En cours" ? "warn" : "danger";
 type Feedback = { id: string; message: string; page: string; userName: string; userEmail: string; status?: FeedbackStatus; createdAt?: Timestamp };
-type Reply = { id: string; text: string; authorName: string; createdAt?: Timestamp };
+type Reply = { id: string; text: string; authorId?: string; authorName: string; createdAt?: Timestamp; editedAt?: Timestamp };
 
 function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback; canManage: boolean; onDelete: (item: Feedback) => void; deleting: boolean }) {
   const { profile } = useAuth();
@@ -19,6 +19,9 @@ function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback;
   const [replyText, setReplyText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
   useEffect(() => onSnapshot(query(collection(db, "testFeedback", item.id, "replies"), orderBy("createdAt", "asc")), snap => setReplies(snap.docs.map(x => ({ id: x.id, ...x.data() } as Reply))), caught => setError(caught.message)), [item.id]);
   async function changeStatus(status: FeedbackStatus) {
     setError("");
@@ -35,6 +38,19 @@ function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback;
     } catch (value) { setError(value instanceof Error ? value.message : "Impossible d’ajouter la réponse."); }
     finally { setBusy(false); }
   }
+  function startEditReply(reply: Reply) {
+    setEditingReplyId(reply.id);
+    setEditText(reply.text);
+  }
+  async function saveEditReply(replyId: string) {
+    if (!editText.trim()) return;
+    setEditBusy(true); setError("");
+    try {
+      await updateDoc(doc(db, "testFeedback", item.id, "replies", replyId), { text: editText.trim(), editedAt: serverTimestamp() });
+      setEditingReplyId(null);
+    } catch (value) { setError(value instanceof Error ? value.message : "Impossible de modifier la réponse."); }
+    finally { setEditBusy(false); }
+  }
   return <article className="test-feedback-item">
     <header><strong>{item.userName || item.userEmail}</strong><span>{item.createdAt?.toDate().toLocaleString("fr-CA") || "Date en attente"}</span></header>
     <p>{item.message}</p><small>Page : {item.page || "Non précisée"} · {item.userEmail}</small>
@@ -46,7 +62,12 @@ function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback;
       </label>
       {canManage && <button className="button danger small" disabled={deleting} onClick={() => onDelete(item)}>{deleting ? "Suppression…" : "Supprimer"}</button>}
     </div>
-    {replies.length > 0 && <div className="feedback-replies">{replies.map(reply => <div className="feedback-reply" key={reply.id}><b>{reply.authorName}</b><span>{reply.createdAt?.toDate().toLocaleString("fr-CA") || ""}</span><p>{reply.text}</p></div>)}</div>}
+    {replies.length > 0 && <div className="feedback-replies">{replies.map(reply => <div className="feedback-reply" key={reply.id}>
+      <b>{reply.authorName}</b><span>{reply.createdAt?.toDate().toLocaleString("fr-CA") || ""}{reply.editedAt ? " · modifiée" : ""}</span>
+      {editingReplyId === reply.id
+        ? <><textarea rows={2} value={editText} onChange={e => setEditText(e.target.value)} /><div className="feedback-reply-edit-actions"><button type="button" className="button secondary small" onClick={() => setEditingReplyId(null)} disabled={editBusy}>Annuler</button><button type="button" className="button small" onClick={() => saveEditReply(reply.id)} disabled={editBusy || !editText.trim()}>{editBusy ? "Enregistrement…" : "Enregistrer"}</button></div></>
+        : <><p>{reply.text}</p>{canManage && reply.authorId === profile?.uid && <button type="button" className="button secondary small" onClick={() => startEditReply(reply)}>Modifier</button>}</>}
+    </div>)}</div>}
     {canManage && <form className="feedback-reply-form" onSubmit={addReply}><textarea rows={2} placeholder="Ajouter une réponse…" value={replyText} onChange={e => setReplyText(e.target.value)} /><button className="button secondary small" disabled={busy || !replyText.trim()}>{busy ? "Envoi…" : "Répondre"}</button></form>}
   </article>;
 }
