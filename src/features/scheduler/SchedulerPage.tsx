@@ -306,7 +306,10 @@ export function SchedulerPage() {
   const [message, setMessageText] = useState("");
   const [messageAction, setMessageAction] = useState<{href?: string; event?: SchedulerEvent; label: string} | null>(null);
   function setMessage(value: string) { setMessageText(value); setMessageAction(null); }
-  const [resourceFilter, setResourceFilter] = useState("");
+  const [resourceFilters, setResourceFilters] = useState<string[]>([]);
+  function toggleResourceFilter(group: string) {
+    setResourceFilters(current => current.includes(group) ? current.filter(item => item !== group) : [...current, group]);
+  }
   const [resourceSearch, setResourceSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentSuggestOpen, setStudentSuggestOpen] = useState(false);
@@ -588,7 +591,7 @@ export function SchedulerPage() {
     );
   }, [baseList, orderSettings]);
   const studentRowSuggestions = students.filter(s => studentRowSearch && normalizeSearch(s.name).includes(normalizeSearch(studentRowSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr")).slice(0, 8);
-  const filteredList = list.filter(r => (!resourceFilter || resourceGroupKey(r) === resourceFilter) && normalizeSearch(`${r.name} ${r.detail}`).includes(normalizeSearch(resourceSearch)) && (!studentRowSearch || visible.some(e => e.resourceId === r.id && normalizeSearch(e.studentName || "").includes(normalizeSearch(studentRowSearch)))));
+  const filteredList = list.filter(r => (!resourceFilters.length || resourceFilters.includes(resourceGroupKey(r))) && normalizeSearch(`${r.name} ${r.detail}`).includes(normalizeSearch(resourceSearch)) && (!studentRowSearch || visible.some(e => e.resourceId === r.id && normalizeSearch(e.studentName || "").includes(normalizeSearch(studentRowSearch)))));
   const filteredStudents = students.filter(s => s.id === draft?.studentId || normalizeSearch(s.name).includes(normalizeSearch(studentSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr"));
   function showConflict(candidate: SchedulerEvent, other: SchedulerEvent) {
     const shared = ids(candidate).filter(id => ids(other).includes(id)).map(id => list.find(r => r.id === id)?.name || id);
@@ -1495,7 +1498,15 @@ export function SchedulerPage() {
             ›
           </button>
         </div>
-        <label>Ressources<select value={resourceFilter} onChange={e => setResourceFilter(e.target.value)}><option value="">Toutes les ressources</option>{Array.from(new Set(list.map(resourceGroupKey))).map(group => <option key={group} value={group}>{group}</option>)}</select></label>
+        <div className="scheduler-resource-filter">
+          <span>Ressources</span>
+          <div className="role-pills">
+            {Array.from(new Set(list.map(resourceGroupKey))).map(group => (
+              <button type="button" key={group} className={resourceFilters.includes(group) ? "active" : ""} onClick={() => toggleResourceFilter(group)}>{group}</button>
+            ))}
+            {resourceFilters.length > 0 && <button type="button" className="button secondary small" onClick={() => setResourceFilters([])}>Toutes</button>}
+          </div>
+        </div>
         <label>Rechercher<input type="search" value={resourceSearch} onChange={e => setResourceSearch(e.target.value)} placeholder="Avion, instructeur, local…" /></label>
         <label style={{position: "relative"}}>
           Élève
