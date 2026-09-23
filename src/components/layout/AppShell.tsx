@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if(!profile)return <main className="access-state"><section className="card"><h1>Compte en attente</h1><p>Votre compte existe, mais aucun rôle ne lui a encore été attribué. Communiquez avec un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
   if(profile.mustSetPassword)return <SetPasswordPage/>;
   if(!profile.active)return <main className="access-state"><section className="card"><h1>Compte suspendu</h1><p>L’accès à ce compte a été désactivé par un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
-  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:can(pathModule(pathname));
+  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:pathname.startsWith("/admin/test-feedback")?canManageAdministration(profile):can(pathModule(pathname));
   return (
     <div className="app-shell">
       <aside className="sidebar">

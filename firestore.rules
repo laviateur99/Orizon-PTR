@@ -7,6 +7,7 @@ service cloud.firestore {
     function has(module) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny([module])); }
     function any(modules) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny(modules)); }
     function admin() { return active() && profile().data.role == 'Administrateur'; }
+    function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
     function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
     function maintenanceReservation(data) {
       return data.keys().hasAny(['maintenanceWorkOrderId'])
@@ -544,7 +545,19 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.message is string
         && request.resource.data.message.size() <= 5000;
-      allow read, update, delete: if admin();
+      allow read: if feedbackManager();
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','statusUpdatedAt','statusUpdatedBy']);
+      allow delete: if admin();
+    }
+    match /testFeedback/{feedbackId}/replies/{replyId} {
+      allow read: if feedbackManager();
+      allow create: if admin()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 5000;
+      allow update, delete: if false;
     }
 
     match /{document=**} { allow read, write: if false; }

@@ -7,6 +7,8 @@ import { UserManagementPanel } from "@/features/auth/UserManagementPanel";
 import { ResourceManagement } from "@/features/fleet/ResourceManagement";
 import { subscribeAircraft } from "@/features/fleet/firestore";
 import type { Aircraft } from "@/features/fleet/types";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { canManageAdministration } from "@/features/auth/types";
 
 type ActionName = "hours" | "records" | "test" | "create" | "payroll";
 const ACTIONS: Record<ActionName, {title:string;description:string;confirmation:string;button:string;danger?:boolean}> = {
@@ -18,6 +20,7 @@ const ACTIONS: Record<ActionName, {title:string;description:string;confirmation:
 };
 
 export function AdminPage() {
+  const {profile}=useAuth();
   const payrollAutoRun=useRef(false);
   const [selected,setSelected]=useState<ActionName|null>(null);
   const [confirmation,setConfirmation]=useState("");
@@ -54,7 +57,7 @@ export function AdminPage() {
     {message&&<div className="notice">{message}</div>}{error&&<div className="notice error">{error}</div>}
     <div className="admin-tools-grid">{(Object.keys(ACTIONS)as ActionName[]).map(key=>{const action=ACTIONS[key];return <section className={`card admin-tool-card ${action.danger?"danger-zone":""}`} key={key}><h2>{action.title}</h2><p>{action.description}</p><button className={`button ${action.danger?"danger":""}`} onClick={()=>{setSelected(key);setConfirmation("");}}>{action.button}</button></section>})}</div>
     <section className="card admin-settings-link"><div><h2>Réglages de l’horaire</h2><p>Modifier la plage horaire, la précision des réservations et l’ordre des ressources.</p></div><a className="button secondary" href="/admin/schedule">Ouvrir les réglages</a></section>
-    {process.env.NEXT_PUBLIC_APP_ENV==="test"&&<section className="card admin-settings-link"><div><h2>Commentaires de test</h2><p>Consulter les observations envoyées par les employés pendant la période d’essai.</p></div><a className="button secondary" href="/admin/test-feedback">Voir les commentaires</a></section>}
+    {process.env.NEXT_PUBLIC_APP_ENV==="test"&&canManageAdministration(profile)&&<section className="card admin-settings-link"><div><h2>Commentaires de test</h2><p>Consulter les observations envoyées par les employés pendant la période d’essai.</p></div><a className="button secondary" href="/admin/test-feedback">Voir les commentaires</a></section>}
     {selected&&<div className="modal-backdrop"><section className="modal compact"><header><div><h2>Confirmation requise</h2><p>{ACTIONS[selected].title}</p></div><button className="icon-button" onClick={()=>setSelected(null)}>×</button></header><div className="modal-body"><p>Cette opération agit sur Firebase et ne peut pas être annulée depuis l’application.</p><label>Tapez <strong>{ACTIONS[selected].confirmation}</strong> pour confirmer<input autoFocus value={confirmation} onChange={event=>setConfirmation(event.target.value)} disabled={busy}/></label></div><footer><span/><button className="button secondary" onClick={()=>setSelected(null)} disabled={busy}>Annuler</button><button className={`button ${ACTIONS[selected].danger?"danger":""}`} onClick={execute} disabled={busy||confirmation!==ACTIONS[selected].confirmation}>{busy?"Traitement…":"Confirmer"}</button></footer></section></div>}
   </>;
 }
