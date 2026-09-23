@@ -499,7 +499,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       </details>
       <details className="pre-solo-details">
         <summary>Check-list pré-solo et autorisation du premier solo</summary>
-        <PreSoloChecklistPanel studentId={studentId}/>
+        <PreSoloChecklistPanel studentId={studentId} studentName={`${student.firstName} ${student.lastName}`.trim()}/>
       </details>
 
       <section className="card program-install-banner">

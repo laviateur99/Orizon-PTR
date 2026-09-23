@@ -121,6 +121,7 @@ export type InstructorOption = { id: string; name: string };
 
 export type PreSoloExercise = {
   completed: boolean;
+  instructorId: string;
   instructorName: string;
   instructorLicense: string;
   instructorSignature: string;
@@ -144,11 +145,13 @@ export type PreSoloChecklist = {
   medicalIssueDate: string;
   medicalExpiryDate: string;
   exercises: Record<string, PreSoloExercise>;
+  recommendingInstructorId: string;
   recommendingInstructorName: string;
   recommendingInstructorLicenseClass: string;
   recommendingInstructorSignature: string;
   recommendingDate: string;
   recommendingInstructorIsClass4: boolean;
+  supervisingInstructorId: string;
   supervisingInstructorName: string;
   supervisingInstructorLicenseClass: string;
   supervisingInstructorSignature: string;
