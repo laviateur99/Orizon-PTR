@@ -1,8 +1,10 @@
 import {
-  collection, doc, getDocs, serverTimestamp, writeBatch,
+  collection, doc, getDocs, serverTimestamp, setDoc, writeBatch,
   type DocumentReference,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { inviteUser } from "@/features/auth/inviteUser";
+import { hashPin, randomPinSalt } from "@/features/auth/pin";
 
 const BATCH_LIMIT = 450;
 
@@ -149,4 +151,37 @@ export async function createPayrollTestData(){
   },{merge:true});
   await batch.commit();
   return{instructors:instructors.length,students:students.length,reservations:13,leaveRequests:1};
+}
+
+export async function createStudentAccountsAndPins() {
+  const [studentsSnap, usersSnap] = await Promise.all([
+    getDocs(collection(db, "students")),
+    getDocs(collection(db, "users")),
+  ]);
+  const existingUsers = usersSnap.docs.map(item => ({ uid: item.id, email: String(item.data().email || "") }));
+  const linkedStudentIds = new Set(usersSnap.docs.map(item => String(item.data().linkedStudentId || "")).filter(Boolean));
+  let accountsCreated = 0, accountsSkippedNoEmail = 0, pinsSet = 0;
+  for (const studentDoc of studentsSnap.docs) {
+    const student = studentDoc.data() as { firstName?: string; lastName?: string; email?: string };
+    const studentId = studentDoc.id;
+    if (!linkedStudentIds.has(studentId)) {
+      const email = String(student.email || "").trim();
+      if (!email) {
+        accountsSkippedNoEmail += 1;
+      } else {
+        await inviteUser({
+          name: `${student.firstName || ""} ${student.lastName || ""}`.trim() || email,
+          email, role: "Étudiant", linkedStudentId: studentId, existingUsers,
+        });
+        accountsCreated += 1;
+      }
+    }
+    const salt = randomPinSalt();
+    const hash = await hashPin("0000", salt);
+    await setDoc(doc(db, "studentPins", studentId), {
+      hash, salt, failedAttempts: 0, lockedUntil: new Date().toISOString(), updatedAt: serverTimestamp(),
+    });
+    pinsSet += 1;
+  }
+  return { totalStudents: studentsSnap.docs.length, accountsCreated, accountsSkippedNoEmail, pinsSet };
 }
