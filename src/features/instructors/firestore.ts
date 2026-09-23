@@ -20,6 +20,7 @@ function mapInstructor(id:string, data:DocumentData):Instructor {
     classHistory:Array.isArray(data.classHistory)?data.classHistory.filter(item=>item&&typeof item==="object").map(item=>({from:text(item.from) as Instructor["classLevel"],to:text(item.to) as Instructor["classLevel"],effectiveDate:text(item.effectiveDate),recordedAt:text(item.recordedAt)})).filter(item=>item.from&&item.to&&item.effectiveDate):[],
     status: (text(data.status) || (data.active === false ? "Inactif" : "Actif")) as Instructor["status"],
     employeeNumber: text(data.employeeNumber),
+    licenseNumber: text(data.licenseNumber),
     hiredDate: text(data.hiredDate),
     birthDate: text(data.birthDate),
     notes: text(data.notes)
@@ -48,6 +49,7 @@ export async function saveInstructor(value:Instructor, exists:boolean, classEffe
     status:value.status,
     active:value.status==="Actif",
     employeeNumber:value.employeeNumber,
+    licenseNumber:value.licenseNumber,
     hiredDate:value.hiredDate,
     birthDate:value.birthDate,
     notes:value.notes,

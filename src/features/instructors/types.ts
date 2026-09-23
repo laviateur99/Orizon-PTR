@@ -12,6 +12,7 @@ export type Instructor = {
   classHistory: InstructorClassChange[];
   status: InstructorStatus;
   employeeNumber: string;
+  licenseNumber: string;
   hiredDate: string;
   birthDate: string;
   notes: string;

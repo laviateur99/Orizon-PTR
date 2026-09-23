@@ -18,6 +18,7 @@ const emptyInstructor = ():Instructor => ({
   classHistory:[],
   status:"Actif",
   employeeNumber:"",
+  licenseNumber:"",
   hiredDate:"",
   birthDate:"",
   notes:""
@@ -124,6 +125,7 @@ export function InstructorsPage(){
           {items.find(item=>item.id===editing.id)?.classLevel!==editing.classLevel&&<label>Date d’entrée en vigueur<input type="date" required value={classEffectiveDate} onChange={event=>setClassEffectiveDate(event.target.value)}/><small>La nouvelle classe et son salaire s’appliqueront dès cette date.</small></label>}
           <label>Statut<select value={editing.status} onChange={event=>setEditing({...editing,status:event.target.value as InstructorStatus})}><option>Actif</option><option>Inactif</option><option>Congé</option></select></label>
           <label>Numéro d’employé<input value={editing.employeeNumber} onChange={event=>setEditing({...editing,employeeNumber:event.target.value})}/></label>
+          <label>Numéro de licence<input value={editing.licenseNumber} onChange={event=>setEditing({...editing,licenseNumber:event.target.value})}/></label>
           <label>Date d’embauche<input type="date" value={editing.hiredDate} onChange={event=>setEditing({...editing,hiredDate:event.target.value})}/></label>
           <label>Date de naissance<input type="date" value={editing.birthDate} onChange={event=>setEditing({...editing,birthDate:event.target.value})}/><small>Requise pour calculer l’échéance médicale interne.</small></label>
         </div>

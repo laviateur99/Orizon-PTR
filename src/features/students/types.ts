@@ -117,7 +117,7 @@ export type StudentReservation = {
   simulatorTcId?:string;
 };
 
-export type InstructorOption = { id: string; name: string };
+export type InstructorOption = { id: string; name: string; licenseNumber: string };
 
 export type PreSoloExercise = {
   completed: boolean;
@@ -131,15 +131,18 @@ export type PreSoloExercise = {
 
 export type PreSoloChecklist = {
   studentId: string;
+  radioExaminerId: string;
   radioExaminerName: string;
   radioExaminerSignature: string;
   radioIssueDate: string;
   pstarMark: string;
   pstarDate: string;
+  permitAuthorizedPersonId: string;
   permitAuthorizedPerson: string;
   permitSignature: string;
   permitIssueDate: string;
   permitExpiryDate: string;
+  medicalAuthorizedPersonId: string;
   medicalAuthorizedPerson: string;
   medicalSignature: string;
   medicalIssueDate: string;
