@@ -42,7 +42,7 @@ export function StudentAccountPanel({ studentId, studentName, studentEmail }: { 
       const snapshot = await getDocs(collection(db, "users"));
       const existingUsers = snapshot.docs.map(item => ({ uid: item.id, email: String(item.data().email || "") }));
       const sentTo = await inviteUser({ name: studentName, email, role: "Étudiant", linkedStudentId: studentId, existingUsers });
-      setMessage(`Accès créé. Courriel d’activation envoyé à ${sentTo}.`);
+      setMessage(`Accès créé. Courriel d’activation envoyé à ${sentTo.email}.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Création de l’accès impossible.");
     } finally {

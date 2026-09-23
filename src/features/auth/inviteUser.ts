@@ -24,10 +24,11 @@ export type InviteUserInput = {
  * réutilisable ailleurs (ex. directement depuis la fiche d'un étudiant, avec linkedStudentId déjà
  * connu, sans devoir chercher son nom dans une liste déroulante séparée).
  */
-export async function inviteUser({ name, email, role, linkedStudentId = "", linkedInstructorId = "", existingUsers }: InviteUserInput): Promise<string> {
+export async function inviteUser({ name, email, role, linkedStudentId = "", linkedInstructorId = "", existingUsers }: InviteUserInput): Promise<{ email: string; uid: string | null }> {
   const normalizedEmail = email.trim().toLowerCase();
   const existing = existingUsers.find(item => item.email.toLowerCase() === normalizedEmail);
   let secondary: ReturnType<typeof initializeApp> | null = null;
+  let uid: string | null = existing?.uid || null;
   const invitation = () => ({
     name: name.trim(), email: normalizedEmail, role, permissions: rolePermissions[role], active: true, mustSetPassword: false,
     linkedStudentId: role === "Étudiant" ? linkedStudentId : "",
@@ -41,6 +42,7 @@ export async function inviteUser({ name, email, role, linkedStudentId = "", link
       secondary = initializeApp(firebaseConfig, `activation-${Date.now()}`);
       try {
         const result = await createUserWithEmailAndPassword(getAuth(secondary), normalizedEmail, temporaryPassword());
+        uid = result.user.uid;
         await setDoc(doc(db, "users", result.user.uid), invitation());
       } catch (error) {
         if ((error as { code?: string }).code !== "auth/email-already-in-use") throw error;
@@ -49,7 +51,7 @@ export async function inviteUser({ name, email, role, linkedStudentId = "", link
     }
     await sendPasswordResetEmail(auth, normalizedEmail);
     if (existing) await deleteDoc(doc(db, "pendingInvitations", normalizedEmail)).catch(() => undefined);
-    return normalizedEmail;
+    return { email: normalizedEmail, uid };
   } finally {
     if (secondary) await deleteApp(secondary);
   }

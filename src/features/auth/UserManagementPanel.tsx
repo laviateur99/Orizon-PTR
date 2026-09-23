@@ -1,7 +1,7 @@
 "use client";
 import { useEffect,useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { collection,deleteDoc,doc,onSnapshot,orderBy,query,serverTimestamp,setDoc,updateDoc,where } from "firebase/firestore";
+import { collection,deleteDoc,doc,onSnapshot,orderBy,query,serverTimestamp,setDoc,updateDoc } from "firebase/firestore";
 import { auth,db } from "@/services/firebase/client";
 import { subscribeStudents } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";
@@ -9,26 +9,32 @@ import { subscribeInstructors } from "@/features/instructors/firestore";
 import { deleteInstructor } from "@/features/instructors/firestore";
 import type { Instructor } from "@/features/instructors/types";
 import { inviteUser } from "./inviteUser";
+import { useAuth } from "./AuthProvider";
 import { moduleLabels,modules,rolePermissions,roles,type AppModule,type UserProfile,type UserRole } from "./types";
 
 const profile=(id:string,data:Record<string,unknown>):UserProfile=>({uid:id,name:String(data.name||""),email:String(data.email||""),role:(data.role as UserRole)||"Étudiant",permissions:Array.isArray(data.permissions)?data.permissions as AppModule[]:[],active:data.active!==false,linkedStudentId:String(data.linkedStudentId||""),linkedInstructorId:String(data.linkedInstructorId||""),createdAt:String(data.createdAt||""),lastLoginAt:String(data.lastLoginAt||"")});
-type SignupRequest={id:string;firstName:string;lastName:string;email:string;phone:string};
-const signupRequest=(id:string,data:Record<string,unknown>):SignupRequest=>({id,firstName:String(data.firstName||""),lastName:String(data.lastName||""),email:String(data.email||""),phone:String(data.phone||"")});
+type SignupRequest={id:string;firstName:string;lastName:string;email:string;phone:string;status:string;studentId:string;accountUid:string};
+const signupRequest=(id:string,data:Record<string,unknown>):SignupRequest=>({id,firstName:String(data.firstName||""),lastName:String(data.lastName||""),email:String(data.email||""),phone:String(data.phone||""),status:String(data.status||"En attente"),studentId:String(data.studentId||""),accountUid:String(data.accountUid||"")});
 
 export function UserManagementPanel(){
+ const{profile:viewer}=useAuth();
+ const canApproveSignups=viewer?.role==="Administrateur";
+ const canCreateStudentDossier=Boolean(viewer&&["Administrateur","Chef instructeur","Instructeur"].includes(viewer.role));
  const[users,setUsers]=useState<UserProfile[]>([]),[students,setStudents]=useState<Student[]>([]),[instructors,setInstructors]=useState<Instructor[]>([]),[editing,setEditing]=useState<UserProfile|null>(null);
  const[form,setForm]=useState({name:"",email:"",role:"Instructeur" as UserRole}),[message,setMessage]=useState(""),[busy,setBusy]=useState(false);
  const[signupRequests,setSignupRequests]=useState<SignupRequest[]>([]),[reviewingSignup,setReviewingSignup]=useState<string|null>(null);
  useEffect(()=>onSnapshot(collection(db,"users"),snap=>setUsers(snap.docs.map(item=>profile(item.id,item.data())).sort((a,b)=>a.name.localeCompare(b.name)))),[]);
  useEffect(()=>subscribeStudents({next:setStudents,error:error=>setMessage(error.message)}),[]);
  useEffect(()=>subscribeInstructors({next:setInstructors,error:error=>setMessage(error.message)}),[]);
- useEffect(()=>onSnapshot(query(collection(db,"signupRequests"),where("status","==","En attente"),orderBy("createdAt","asc")),snap=>setSignupRequests(snap.docs.map(item=>signupRequest(item.id,item.data()))),error=>setMessage(error.message)),[]);
+ useEffect(()=>onSnapshot(query(collection(db,"signupRequests"),orderBy("createdAt","asc")),snap=>setSignupRequests(snap.docs.map(item=>signupRequest(item.id,item.data()))),error=>setMessage(error.message)),[]);
+ const pendingSignups=signupRequests.filter(item=>item.status==="En attente");
+ const approvedWithoutDossier=signupRequests.filter(item=>item.status==="Approuvée"&&!item.studentId);
  async function approveSignup(request:SignupRequest){
   setReviewingSignup(request.id);setMessage("");
   try{
-   await inviteUser({name:`${request.firstName} ${request.lastName}`.trim(),email:request.email,role:"Étudiant",existingUsers:users});
-   await updateDoc(doc(db,"signupRequests",request.id),{status:"Approuvée",reviewedAt:new Date().toISOString(),reviewedAtServer:serverTimestamp(),reviewedBy:auth.currentUser?.email||""});
-   setMessage(`Compte élève créé pour ${request.email}. Créez son dossier étudiant puis associez-le depuis « Gérer ».`);
+   const result=await inviteUser({name:`${request.firstName} ${request.lastName}`.trim(),email:request.email,role:"Étudiant",existingUsers:users});
+   await updateDoc(doc(db,"signupRequests",request.id),{status:"Approuvée",accountUid:result.uid||"",reviewedAt:new Date().toISOString(),reviewedAtServer:serverTimestamp(),reviewedBy:auth.currentUser?.email||""});
+   setMessage(`Compte élève créé pour ${request.email}. Le dossier étudiant peut maintenant être créé (Instructeur ou plus).`);
   }catch(error){setMessage(error instanceof Error?error.message:"Approbation impossible.");}finally{setReviewingSignup(null)}
  }
  async function rejectSignup(request:SignupRequest){
@@ -62,7 +68,14 @@ export function UserManagementPanel(){
  return <section className="card user-management">
   <header><div><span className="badge ok">Sécurité</span><h2>Utilisateurs et rôles</h2><p>Inviter les utilisateurs et contrôler les sections auxquelles ils ont accès.</p></div></header>
   {message&&<div className={`notice ${message.includes("impossible")||message.includes("Firebase")?"error":""}`}>{message}</div>}
-  {signupRequests.length>0&&<div className="signup-requests"><h3>Demandes d’inscription ({signupRequests.length})</h3>{signupRequests.map(request=><div className="signup-request-row" key={request.id}><div><strong>{request.firstName} {request.lastName}</strong><small>{request.email}{request.phone?` · ${request.phone}`:""}</small></div><div className="signup-request-actions"><button className="button secondary small" disabled={reviewingSignup===request.id} onClick={()=>rejectSignup(request)}>Rejeter</button><button className="button small" disabled={reviewingSignup===request.id} onClick={()=>approveSignup(request)}>{reviewingSignup===request.id?"Traitement…":"Approuver"}</button></div></div>)}</div>}
+  {canApproveSignups&&pendingSignups.length>0&&<div className="signup-requests"><h3>Demandes d’inscription ({pendingSignups.length})</h3>{pendingSignups.map(request=><div className="signup-request-row" key={request.id}><div><strong>{request.firstName} {request.lastName}</strong><small>{request.email}{request.phone?` · ${request.phone}`:""}</small></div><div className="signup-request-actions"><button className="button secondary small" disabled={reviewingSignup===request.id} onClick={()=>rejectSignup(request)}>Rejeter</button><button className="button small" disabled={reviewingSignup===request.id} onClick={()=>approveSignup(request)}>{reviewingSignup===request.id?"Traitement…":"Approuver"}</button></div></div>)}</div>}
+  {canCreateStudentDossier&&approvedWithoutDossier.length>0&&<div className="signup-requests approved">
+   <h3>Approuvées — dossier étudiant à créer ({approvedWithoutDossier.length})</h3>
+   {approvedWithoutDossier.map(request=>{
+    const params=new URLSearchParams({requestId:request.id,firstName:request.firstName,lastName:request.lastName,email:request.email,phone:request.phone,accountUid:request.accountUid});
+    return <div className="signup-request-row" key={request.id}><div><strong>{request.firstName} {request.lastName}</strong><small>{request.email}{request.phone?` · ${request.phone}`:""}</small></div><a className="button small" href={`/students/new?${params.toString()}`}>Créer le dossier étudiant</a></div>;
+   })}
+  </div>}
   <form className="invite-form" onSubmit={invite}><label>Nom complet<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Adresse courriel<input required type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label>Rôle<select value={form.role} onChange={e=>setForm({...form,role:e.target.value as UserRole})}>{roles.map(role=><option key={role}>{role}</option>)}</select></label><button className="button" disabled={busy}>{busy?"Envoi…":"Envoyer l’invitation"}</button></form>
   <div className="user-list"><div className="user-list-head"><span>Utilisateur</span><span>Rôle</span><span>État</span><span>Dernière connexion</span><span/></div>{users.map(item=><div className="user-list-row" key={item.uid}><div><strong>{item.name||"Nom non défini"}</strong><small>{item.email}</small></div><span>{item.role}</span><span className={`badge ${item.active?"ok":"danger"}`}>{item.active?"Actif":"Suspendu"}</span><span>{item.lastLoginAt?new Date(item.lastLoginAt).toLocaleString("fr-CA"):"Jamais"}</span><button className="button secondary" onClick={()=>setEditing(item)}>Gérer</button></div>)}</div>
   {editing&&<div className="modal-backdrop"><section className="modal"><header><div><h2>Accès de {editing.name}</h2><p>{editing.email}</p></div><button className="icon-button" onClick={()=>setEditing(null)}>×</button></header><div className="modal-body">

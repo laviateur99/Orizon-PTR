@@ -7,6 +7,7 @@ service cloud.firestore {
     function has(module) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny([module])); }
     function any(modules) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny(modules)); }
     function admin() { return active() && profile().data.role == 'Administrateur'; }
+    function trainingStaff() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
     function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
     function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
     function maintenanceReservation(data) {
@@ -83,7 +84,10 @@ service cloud.firestore {
       allow list: if admin();
       allow update: if admin() || (signedIn() && uid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['lastLoginAt','lastLoginAtServer','mustSetPassword','passwordCreatedAt']));
+          .hasOnly(['lastLoginAt','lastLoginAtServer','mustSetPassword','passwordCreatedAt']))
+        // Personnel formateur : peut lier un compte élève non lié au dossier étudiant qu'il vient de créer.
+        || (trainingStaff() && resource.data.role == 'Étudiant' && resource.data.linkedStudentId == ''
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['linkedStudentId']));
       allow create: if admin() || (signedIn() && uid == request.auth.uid
         && exists(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email))
         && request.resource.data.email == request.auth.token.email
@@ -541,7 +545,9 @@ service cloud.firestore {
     }
 
     // Demande d'inscription publique (page de connexion) — écriture possible sans être connecté,
-    // strictement validée; seul un administrateur peut la consulter/l'approuver/la rejeter.
+    // strictement validée. Seul un administrateur approuve/rejette (status); le personnel formateur
+    // (instructeur, chef instructeur, administrateur) peut seulement y attacher le dossier étudiant
+    // créé (studentId) une fois la demande approuvée.
     match /signupRequests/{id} {
       allow create: if request.resource.data.firstName is string
         && request.resource.data.firstName.size() > 0
@@ -556,7 +562,12 @@ service cloud.firestore {
         && request.resource.data.phone.size() <= 40
         && request.resource.data.status == 'En attente'
         && request.resource.data.keys().hasOnly(['firstName','lastName','email','phone','status','createdAt']);
-      allow read, update, delete: if admin();
+      allow read: if trainingStaff();
+      allow update: if admin()
+        || (trainingStaff() && resource.data.status == 'Approuvée'
+          && (!resource.data.keys().hasAny(['studentId']) || resource.data.studentId == '')
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentId','studentCreatedAt','studentCreatedBy']));
+      allow delete: if admin();
     }
 
     match /testFeedback/{id} {
