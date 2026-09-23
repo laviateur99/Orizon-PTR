@@ -310,6 +310,8 @@ export function SchedulerPage() {
   const [resourceSearch, setResourceSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentSuggestOpen, setStudentSuggestOpen] = useState(false);
+  const [studentRowSearch, setStudentRowSearch] = useState("");
+  const [studentRowSuggestOpen, setStudentRowSuggestOpen] = useState(false);
   const normalizeSearch = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr");
 
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -585,7 +587,8 @@ export function SchedulerPage() {
         a.name.localeCompare(b.name),
     );
   }, [baseList, orderSettings]);
-  const filteredList = list.filter(r => (!resourceFilter || resourceGroupKey(r) === resourceFilter) && normalizeSearch(`${r.name} ${r.detail}`).includes(normalizeSearch(resourceSearch)));
+  const studentRowSuggestions = students.filter(s => studentRowSearch && normalizeSearch(s.name).includes(normalizeSearch(studentRowSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr")).slice(0, 8);
+  const filteredList = list.filter(r => (!resourceFilter || resourceGroupKey(r) === resourceFilter) && normalizeSearch(`${r.name} ${r.detail}`).includes(normalizeSearch(resourceSearch)) && (!studentRowSearch || visible.some(e => e.resourceId === r.id && normalizeSearch(e.studentName || "").includes(normalizeSearch(studentRowSearch)))));
   const filteredStudents = students.filter(s => s.id === draft?.studentId || normalizeSearch(s.name).includes(normalizeSearch(studentSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr"));
   function showConflict(candidate: SchedulerEvent, other: SchedulerEvent) {
     const shared = ids(candidate).filter(id => ids(other).includes(id)).map(id => list.find(r => r.id === id)?.name || id);
@@ -1494,6 +1497,26 @@ export function SchedulerPage() {
         </div>
         <label>Ressources<select value={resourceFilter} onChange={e => setResourceFilter(e.target.value)}><option value="">Toutes les ressources</option>{Array.from(new Set(list.map(resourceGroupKey))).map(group => <option key={group} value={group}>{group}</option>)}</select></label>
         <label>Rechercher<input type="search" value={resourceSearch} onChange={e => setResourceSearch(e.target.value)} placeholder="Avion, instructeur, local…" /></label>
+        <label style={{position: "relative"}}>
+          Élève
+          <input
+            type="search"
+            value={studentRowSearch}
+            onChange={e => { setStudentRowSearch(e.target.value); setStudentRowSuggestOpen(true); }}
+            onFocus={() => setStudentRowSuggestOpen(true)}
+            onBlur={() => setTimeout(() => setStudentRowSuggestOpen(false), 150)}
+            placeholder="Rechercher un élève…"
+          />
+          {studentRowSuggestOpen && studentRowSearch && (
+            <div className="student-suggest-list">
+              {studentRowSuggestions.map(s => (
+                <button type="button" key={s.id} onMouseDown={() => { setStudentRowSearch(s.name); setStudentRowSuggestOpen(false); }}>{s.name}</button>
+              ))}
+              {!studentRowSuggestions.length && <p>Aucun résultat.</p>}
+            </div>
+          )}
+        </label>
+        {studentRowSearch && <button type="button" className="button secondary small" onClick={() => setStudentRowSearch("")}>Effacer le filtre élève</button>}
         <span className="scheduler-help">
           Glissez une réservation pour la déplacer · tirez son bord supérieur ou
           inférieur pour changer sa durée.
