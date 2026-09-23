@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/Card";
 import { subscribeStudent, subscribeStudents } from "@/features/students/firestore";
 import type { Student } from "@/features/students/types";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { StudentPinPanel } from "@/features/students/StudentPinPanel";
 import Link from "next/link";
 
 export function PtrPage() {
@@ -31,7 +30,6 @@ export function PtrPage() {
     <>
       <PageHeader title="PTR électronique" subtitle="Leçons, évaluations Transports Canada, commentaires et signatures" />
       {error && <div className="notice error">{error}</div>}
-      {profile?.role==="Étudiant"&&profile.linkedStudentId&&<section className="card"><StudentPinPanel studentId={profile.linkedStudentId} studentName={students[0]?`${students[0].firstName} ${students[0].lastName}`.trim():""}/></section>}
       {profile?.role !== "Étudiant" && <div className="form-grid" style={{marginBottom:16}}>
         <label>Afficher<select value={scope} onChange={e=>setScope(e.target.value as "all"|"mine")}><option value="all">Tous les PTR accessibles</option><option value="mine">Mes PTR — PTR de mes étudiants</option></select></label>
         <label>Rechercher un étudiant<input type="search" value={search} onChange={e=>setSearch(e.target.value)} /></label>
