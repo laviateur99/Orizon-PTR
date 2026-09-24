@@ -16,7 +16,10 @@ export function PtrPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name"|"nameDesc"|"program">("name");
   const filteredStudents = students.filter(student => (scope === "all" || Boolean(profile?.linkedInstructorId && student.primaryInstructorId === profile.linkedInstructorId)) && `${student.firstName} ${student.lastName}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().includes(search.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase()))
-    .sort((a, b) => sortBy==="nameDesc" ? (b.lastName.localeCompare(a.lastName)||b.firstName.localeCompare(a.firstName)) : sortBy==="program" ? (a.program.localeCompare(b.program)||a.lastName.localeCompare(b.lastName)) : (a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName)));
+    .sort((a, b) => {
+      const nameA=`${a.firstName} ${a.lastName}`,nameB=`${b.firstName} ${b.lastName}`;
+      return sortBy==="nameDesc" ? nameB.localeCompare(nameA) : sortBy==="program" ? (a.program.localeCompare(b.program)||nameA.localeCompare(nameB)) : nameA.localeCompare(nameB);
+    });
 
   useEffect(() => {
     setStudents([]);

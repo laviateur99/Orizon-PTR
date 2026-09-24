@@ -25,11 +25,12 @@ export function StudentsPage(){
     const hay=`${s.firstName} ${s.lastName} ${s.email} ${s.program}`.toLowerCase();
     return (!search||hay.includes(search.toLowerCase()))&&(status==="Tous"||s.status===status);
   }).sort((a,b)=>{
-    if(sortBy==="nameDesc")return b.lastName.localeCompare(a.lastName)||b.firstName.localeCompare(a.firstName);
-    if(sortBy==="program")return a.program.localeCompare(b.program)||a.lastName.localeCompare(b.lastName);
-    if(sortBy==="status")return a.status.localeCompare(b.status)||a.lastName.localeCompare(b.lastName);
+    const nameA=`${a.firstName} ${a.lastName}`,nameB=`${b.firstName} ${b.lastName}`;
+    if(sortBy==="nameDesc")return nameB.localeCompare(nameA);
+    if(sortBy==="program")return a.program.localeCompare(b.program)||nameA.localeCompare(nameB);
+    if(sortBy==="status")return a.status.localeCompare(b.status)||nameA.localeCompare(nameB);
     if(sortBy==="hours")return b.flightHours-a.flightHours;
-    return a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName);
+    return nameA.localeCompare(nameB);
   }),[students,search,status,sortBy]);
   return <>
     <PageHeader title={restricted?"Mon dossier étudiant":"Étudiants"} subtitle={restricted?"Informations, documents, progression, réservations et notes":"Dossiers, documents, progression, réservations et historique"} />

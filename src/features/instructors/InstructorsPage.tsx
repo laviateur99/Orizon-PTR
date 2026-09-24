@@ -55,10 +55,11 @@ export function InstructorsPage(){
         item.firstName,item.lastName,item.email,item.classLevel,item.employeeNumber
       ].some(value=>value.toLowerCase().includes(needle)))
       .sort((a,b)=>{
-        if(sortBy==="nameDesc")return b.lastName.localeCompare(a.lastName)||b.firstName.localeCompare(a.firstName);
-        if(sortBy==="class")return a.classLevel.localeCompare(b.classLevel)||a.lastName.localeCompare(b.lastName);
-        if(sortBy==="status")return a.status.localeCompare(b.status)||a.lastName.localeCompare(b.lastName);
-        return a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName);
+        const nameA=`${a.firstName} ${a.lastName}`,nameB=`${b.firstName} ${b.lastName}`;
+        if(sortBy==="nameDesc")return nameB.localeCompare(nameA);
+        if(sortBy==="class")return a.classLevel.localeCompare(b.classLevel)||nameA.localeCompare(nameB);
+        if(sortBy==="status")return a.status.localeCompare(b.status)||nameA.localeCompare(nameB);
+        return nameA.localeCompare(nameB);
       });
   },[items,query,status,sortBy]);
 
