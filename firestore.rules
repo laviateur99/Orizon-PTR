@@ -8,7 +8,7 @@ service cloud.firestore {
     function any(modules) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny(modules)); }
     function admin() { return active() && profile().data.role == 'Administrateur'; }
     function trainingStaff() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
-    function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
     function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
     function maintenanceReservation(data) {
       return data.keys().hasAny(['maintenanceWorkOrderId'])
