@@ -14,7 +14,9 @@ export function PtrPage() {
   const { profile }=useAuth();
   const [scope, setScope] = useState<"all"|"mine">("all");
   const [search, setSearch] = useState("");
-  const filteredStudents = students.filter(student => (scope === "all" || Boolean(profile?.linkedInstructorId && student.primaryInstructorId === profile.linkedInstructorId)) && `${student.firstName} ${student.lastName}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().includes(search.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase()));
+  const [sortBy, setSortBy] = useState<"name"|"nameDesc"|"program">("name");
+  const filteredStudents = students.filter(student => (scope === "all" || Boolean(profile?.linkedInstructorId && student.primaryInstructorId === profile.linkedInstructorId)) && `${student.firstName} ${student.lastName}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().includes(search.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase()))
+    .sort((a, b) => sortBy==="nameDesc" ? (b.lastName.localeCompare(a.lastName)||b.firstName.localeCompare(a.firstName)) : sortBy==="program" ? (a.program.localeCompare(b.program)||a.lastName.localeCompare(b.lastName)) : (a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName)));
 
   useEffect(() => {
     setStudents([]);
@@ -33,6 +35,7 @@ export function PtrPage() {
       {profile?.role !== "Étudiant" && <div className="form-grid" style={{marginBottom:16}}>
         <label>Afficher<select value={scope} onChange={e=>setScope(e.target.value as "all"|"mine")}><option value="all">Tous les PTR accessibles</option><option value="mine">Mes PTR — PTR de mes étudiants</option></select></label>
         <label>Rechercher un étudiant<input type="search" value={search} onChange={e=>setSearch(e.target.value)} /></label>
+        <label>Trier par<select value={sortBy} onChange={e=>setSortBy(e.target.value as typeof sortBy)}><option value="name">Nom (A-Z)</option><option value="nameDesc">Nom (Z-A)</option><option value="program">Programme</option></select></label>
       </div>}
       {scope === "mine" && !profile?.linkedInstructorId && <div className="notice">Votre compte doit être lié à une fiche instructeur par un administrateur pour afficher vos PTR.</div>}
       <div className="ptr-student-grid">

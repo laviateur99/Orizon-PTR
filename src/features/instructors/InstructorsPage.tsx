@@ -30,6 +30,7 @@ export function InstructorsPage(){
   const [items,setItems]=useState<Instructor[]>([]);
   const [query,setQuery]=useState("");
   const [status,setStatus]=useState<InstructorStatus|"Tous">("Tous");
+  const [sortBy,setSortBy]=useState<"name"|"nameDesc"|"class"|"status">("name");
   const [editing,setEditing]=useState<Instructor|null>(null);
   const [dutyInstructor,setDutyInstructor]=useState<Instructor|null>(null);
   const [pinInstructor,setPinInstructor]=useState<Instructor|null>(null);
@@ -53,8 +54,13 @@ export function InstructorsPage(){
       .filter(item=>!needle||[
         item.firstName,item.lastName,item.email,item.classLevel,item.employeeNumber
       ].some(value=>value.toLowerCase().includes(needle)))
-      .sort((a,b)=>a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName));
-  },[items,query,status]);
+      .sort((a,b)=>{
+        if(sortBy==="nameDesc")return b.lastName.localeCompare(a.lastName)||b.firstName.localeCompare(a.firstName);
+        if(sortBy==="class")return a.classLevel.localeCompare(b.classLevel)||a.lastName.localeCompare(b.lastName);
+        if(sortBy==="status")return a.status.localeCompare(b.status)||a.lastName.localeCompare(b.lastName);
+        return a.lastName.localeCompare(b.lastName)||a.firstName.localeCompare(b.firstName);
+      });
+  },[items,query,status,sortBy]);
 
   async function save(){
     if(!editing)return;
@@ -80,6 +86,9 @@ export function InstructorsPage(){
       <input placeholder="Rechercher un instructeur…" value={query} onChange={event=>setQuery(event.target.value)} />
       <select value={status} onChange={event=>setStatus(event.target.value as InstructorStatus|"Tous")}>
         <option>Tous</option><option>Actif</option><option>Inactif</option><option>Congé</option>
+      </select>
+      <select value={sortBy} onChange={event=>setSortBy(event.target.value as typeof sortBy)}>
+        <option value="name">Nom (A-Z)</option><option value="nameDesc">Nom (Z-A)</option><option value="class">Classe</option><option value="status">Statut</option>
       </select>
       <button className="button" onClick={()=>{setClassEffectiveDate(new Date().toISOString().slice(0,10));setEditing(emptyInstructor())}}>Ajouter un instructeur</button>
     </div>}

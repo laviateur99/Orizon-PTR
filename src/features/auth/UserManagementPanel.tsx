@@ -23,7 +23,8 @@ export function UserManagementPanel(){
  const[users,setUsers]=useState<UserProfile[]>([]),[students,setStudents]=useState<Student[]>([]),[instructors,setInstructors]=useState<Instructor[]>([]),[editing,setEditing]=useState<UserProfile|null>(null);
  const[form,setForm]=useState({name:"",email:"",role:"Instructeur" as UserRole}),[message,setMessage]=useState(""),[busy,setBusy]=useState(false);
  const[signupRequests,setSignupRequests]=useState<SignupRequest[]>([]),[reviewingSignup,setReviewingSignup]=useState<string|null>(null);
- useEffect(()=>onSnapshot(collection(db,"users"),snap=>setUsers(snap.docs.map(item=>profile(item.id,item.data())).sort((a,b)=>a.name.localeCompare(b.name)))),[]);
+ const[userSortBy,setUserSortBy]=useState<"name"|"nameDesc"|"role"|"status"|"lastLogin">("name");
+ useEffect(()=>onSnapshot(collection(db,"users"),snap=>setUsers(snap.docs.map(item=>profile(item.id,item.data())))),[]);
  useEffect(()=>subscribeStudents({next:setStudents,error:error=>setMessage(error.message)}),[]);
  useEffect(()=>subscribeInstructors({next:setInstructors,error:error=>setMessage(error.message)}),[]);
  useEffect(()=>onSnapshot(query(collection(db,"signupRequests"),orderBy("createdAt","asc")),snap=>setSignupRequests(snap.docs.map(item=>signupRequest(item.id,item.data()))),error=>setMessage(error.message)),[]);
@@ -63,6 +64,13 @@ export function UserManagementPanel(){
  async function removeAccess(){if(!editing||editing.uid===auth.currentUser?.uid)return;const removesInstructor=editing.role==="Instructeur"&&Boolean(editing.linkedInstructorId);const detail=removesInstructor?"Son compte utilisateur ET sa fiche instructeur seront supprimés.":"Sa fiche de rôle et ses invitations seront supprimées. Cette action ne supprime pas ses autres dossiers de formation.";if(!window.confirm(`Supprimer définitivement l’accès de ${editing.name||editing.email}?\n\n${detail}`))return;setBusy(true);try{await deleteDoc(doc(db,"pendingInvitations",editing.email.toLowerCase())).catch(()=>undefined);if(removesInstructor)await deleteInstructor(editing.linkedInstructorId!);await deleteDoc(doc(db,"users",editing.uid));setEditing(null);setMessage(removesInstructor?`Le compte ${editing.email} et sa fiche instructeur ont été supprimés.`:`L’accès de ${editing.email} a été supprimé.`);}catch(error){setMessage(error instanceof Error?error.message:"Suppression impossible.");}finally{setBusy(false)}}
  const changeRole=(role:UserRole)=>setEditing(current=>current?{...current,role,permissions:rolePermissions[role],linkedStudentId:role==="Étudiant"?current.linkedStudentId:"",linkedInstructorId:instructorLinkableRoles.includes(role)?current.linkedInstructorId:""}:current);
  const toggle=(module:AppModule)=>setEditing(current=>current?{...current,permissions:current.permissions.includes(module)?current.permissions.filter(item=>item!==module):[...current.permissions,module]}:current);
+ const sortedUsers=users.slice().sort((a,b)=>{
+   if(userSortBy==="nameDesc")return b.name.localeCompare(a.name);
+   if(userSortBy==="role")return a.role.localeCompare(b.role)||a.name.localeCompare(b.name);
+   if(userSortBy==="status")return Number(b.active)-Number(a.active)||a.name.localeCompare(b.name);
+   if(userSortBy==="lastLogin")return (b.lastLoginAt||"").localeCompare(a.lastLoginAt||"");
+   return a.name.localeCompare(b.name);
+ });
  const sortedStudents=students.slice().sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
  const sortedInstructors=instructors.slice().sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
 
@@ -78,7 +86,8 @@ export function UserManagementPanel(){
    })}
   </div>}
   <form className="invite-form" onSubmit={invite}><label>Nom complet<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Adresse courriel<input required type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label>Rôle<select value={form.role} onChange={e=>setForm({...form,role:e.target.value as UserRole})}>{roles.map(role=><option key={role}>{role}</option>)}</select></label><button className="button" disabled={busy}>{busy?"Envoi…":"Envoyer l’invitation"}</button></form>
-  <div className="user-list"><div className="user-list-head"><span>Utilisateur</span><span>Rôle</span><span>État</span><span>Dernière connexion</span><span/></div>{users.map(item=><div className="user-list-row" key={item.uid}><div><strong>{item.name||"Nom non défini"}</strong><small>{item.email}</small></div><span>{item.role}</span><span className={`badge ${item.active?"ok":"danger"}`}>{item.active?"Actif":"Suspendu"}</span><span>{item.lastLoginAt?new Date(item.lastLoginAt).toLocaleString("fr-CA"):"Jamais"}</span><button className="button secondary" onClick={()=>setEditing(item)}>Gérer</button></div>)}</div>
+  <div className="user-list-toolbar"><label>Trier par<select value={userSortBy} onChange={e=>setUserSortBy(e.target.value as typeof userSortBy)}><option value="name">Nom (A-Z)</option><option value="nameDesc">Nom (Z-A)</option><option value="role">Rôle</option><option value="status">État (actifs d’abord)</option><option value="lastLogin">Dernière connexion</option></select></label></div>
+  <div className="user-list"><div className="user-list-head"><span>Utilisateur</span><span>Rôle</span><span>État</span><span>Dernière connexion</span><span/></div>{sortedUsers.map(item=><div className="user-list-row" key={item.uid}><div><strong>{item.name||"Nom non défini"}</strong><small>{item.email}</small></div><span>{item.role}</span><span className={`badge ${item.active?"ok":"danger"}`}>{item.active?"Actif":"Suspendu"}</span><span>{item.lastLoginAt?new Date(item.lastLoginAt).toLocaleString("fr-CA"):"Jamais"}</span><button className="button secondary" onClick={()=>setEditing(item)}>Gérer</button></div>)}</div>
   {editing&&<div className="modal-backdrop"><section className="modal"><header><div><h2>Accès de {editing.name}</h2><p>{editing.email}</p></div><button className="icon-button" onClick={()=>setEditing(null)}>×</button></header><div className="modal-body">
    <label>Nom<input value={editing.name} onChange={e=>setEditing({...editing,name:e.target.value})}/></label>
    <label>Rôle<select value={editing.role} onChange={e=>changeRole(e.target.value as UserRole)}>{roles.map(role=><option key={role}>{role}</option>)}</select></label>
