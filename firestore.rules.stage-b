@@ -13,9 +13,6 @@ service cloud.firestore {
     function orgHasRole(orgId, roles) { return orgMember(orgId) && get(memberPath(orgId)).data.role in roles; }
     function orgIsType(orgId, kind) { return get(/databases/$(database)/documents/organizations/$(orgId)).data.type == kind; }
     function linkedInstructor(instructorId) { return profile().data.linkedInstructorId == instructorId; }
-    // Étiquetage ponctuel par l'outil de migration : poser orgId (et rien d'autre) sur un document qui n'en a pas.
-    // À RETIRER à l'étape B (voir docs/audit-maintenance.md, D2) : ensuite aucune règle n'accepte un document sans orgId.
-    function orgStamp() { return admin() && !resource.data.keys().hasAny(['orgId']) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['orgId']); }
     function trainingStaff() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
     function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
     function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
@@ -111,16 +108,24 @@ service cloud.firestore {
     }
 
     match /reservations/{id} {
-      allow read: if any(['dashboard','students','instructors','ptr','theory']) || scheduleAccess();
-      allow create: if (maintenanceReservation(request.resource.data) && maintenanceAccess())
+      // Un étudiant ne lit que ses propres réservations (studentId ou participants), jamais celles d'autrui.
+      allow read: if (any(['dashboard','students','instructors','ptr','theory']) || scheduleAccess())
+        && (!studentRole()
+          || (profile().data.linkedStudentId != '' && (resource.data.studentId == profile().data.linkedStudentId
+            || resource.data.get('participantStudentIds', []).hasAny([profile().data.linkedStudentId]))))
+        && orgMember(resource.data.orgId);
+      allow create: if ((maintenanceReservation(request.resource.data) && maintenanceAccess())
         || ((scheduleAccess() || has('theory'))
-          && !maintenanceReservation(request.resource.data));
-      allow update: if (maintenanceReservation(resource.data) && maintenanceAccess())
+          && !maintenanceReservation(request.resource.data)))
+        && orgMember(request.resource.data.orgId);
+      allow update: if ((maintenanceReservation(resource.data) && maintenanceAccess())
         || ((scheduleAccess() || has('theory'))
-          && !maintenanceReservation(resource.data));
-      allow delete: if (maintenanceReservation(resource.data) && maintenanceAccess())
+          && !maintenanceReservation(resource.data)))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
+      allow delete: if ((maintenanceReservation(resource.data) && maintenanceAccess())
         || ((scheduleAccess() || has('theory'))
-          && !maintenanceReservation(resource.data));
+          && !maintenanceReservation(resource.data)))
+        && orgMember(resource.data.orgId);
     }
     match /cancellations/{id} { allow read, write: if scheduleAccess(); }
 
@@ -189,11 +194,11 @@ service cloud.firestore {
     // du personnel PTR peuvent seulement mettre à jour les compteurs d'essais (verrouillage) et un
     // responsable peut RÉINITIALISER (supprimer) — jamais choisir le NIP d'autrui.
     match /instructorPins/{instructorId} {
-      allow read: if ptrStaff() && ownInstructorPin(instructorId);
-      allow create: if ptrStaff() && linkedInstructor(instructorId);
-      allow update: if orgStamp() || (ptrStaff() && (linkedInstructor(instructorId)
-        || (ownInstructorPin(instructorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['failedAttempts','lockedUntil','updatedAt']))));
-      allow delete: if ptrStaff() && (linkedInstructor(instructorId) || managesInstructors());
+      allow read: if ptrStaff() && ownInstructorPin(instructorId) && orgMember(resource.data.orgId);
+      allow create: if ptrStaff() && linkedInstructor(instructorId) && orgMember(request.resource.data.orgId);
+      allow update: if ptrStaff() && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId && (linkedInstructor(instructorId)
+        || (ownInstructorPin(instructorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['failedAttempts','lockedUntil','updatedAt'])));
+      allow delete: if ptrStaff() && orgMember(resource.data.orgId) && (linkedInstructor(instructorId) || managesInstructors());
     }
     match /studentAgreements/{studentId} {
       allow read: if any(['students','ptr']) && ownPtr(studentId);
@@ -396,9 +401,12 @@ service cloud.firestore {
     }
 
     match /aircraft/{id} {
-      allow read: if any(['dashboard','schedule','fleet','maintenance','ptr']) || maintenanceAccess();
-      allow create, update: if maintenanceAccess();
-      allow update: if has('schedule') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['airTimeTotal','airTimeUpdatedAt','lastAirTimeReservationId']);
+      // Plus lisible par le rôle Étudiant; appartenance à l'organisation du document obligatoire.
+      allow read: if !studentRole() && (any(['dashboard','schedule','fleet','maintenance','ptr']) || maintenanceAccess()) && orgMember(resource.data.orgId);
+      allow create: if maintenanceAccess() && orgMember(request.resource.data.orgId);
+      allow update: if (maintenanceAccess()
+          || (has('schedule') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['airTimeTotal','airTimeUpdatedAt','lastAirTimeReservationId'])))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
       // Un avion ayant un historique MCM doit être désactivé, jamais supprimé.
       allow delete: if false;
     }
@@ -445,18 +453,20 @@ service cloud.firestore {
       allow write: if has('fleet');
     }
     match /snags/{id} {
-      allow read: if any(['dashboard','schedule','fleet','snags']) || maintenanceAccess();
-      allow create: if any(['fleet','snags']);
-      allow update: if orgStamp() || (any(['fleet','snags'])
+      allow read: if !studentRole() && (any(['dashboard','schedule','fleet','snags']) || maintenanceAccess()) && orgMember(resource.data.orgId);
+      allow create: if any(['fleet','snags']) && orgMember(request.resource.data.orgId);
+      allow update: if ((any(['fleet','snags'])
           && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
           && request.resource.data.status != 'Fermé')
         || (maintenanceAccess()
           && (request.resource.data.status != 'Fermé'
             || (request.resource.data.resolvedByWorkOrderId is string
               && request.resource.data.returnedToServiceBy is string
-              && request.resource.data.returnedToServiceAt is timestamp)));
+              && request.resource.data.returnedToServiceAt is timestamp))))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
       allow delete: if any(['fleet','snags'])
-        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0);
+        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+        && orgMember(resource.data.orgId);
     }
     match /snagHistory/{id} {
       allow read: if any(['fleet','snags']) || maintenanceAccess();
@@ -471,9 +481,10 @@ service cloud.firestore {
       allow create: if any(['fleet','snags'])
         && request.resource.data.type is string
         && request.resource.data.snagId is string
-        && request.resource.data.title is string && request.resource.data.title.size() <= 300;
-      allow read, delete: if maintenanceAccess() || managesInstructors();
-      allow update: if orgStamp() || (maintenanceAccess() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']));
+        && request.resource.data.title is string && request.resource.data.title.size() <= 300
+        && orgMember(request.resource.data.orgId);
+      allow read, delete: if (maintenanceAccess() || managesInstructors()) && orgMember(resource.data.orgId);
+      allow update: if maintenanceAccess() && orgMember(resource.data.orgId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
     }
     match /operationalNotifications/{id} { allow read, write: if any(['schedule','fleet','snags']); }
 
