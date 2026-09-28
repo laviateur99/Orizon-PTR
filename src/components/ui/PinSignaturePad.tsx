@@ -14,7 +14,7 @@ import { PIN_LENGTH } from "@/features/auth/pin";
  */
 export function PinSignaturePad({ label, kind, personId, signerName, value, onChange }: {
   label: string;
-  kind: "student" | "instructor";
+  kind: "student" | "instructor" | "technician";
   personId: string;
   signerName: string;
   value: string;
