@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:rules": "firebase emulators:exec --only firestore \"vitest run\""
+    "test:rules": "firebase emulators:exec --only firestore \"vitest run\"",
+    "backup:migration-data": "node --env-file=.env.local scripts/backup-migration-data.mjs"
   },
   "dependencies": {
     "@tesseract.js-data/eng": "^1.0.0",
