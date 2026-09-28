@@ -16,7 +16,7 @@ export function StudentsPage(){
   const [search,setSearch]=useState(""); const [status,setStatus]=useState<"Tous"|StudentStatus>("Tous");
   const [sortBy,setSortBy]=useState<"name"|"nameDesc"|"program"|"status"|"hours">("name");
   const [activities,setActivities]=useState<ProgressActivity[]>([]);
-  useEffect(()=>subscribeAllProgressActivities(setActivities,()=>undefined),[]);
+  useEffect(()=>restricted?undefined:subscribeAllProgressActivities(setActivities,()=>undefined),[restricted]);
   const flightHoursByStudent=useMemo(()=>{
     const totals:Record<string,number>={};
     activities.filter(item=>item.status==="Complété"&&(item.type==="Double commande"||item.type==="Solo")).forEach(item=>{

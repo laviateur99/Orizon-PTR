@@ -3,6 +3,7 @@ import {
   runTransaction, updateDoc, where, type DocumentData, type FirestoreError, type Unsubscribe
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { schoolScope } from "@/features/organizations/scope";
 import type { AircraftOption, InstructorOption, PTREvaluation, PTRFlightRecord, PTRLesson, PTRLessonHistory, ReservationOption, TCScore } from "./types";
 
 export type LiveHandlers<T> = { next: (items: T[]) => void; error: (error: FirestoreError) => void };
@@ -55,7 +56,7 @@ const flightRecords=(value:unknown):PTRFlightRecord[]=>objects(value).map(record
 }));
 
 function scoped<T>(name: string, studentId: string, map: (id: string, data: DocumentData) => T, handlers: LiveHandlers<T>): Unsubscribe {
-  const q = query(collection(db, name), where("studentId", "==", studentId));
+  const q = query(collection(db, name), where("studentId", "==", studentId), ...(name === "reservations" ? schoolScope() : []));
   return onSnapshot(q, snap => handlers.next(snap.docs.map(item => map(item.id, item.data()))), handlers.error);
 }
 
@@ -243,8 +244,10 @@ export function subscribeInstructors(handlers: LiveHandlers<InstructorOption>): 
     return { id: item.id, name: name || item.id };
   })), handlers.error);
 }
-export function subscribeAircraft(handlers:LiveHandlers<AircraftOption>):Unsubscribe{
-  return onSnapshot(collection(db,"aircraft"),snap=>handlers.next(snap.docs.map(item=>{
+/** `restrictedStudent` : Étudiant, les règles interdisent la lecture de aircraft — aucune requête n'est tentée. */
+export function subscribeAircraft(handlers:LiveHandlers<AircraftOption>,restrictedStudent=false):Unsubscribe{
+  if(restrictedStudent){handlers.next([]);return()=>{};}
+  return onSnapshot(query(collection(db,"aircraft"),...schoolScope()),snap=>handlers.next(snap.docs.map(item=>{
     const data=item.data();
     return{id:item.id,registration:text(data.registration)||text(data.name)||item.id,type:text(data.typeLabel)||text(data.type)||"Type non précisé"};
   })),handlers.error);

@@ -105,7 +105,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
       subscribeEvaluations(studentId,{next:setEvaluations,error:fail}),
       subscribeReservations(studentId,{next:setReservations,error:fail}),
       subscribeInstructors({next:setInstructors,error:fail}),
-      subscribeAircraft({next:setAircraft,error:fail}),
+      subscribeAircraft({next:setAircraft,error:fail},profile?.role==="Étudiant"),
       subscribeTheorySessions(values=>setTheory(values.filter(item=>item.studentIds.includes(studentId))),fail),
       subscribePreSoloChecklist(studentId,setPreSolo,fail),
       subscribeFlightTestRecommendation(studentId,setRecommendation,fail)

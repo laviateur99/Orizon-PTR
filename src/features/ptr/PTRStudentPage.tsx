@@ -113,6 +113,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 
   const {user,profile}=useAuth();
   const allowed=canAccessPtr(profile,studentId);
+  const restrictedStudent=profile?.role==="Étudiant";
   const canManagePtrHistory=Boolean(profile?.active&&profile.permissions.includes("ptr")&&
     ["Administrateur","Chef instructeur","Instructeur"].includes(profile.role));
   const [student, setStudent] = useState<Student | null>(null);
@@ -200,9 +201,9 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       :()=>undefined;
     const offReservations = subscribeReservations(studentId, { next: value=>{setReservations(value);setReservationsLoaded(true)}, error: value => setError(value.message) });
     const offInstructors = subscribeInstructors({ next: setInstructors, error: value => setError(value.message) });
-    const offAircraft=subscribeAircraft({next:setAircraft,error:value=>setError(value.message)});
+    const offAircraft=subscribeAircraft({next:setAircraft,error:value=>setError(value.message)},restrictedStudent);
     return () => { offEvaluations(); offHistory(); offReservations(); offInstructors(); offAircraft(); };
-  }, [studentId,allowed,canManagePtrHistory,lessonsLoaded,lessons.length]);
+  }, [studentId,allowed,canManagePtrHistory,restrictedStudent,lessonsLoaded,lessons.length]);
 
   useEffect(()=>{
     if(!canManagePtrHistory||!lessonsLoaded||!reservationsLoaded)return;
