@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { ReactNode, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { OrizonLogo } from "@/components/branding/OrizonLogo";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { SetPasswordPage } from "@/features/auth/SetPasswordPage";
@@ -10,10 +10,12 @@ import {canManageAdministration,canViewTestFeedback,pathModule,type AppModule} f
 import { CommunicationGate } from "@/features/employees/CommunicationGate";
 import { FeedbackWidget } from "@/components/test/FeedbackWidget";
 
-const links:Array<[string,string,AppModule]>=[["/","Tableau de bord","dashboard"],["/schedule","Horaire","schedule"],["/ptr","PTR","ptr"],["/students","Étudiants","students"],["/theory","Formation théorique","theory"],["/fleet","Flotte","fleet"],["/maintenance","Maintenance","maintenance"],["/emergency","Urgence","emergency"]];
+const links:Array<[string,string,AppModule]>=[["/","Tableau de bord","dashboard"],["/schedule","Horaire","schedule"],["/ptr","PTR","ptr"],["/students","Étudiants","students"],["/theory","Formation théorique","theory"],["/fleet","Flotte","fleet"],["/maintenance","Maintenance","maintenance"],["/emergency","Urgence","emergency"],["/oma","OMA","oma"]];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname=usePathname(),{user,profile,loading,can,logout}=useAuth();
+  const pathname=usePathname(),router=useRouter(),{user,profile,loading,can,logout}=useAuth();
+  // Le personnel de l'OMA n'a aucune permission école : sa page d'accueil est le module OMA.
+  useEffect(()=>{if(profile?.role==="OMA"&&pathname==="/")router.replace("/oma")},[profile?.role,pathname,router]);
   if(loading)return <main className="auth-loading"><OrizonLogo/><strong>Chargement de Flight Director…</strong></main>;
   if(!user)return <LoginPage/>;
   if(!profile)return <main className="access-state"><section className="card"><h1>Compte en attente</h1><p>Votre compte existe, mais aucun rôle ne lui a encore été attribué. Communiquez avec un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
