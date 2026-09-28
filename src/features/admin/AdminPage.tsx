@@ -9,6 +9,7 @@ import { subscribeAircraft } from "@/features/fleet/firestore";
 import type { Aircraft } from "@/features/fleet/types";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { canManageAdministration } from "@/features/auth/types";
+import { OrganizationsAdminPanel } from "@/features/organizations/OrganizationsAdminPanel";
 
 type ActionName = "hours" | "records" | "test" | "create" | "payroll" | "studentAccounts";
 const ACTIONS: Record<ActionName, {title:string;description:string;confirmation:string;button:string;danger?:boolean;adminOnly?:boolean}> = {
@@ -54,6 +55,7 @@ export function AdminPage() {
   }
   return <><PageHeader title="Administration" subtitle="Outils de développement et remise à zéro sécurisée"/>
     <UserManagementPanel/>
+    {profile?.role==="Administrateur"&&<OrganizationsAdminPanel/>}
     <ResourceManagement aircraft={aircraft}/>
     <div className="admin-warning"><strong>Zone sensible</strong><span>Ces opérations modifient directement les données Firebase partagées par les deux Mac.</span></div>
     {message&&<div className="notice">{message}</div>}{error&&<div className="notice error">{error}</div>}

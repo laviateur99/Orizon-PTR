@@ -4,21 +4,25 @@ import { onAuthStateChanged,signOut,type User } from "firebase/auth";
 import { collection,doc,getDoc,getDocs,limit,onSnapshot,query,serverTimestamp,setDoc,updateDoc,type Unsubscribe } from "firebase/firestore";
 import { auth,db } from "@/services/firebase/client";
 import { hasModuleAccess,rolePermissions,type AppModule,type UserProfile } from "./types";
+import { setOrgContext } from "@/features/organizations/orgContext";
 
 type AuthValue={user:User|null;profile:UserProfile|null;loading:boolean;can:(module:AppModule)=>boolean;logout:()=>Promise<void>};
 const Context=createContext<AuthValue|null>(null);
-const asProfile=(uid:string,data:Record<string,unknown>):UserProfile=>{const role=(data.role as UserProfile["role"])||"Étudiant";return{uid,name:String(data.name||""),email:String(data.email||""),role,permissions:Array.isArray(data.permissions)?data.permissions as AppModule[]:rolePermissions[role],active:data.active!==false,mustSetPassword:data.mustSetPassword===true,linkedStudentId:String(data.linkedStudentId||""),linkedInstructorId:String(data.linkedInstructorId||""),createdAt:String(data.createdAt||""),lastLoginAt:String(data.lastLoginAt||"")}};
+const asProfile=(uid:string,data:Record<string,unknown>):UserProfile=>{const role=(data.role as UserProfile["role"])||"Étudiant";return{uid,name:String(data.name||""),email:String(data.email||""),role,permissions:Array.isArray(data.permissions)?data.permissions as AppModule[]:rolePermissions[role],active:data.active!==false,mustSetPassword:data.mustSetPassword===true,linkedStudentId:String(data.linkedStudentId||""),linkedInstructorId:String(data.linkedInstructorId||""),createdAt:String(data.createdAt||""),lastLoginAt:String(data.lastLoginAt||""),orgIds:Array.isArray(data.orgIds)?data.orgIds.filter((item:unknown):item is string=>typeof item==="string"):[],schoolOrgId:typeof data.schoolOrgId==="string"&&data.schoolOrgId?data.schoolOrgId:undefined,mroOrgId:typeof data.mroOrgId==="string"&&data.mroOrgId?data.mroOrgId:undefined}};
+const applyOrgContext=(profile:UserProfile|null)=>setOrgContext({orgIds:profile?.orgIds||[],schoolOrgId:profile?.schoolOrgId,mroOrgId:profile?.mroOrgId});
 
 export function AuthProvider({children}:{children:React.ReactNode}){
  const[user,setUser]=useState<User|null>(null),[profile,setProfile]=useState<UserProfile|null>(null),[loading,setLoading]=useState(true);
  useEffect(()=>{
   let offProfile:Unsubscribe|undefined;
  const offAuth=onAuthStateChanged(auth,async current=>{
-   offProfile?.();offProfile=undefined;setLoading(true);setUser(current);setProfile(null);
+   offProfile?.();offProfile=undefined;setLoading(true);setUser(current);applyOrgContext(null);setProfile(null);
    if(!current){setLoading(false);return;}
    const ref=doc(db,"users",current.uid);
    offProfile=onSnapshot(ref,value=>{
-    setProfile(value.exists()?asProfile(current.uid,value.data()):null);
+    const next=value.exists()?asProfile(current.uid,value.data()):null;
+    applyOrgContext(next);
+    setProfile(next);
     setLoading(false);
    },()=>{setProfile(null);setLoading(false)});
    try{
@@ -27,7 +31,9 @@ export function AuthProvider({children}:{children:React.ReactNode}){
      const email=(current.email||"").trim().toLowerCase(),invitation=email?await getDoc(doc(db,"pendingInvitations",email)):null;
      if(invitation?.exists()){
       const data=invitation.data();
-      await setDoc(ref,{name:data.name||email,email,role:data.role,permissions:data.permissions,active:true,mustSetPassword:true,linkedStudentId:data.linkedStudentId||"",linkedInstructorId:data.linkedInstructorId||"",invitedAt:data.invitedAt||"",acceptedAt:new Date().toISOString(),createdAtServer:serverTimestamp()});
+      const inviteOrg=typeof data.orgId==="string"&&data.orgId?{orgId:data.orgId,orgType:data.orgType==="mro"?"mro":"school",orgRole:typeof data.orgRole==="string"?data.orgRole:"staff"}:null;
+      await setDoc(ref,{name:data.name||email,email,role:data.role,permissions:data.permissions,active:true,mustSetPassword:true,linkedStudentId:data.linkedStudentId||"",linkedInstructorId:data.linkedInstructorId||"",invitedAt:data.invitedAt||"",acceptedAt:new Date().toISOString(),createdAtServer:serverTimestamp(),...(inviteOrg?{orgIds:[inviteOrg.orgId],...(inviteOrg.orgType==="mro"?{mroOrgId:inviteOrg.orgId}:{schoolOrgId:inviteOrg.orgId})}:{})});
+      if(inviteOrg)await setDoc(doc(db,"organizations",inviteOrg.orgId,"members",current.uid),{userId:current.uid,orgId:inviteOrg.orgId,role:inviteOrg.orgRole,active:true,displayName:String(data.name||email),updatedAt:serverTimestamp()});
       snap=await getDoc(ref);
      }else{
       const any=await getDocs(query(collection(db,"users"),limit(1)));
@@ -38,7 +44,7 @@ export function AuthProvider({children}:{children:React.ReactNode}){
      }
     }
     if(snap.exists()){
-     setProfile(asProfile(current.uid,snap.data()));setLoading(false);
+     const created=asProfile(current.uid,snap.data());applyOrgContext(created);setProfile(created);setLoading(false);
      void updateDoc(ref,{lastLoginAt:new Date().toISOString(),lastLoginAtServer:serverTimestamp()}).catch(()=>undefined);
     }
    }catch{
