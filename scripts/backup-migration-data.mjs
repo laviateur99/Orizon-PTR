@@ -2,16 +2,22 @@
 // Sauvegarde/restauration en JSON local des collections touchées par l'outil de migration des
 // organisations (docs/audit-maintenance.md, D2) : organizations (+ sous-collection members),
 // users (orgIds/schoolOrgId/mroOrgId) et les cinq collections étiquetées aircraft, snags,
-// reservations, notifications, instructorPins.
+// reservations, notifications.
+//
+// instructorPins est VOLONTAIREMENT EXCLU (des empreintes de NIP ne doivent pas finir dans un
+// fichier JSON local) : cette collection est couverte par l'export géré Google Cloud uniquement
+// (gcloud firestore export/import — docs/audit-maintenance.md D12, étape 1), qui restaure de façon
+// fidèle sans passer par les règles Firestore (contrairement à ce script, voir "Restauration").
 //
 // Aucun compte de service n'existe pour ce projet (voir docs/audit-maintenance.md) : ce script
-// utilise le SDK client Firebase avec les identifiants d'un compte Administrateur. Par défaut ils
-// sont saisis de façon interactive (mot de passe masqué); ils peuvent aussi être fournis par les
-// variables d'environnement BACKUP_ACCOUNT_EMAIL / BACKUP_ACCOUNT_PASSWORD, réglées dans le terminal
-// de l'opérateur — jamais demandées dans le chat, jamais écrites dans un fichier par ce script. Les
-// fichiers produits contiennent des données réelles potentiellement sensibles (élèves, employés,
-// hash de NIP) : ils sont écrits dans backups/ (ignoré par git, voir .gitignore) et NE DOIVENT
-// JAMAIS être committés.
+// utilise le SDK client Firebase avec les identifiants d'un compte Administrateur — le compte
+// administrateur du propriétaire sur le projet de test, aucun compte dédié n'a été créé pour
+// l'instant. Par défaut ils sont saisis de façon interactive (mot de passe masqué); ils peuvent
+// aussi être fournis par les variables d'environnement BACKUP_ACCOUNT_EMAIL / BACKUP_ACCOUNT_PASSWORD,
+// réglées dans le terminal de l'opérateur — jamais demandées dans le chat, jamais écrites dans un
+// fichier par ce script. Les fichiers produits contiennent des données réelles potentiellement
+// sensibles (élèves, employés) : ils sont écrits dans backups/ (ignoré par git, voir .gitignore) et
+// NE DOIVENT JAMAIS être committés.
 //
 // Usage :
 //   node --env-file=.env.local scripts/backup-migration-data.mjs                       # export
@@ -20,11 +26,6 @@
 //
 // Avant tout lancement réel, vérifier que NEXT_PUBLIC_FIREBASE_PROJECT_ID (affiché ci-dessous dès
 // le chargement de la config, avant toute connexion) est bien le projet de test visé.
-//
-// Voir "Restauration" plus bas pour les limites importantes (instructorPins notamment) : pour une
-// restauration complète et fidèle (y compris instructorPins), préférer l'import Google Cloud d'un
-// export géré (`gcloud firestore import`, voir docs/audit-maintenance.md D12) — ce script n'a pas
-// les privilèges IAM nécessaires pour contourner les règles Firestore.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
@@ -34,7 +35,11 @@ import {
   Timestamp, collection, doc, getDocs, getFirestore, setDoc,
 } from "firebase/firestore";
 
-const COLLECTIONS = ["organizations", "users", "aircraft", "snags", "reservations", "notifications", "instructorPins"];
+// instructorPins est volontairement exclu : ce sont des empreintes de NIP, elles ne doivent pas se
+// retrouver dans un fichier JSON local. L'export géré Google Cloud (docs/audit-maintenance.md, D12,
+// étape 1) couvre déjà cette collection avec une restauration fidèle (contrairement à ce script).
+const COLLECTIONS = ["organizations", "users", "aircraft", "snags", "reservations", "notifications"];
+const EXCLUDED_COLLECTIONS = { instructorPins: "empreintes de NIP — couvert par l'export géré Google Cloud (gcloud firestore export/import), pas par ce script." };
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -101,31 +106,52 @@ function deserializeValue(value) {
   return value;
 }
 
+// Lit une collection sans jamais laisser un refus des règles Firestore interrompre les autres :
+// chaque collection est indépendante, un échec est consigné et le reste de l'export continue.
+async function readCollectionSafely(db, name, describe) {
+  try {
+    const snap = await getDocs(collection(db, name));
+    return { ok: true, snap };
+  } catch (error) {
+    const denied = String(error?.code || "").includes("permission-denied") || /insufficient permissions/i.test(String(error?.message || ""));
+    console.error(`  ✗ ${describe} : ${denied ? "accès refusé par les règles Firestore (permission-denied) — le compte n'a pas les droits de lecture requis." : `erreur inattendue : ${error?.message || error}`}`);
+    return { ok: false, error: denied ? "permission-denied" : String(error?.message || error) };
+  }
+}
+
 async function exportRun(db, outDir) {
   mkdirSync(outDir, { recursive: true });
-  const manifest = { exportedAt: new Date().toISOString(), projectId: db.app.options.projectId, collections: {} };
+  const manifest = { exportedAt: new Date().toISOString(), projectId: db.app.options.projectId, collections: {}, failures: {}, excluded: EXCLUDED_COLLECTIONS };
+  for (const [name, reason] of Object.entries(EXCLUDED_COLLECTIONS)) console.log(`  ⊘ ${name} : volontairement exclu — ${reason}`);
 
   for (const name of COLLECTIONS) {
-    const snap = await getDocs(collection(db, name));
-    const docs = snap.docs.map(d => ({ id: d.id, data: serializeValue(d.data()) }));
+    const result = await readCollectionSafely(db, name, name);
+    if (!result.ok) { manifest.failures[name] = result.error; continue; }
+    const docs = result.snap.docs.map(d => ({ id: d.id, data: serializeValue(d.data()) }));
     writeFileSync(`${outDir}/${name}.json`, JSON.stringify(docs, null, 2));
     manifest.collections[name] = docs.length;
-    console.log(`  ${name} : ${docs.length} document(s)`);
+    console.log(`  ✓ ${name} : ${docs.length} document(s)`);
 
     if (name === "organizations") {
       mkdirSync(`${outDir}/organizations-members`, { recursive: true });
-      for (const org of snap.docs) {
-        const membersSnap = await getDocs(collection(db, "organizations", org.id, "members"));
-        const members = membersSnap.docs.map(d => ({ id: d.id, data: serializeValue(d.data()) }));
+      for (const org of result.snap.docs) {
+        const membersResult = await readCollectionSafely(db, `organizations/${org.id}/members`, `organizations/${org.id}/members`);
+        if (!membersResult.ok) { manifest.failures[`organizations/${org.id}/members`] = membersResult.error; continue; }
+        const members = membersResult.snap.docs.map(d => ({ id: d.id, data: serializeValue(d.data()) }));
         writeFileSync(`${outDir}/organizations-members/${org.id}.json`, JSON.stringify(members, null, 2));
         manifest.collections[`organizations/${org.id}/members`] = members.length;
-        console.log(`    organizations/${org.id}/members : ${members.length} document(s)`);
+        console.log(`    ✓ organizations/${org.id}/members : ${members.length} document(s)`);
       }
     }
   }
   writeFileSync(`${outDir}/manifest.json`, JSON.stringify(manifest, null, 2));
-  console.log(`\nExport terminé dans ${outDir}`);
+  const failedNames = Object.keys(manifest.failures);
+  console.log(`\nExport terminé dans ${outDir} (${Object.keys(manifest.collections).length} collection(s)/sous-collection(s) réussie(s)${failedNames.length ? `, ${failedNames.length} refusée(s) : ${failedNames.join(", ")}` : ""}).`);
   console.log("Rappel : ce dossier contient des données réelles. Ne jamais le committer ni le partager hors de l'équipe autorisée.");
+  if (failedNames.length) {
+    console.error(`\nExport INCOMPLET : vérifier le rôle/les permissions du compte pour ${failedNames.join(", ")} (voir manifest.json → failures).`);
+    process.exitCode = 1;
+  }
 }
 
 async function restoreRun(db, inDir) {
@@ -163,8 +189,9 @@ async function restoreRun(db, inDir) {
   const deniedCollections = Object.entries(report).filter(([, r]) => r.denied > 0).map(([name]) => name);
   if (deniedCollections.length) {
     console.log(`\nDocuments refusés par les règles de sécurité dans : ${deniedCollections.join(", ")}.`);
-    console.log("C'est attendu pour instructorPins (voir la section « Restauration » du script) : seul l'instructeur");
-    console.log("propriétaire peut réécrire son propre hash de NIP; un administrateur ne le peut pas, par conception.");
+    console.log("Ce script ne peut restaurer que ce que les règles Firestore autorisent à un compte Administrateur connecté;");
+    console.log("pour une restauration complète et fidèle (y compris instructorPins, exclu de l'export), voir l'import géré");
+    console.log("Google Cloud (gcloud firestore import) documenté dans docs/audit-maintenance.md, D12.");
   }
 }
 
@@ -201,7 +228,7 @@ async function main() {
     const outDir = `backups/migration/${new Date().toISOString().replace(/[:.]/g, "-")}`;
     await exportRun(db, outDir);
   }
-  process.exit(0);
+  process.exit(process.exitCode || 0);
 }
 
 main().catch(error => {
