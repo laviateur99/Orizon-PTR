@@ -5,16 +5,26 @@
 // reservations, notifications, instructorPins.
 //
 // Aucun compte de service n'existe pour ce projet (voir docs/audit-maintenance.md) : ce script
-// utilise le SDK client Firebase avec les identifiants d'un compte Administrateur, saisis de
-// façon interactive (jamais stockés, jamais passés en argument). Les fichiers produits contiennent
-// des données réelles potentiellement sensibles (élèves, employés, hash de NIP) : ils sont écrits
-// dans backups/ (ignoré par git, voir .gitignore) et NE DOIVENT JAMAIS être committés.
+// utilise le SDK client Firebase avec les identifiants d'un compte Administrateur. Par défaut ils
+// sont saisis de façon interactive (mot de passe masqué); ils peuvent aussi être fournis par les
+// variables d'environnement BACKUP_ACCOUNT_EMAIL / BACKUP_ACCOUNT_PASSWORD, réglées dans le terminal
+// de l'opérateur — jamais demandées dans le chat, jamais écrites dans un fichier par ce script. Les
+// fichiers produits contiennent des données réelles potentiellement sensibles (élèves, employés,
+// hash de NIP) : ils sont écrits dans backups/ (ignoré par git, voir .gitignore) et NE DOIVENT
+// JAMAIS être committés.
 //
 // Usage :
-//   npm run backup:migration-data                       # export en lecture seule (par défaut)
-//   npm run backup:migration-data -- --restore <dossier> # restauration depuis un export précédent
+//   node --env-file=.env.local scripts/backup-migration-data.mjs                       # export
+//   node --env-file=.env.local scripts/backup-migration-data.mjs --restore <dossier>   # restaure
+//   npm run backup:migration-data -- --restore <dossier>
 //
-// Voir "Restauration" plus bas pour les limites importantes (instructorPins notamment).
+// Avant tout lancement réel, vérifier que NEXT_PUBLIC_FIREBASE_PROJECT_ID (affiché ci-dessous dès
+// le chargement de la config, avant toute connexion) est bien le projet de test visé.
+//
+// Voir "Restauration" plus bas pour les limites importantes (instructorPins notamment) : pour une
+// restauration complète et fidèle (y compris instructorPins), préférer l'import Google Cloud d'un
+// export géré (`gcloud firestore import`, voir docs/audit-maintenance.md D12) — ce script n'a pas
+// les privilèges IAM nécessaires pour contourner les règles Firestore.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
@@ -37,6 +47,14 @@ function requireEnv(name) {
 }
 
 async function promptCredentials() {
+  // Si le compte est fourni par variables d'environnement (dans le terminal de l'opérateur,
+  // jamais dans un fichier ni demandé dans le chat), on les utilise sans rien afficher ni écrire.
+  const envEmail = process.env.BACKUP_ACCOUNT_EMAIL;
+  const envPassword = process.env.BACKUP_ACCOUNT_PASSWORD;
+  if (envEmail && envPassword) {
+    console.log(`Identifiants lus depuis BACKUP_ACCOUNT_EMAIL/BACKUP_ACCOUNT_PASSWORD (courriel : ${envEmail}).`);
+    return { email: envEmail, password: envPassword };
+  }
   const rl = createInterface({ input: stdin, output: stdout });
   const email = await rl.question("Courriel du compte Administrateur : ");
   rl.close();
@@ -159,6 +177,9 @@ async function main() {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   };
+  // Affiché en premier, avant toute connexion : c'est le seul champ de config qu'un opérateur
+  // doit vérifier à l'œil avant de continuer (docs/audit-maintenance.md, D12).
+  console.log(`NEXT_PUBLIC_FIREBASE_PROJECT_ID = ${firebaseConfig.projectId}`);
   if (!/(test|staging|sandbox|demo)/i.test(firebaseConfig.projectId)) {
     console.error(`Refusé : ce script ne s'exécute que contre un projet de test (projectId actuel : ${firebaseConfig.projectId}).`);
     process.exit(1);

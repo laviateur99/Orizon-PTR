@@ -62,7 +62,10 @@ export function OrganizationsAdminPanel() {
       </div>
       {report.collections.filter(item => item.errors.length).map(item => <div className="notice error" key={item.collection}><strong>{item.collection}</strong> : {item.errors.slice(0, 5).map(entry => `${entry.id} (${entry.message})`).join(" · ")}{item.errors.length > 5 ? ` … +${item.errors.length - 5}` : ""}</div>)}
       {[...report.members.errors, ...report.users.errors].length > 0 && <div className="notice error">Erreurs membres/utilisateurs : {[...report.members.errors, ...report.users.errors].slice(0, 5).map(entry => `${entry.id} (${entry.message})`).join(" · ")}</div>}
-      <p><strong>Documents restant à étiqueter : {report.remainingToTag}</strong>{report.remainingToTag === 0 && !report.dryRun ? " — la migration est complète, l’étape B (requêtes filtrées + règles strictes) peut être déployée." : ""}</p>
+      {report.members.missingUserIds.length > 0
+        ? <div className="notice error"><strong>{report.members.missingUserIds.length} utilisateur(s) sans fiche « membre » de l’école</strong> — la bascule vers les règles strictes (stage-b) les bloquerait entièrement, ne pas y passer tant que cette liste n’est pas vide : {report.members.missingUserIds.slice(0, 20).join(", ")}{report.members.missingUserIds.length > 20 ? ` … +${report.members.missingUserIds.length - 20}` : ""}</div>
+        : !report.dryRun && <div className="notice">Tous les utilisateurs ont une fiche « membre » de l’école.</div>}
+      <p><strong>Documents restant à étiqueter : {report.remainingToTag}</strong>{report.remainingToTag === 0 && !report.dryRun && !report.members.missingUserIds.length ? " — la migration est complète, l’étape B (requêtes filtrées + règles strictes) peut être déployée." : ""}</p>
       {report.staffing.map(item => <div key={item.orgId}>
         <p>Effectif <strong>{item.orgId}</strong> : {item.members} membre(s) actif(s), {item.controllers} pouvant tenir le rôle de PRM.</p>
         {item.warnings.map(warning => <div className="notice warning" key={warning}>⚠ {warning}</div>)}

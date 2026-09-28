@@ -27,7 +27,10 @@ export type StaffingReport = {
 export type MigrationReport = {
   dryRun: boolean;
   organizations: { toCreate: string[]; existing: string[] };
-  members: { scanned: number; toCreate: number; created: number; errors: { id: string; message: string }[] };
+  // missingUserIds : utilisateurs sans fiche organizations/orizon-aviation/members/{uid} à la fin de
+  // cette exécution — vide en simulation seulement si toCreate=0; après exécution, vide sauf erreur.
+  // Vérifier cette liste avant de basculer vers les règles stage-b : voir D12.
+  members: { scanned: number; toCreate: number; created: number; missingUserIds: string[]; errors: { id: string; message: string }[] };
   users: { toUpdate: number; updated: number; errors: { id: string; message: string }[] };
   collections: CollectionReport[];
   staffing: StaffingReport[];
@@ -61,14 +64,14 @@ export async function runOrganizationMigration({ dryRun }: { dryRun: boolean }):
   // 2. Membres et champs de commodité des utilisateurs
   const users = (await getDocs(collection(db, "users"))).docs;
   const existingMembers = new Set((await getDocs(collection(db, "organizations", ORG_SCHOOL_ID, "members")).catch(() => ({ docs: [] as { id: string }[] }))).docs.map(item => item.id));
-  const membersReport = { scanned: users.length, toCreate: 0, created: 0, errors: [] as { id: string; message: string }[] };
+  const membersReport = { scanned: users.length, toCreate: 0, created: 0, missingUserIds: [] as string[], errors: [] as { id: string; message: string }[] };
   const usersReport = { toUpdate: 0, updated: 0, errors: [] as { id: string; message: string }[] };
   for (const user of users) {
     const data = user.data();
     const needsMember = !existingMembers.has(user.id);
     const schoolOrgId = typeof data.schoolOrgId === "string" ? data.schoolOrgId : "";
     const needsUserFields = schoolOrgId !== ORG_SCHOOL_ID || !Array.isArray(data.orgIds) || !data.orgIds.includes(ORG_SCHOOL_ID);
-    if (needsMember) membersReport.toCreate += 1;
+    if (needsMember) { membersReport.toCreate += 1; membersReport.missingUserIds.push(user.id); }
     if (needsUserFields) usersReport.toUpdate += 1;
     if (dryRun) continue;
     if (needsMember) {
@@ -76,6 +79,8 @@ export async function runOrganizationMigration({ dryRun }: { dryRun: boolean }):
         const role: OrgRole = orgRoleForUserRole((typeof data.role === "string" ? data.role : "Étudiant") as UserRole);
         await setDoc(doc(db, "organizations", ORG_SCHOOL_ID, "members", user.id), { userId: user.id, orgId: ORG_SCHOOL_ID, role, active: data.active !== false, displayName: typeof data.name === "string" ? data.name : "", updatedAt: serverTimestamp() });
         membersReport.created += 1;
+        // Créé avec succès : retiré de la liste des manquants (posée par défaut ci-dessus).
+        membersReport.missingUserIds = membersReport.missingUserIds.filter(id => id !== user.id);
       } catch (error) { membersReport.errors.push({ id: user.id, message: message(error) }); }
     }
     if (needsUserFields) {
