@@ -15,7 +15,9 @@ export const subscribeIssuedWorkOrders = (orgId: string, next: Next<WorkOrder>, 
   onSnapshot(query(collection(db, "workOrders"), where("orgId", "==", orgId)), snap => next(snap.docs.map(item => mapWorkOrder(item.id, item.data()))), error);
 
 export const subscribeReceivedWorkOrders = (mroOrgId: string, next: Next<WorkOrder>, error: Err): Unsubscribe =>
-  onSnapshot(query(collection(db, "workOrders"), where("sharedWithOrgId", "==", mroOrgId), where("status", "in", ["transmis", "pris_en_charge", "rapport_depose", "controle_prm", "cloture"])), snap => next(snap.docs.map(item => mapWorkOrder(item.id, item.data()))), error);
+  // "annule" est inclus pour qu'un bon annulé après transmission reste visible (lecture seule) côté
+  // OMA plutôt que de disparaître silencieusement de la liste (D13).
+  onSnapshot(query(collection(db, "workOrders"), where("sharedWithOrgId", "==", mroOrgId), where("status", "in", ["transmis", "pris_en_charge", "rapport_depose", "controle_prm", "cloture", "annule"])), snap => next(snap.docs.map(item => mapWorkOrder(item.id, item.data()))), error);
 
 export const subscribeProject = (id: string, next: (value: Project | null) => void, error: Err): Unsubscribe =>
   onSnapshot(doc(db, "projects", id), snap => next(snap.exists() ? mapProject(snap.id, snap.data()) : null), error);

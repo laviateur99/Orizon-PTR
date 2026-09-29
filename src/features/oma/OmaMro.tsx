@@ -6,9 +6,10 @@ import { subscribeOrgMembers } from "@/features/organizations/firestore";
 import { TechnicianPinPanel } from "@/features/organizations/TechnicianPinPanel";
 import { LICENSE_CLASSES, type LicenseClass, type OrgMember } from "@/features/organizations/types";
 import {
-  acceptWorkOrder, addCardEntry, addWorkCard, depositReport, signWorkCard, subscribeCards, subscribeEntries, subscribeProject,
+  acceptWorkOrder, addCardEntry, addWorkCard, cancelWorkCard, depositReport, signWorkCard, subscribeCards, subscribeEntries, subscribeProject,
   subscribeReceivedWorkOrders, subscribeSignatures, updateWorkCardContent,
 } from "./firestore";
+import { cardProgress, describeOmaStep } from "./statusText";
 import { WORK_ORDER_STATUS_LABELS, type CardEntry, type CardPart, type CardSignature, type Project, type WorkCard, type WorkOrder } from "./types";
 
 const CLASS_MATCH_LABEL = { match: "correspond à la classe requise", mismatch: "ne correspond PAS à la classe requise", unspecified: "classe requise non précisée" } as const;
@@ -17,7 +18,7 @@ const errorText = (value: unknown, fallback: string) => {
   return /permission/i.test(raw) ? "Refusé par les règles de sécurité (rôle, organisation ou séparation des tâches)." : raw;
 };
 
-function CardView({ card, mroOrgId, viewerUid, isPrm, members }: { card: WorkCard; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[] }) {
+function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card: WorkCard; project: Project | null; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[] }) {
   const { profile } = useAuth();
   const actor = { uid: viewerUid, name: profile?.name || profile?.email || "" };
   const [draft, setDraft] = useState({ rectification: card.rectification, parts: card.parts, completedAirTime: card.completedAirTime?.toString() || "", completedDate: card.completedDate || "" });
@@ -25,9 +26,11 @@ function CardView({ card, mroOrgId, viewerUid, isPrm, members }: { card: WorkCar
   const [entries, setEntries] = useState<CardEntry[]>([]);
   const [pin, setPin] = useState("");
   const [entryText, setEntryText] = useState("");
+  const [cancelComments, setCancelComments] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const open = card.status === "ouvert";
+  const cancelled = card.status === "annulee";
   const canEdit = open && (card.assignedUserId === viewerUid || isPrm);
 
   useEffect(() => { setDraft({ rectification: card.rectification, parts: card.parts, completedAirTime: card.completedAirTime?.toString() || "", completedDate: card.completedDate || "" }); }, [card.rectification, card.parts, card.completedAirTime, card.completedDate]);
@@ -62,9 +65,18 @@ function CardView({ card, mroOrgId, viewerUid, isPrm, members }: { card: WorkCar
     } catch (error) { setMessage(errorText(error, "Ajout impossible.")); } finally { setBusy(false); }
   }
 
+  async function cancel() {
+    if (!project) return;
+    if (!window.confirm("Annuler cette carte ? Cette action reste visible ensuite, elle ne supprime rien.")) return;
+    setBusy(true); setMessage("");
+    try { await cancelWorkCard(project, card, actor, cancelComments); }
+    catch (error) { setMessage(errorText(error, "Annulation impossible.")); }
+    finally { setBusy(false); }
+  }
+
   const assignee = members.find(member => member.userId === card.assignedUserId);
-  return <article className={`oma-card ${open ? "open" : "closed"}`}>
-    <header><strong>ATA {card.ata || "—"} · {card.subject}</strong><span className={`badge ${open ? "warn" : "ok"}`}>{open ? "Ouverte" : "Fermée — lecture seule"}</span></header>
+  return <article className={`oma-card ${open ? "open" : cancelled ? "cancelled" : "closed"}`}>
+    <header><strong>ATA {card.ata || "—"} · {card.subject}</strong><span className={`badge ${open ? "warn" : cancelled ? "" : "ok"}`}>{open ? "Ouverte" : cancelled ? "Annulée" : "Fermée — lecture seule"}</span></header>
     <small>{card.type === "snag" ? "SNAG" : "Routine"} · Technicien : {assignee?.displayName || card.assignedUserName}{card.requiredClass ? ` · Classe requise : ${card.requiredClass}` : ""}{card.taskSnapshot ? ` · Échéance : ${card.taskSnapshot.title}` : ""}</small>
     <label>Rectification<textarea rows={3} disabled={!canEdit} value={draft.rectification} onChange={e => setDraft({ ...draft, rectification: e.target.value })} /></label>
     <div className="oma-parts">{draft.parts.map((part, index) => <div className="form-grid" key={index}>
@@ -86,6 +98,11 @@ function CardView({ card, mroOrgId, viewerUid, isPrm, members }: { card: WorkCar
       <input type="password" inputMode="numeric" maxLength={4} placeholder="NIP" className="pin-input" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} />
       <button type="button" className="button" disabled={busy || pin.length !== 4} onClick={sign}>Certifier avec le NIP</button>
     </div>}
+    {canEdit && <div className="oma-cancel">
+      <label>Motif d’annulation (optionnel)<input value={cancelComments} onChange={e => setCancelComments(e.target.value)} /></label>
+      <button type="button" className="button secondary small" disabled={busy} onClick={cancel}>Annuler cette carte (créée par erreur)</button>
+    </div>}
+    {cancelled && card.cancelled && <div className="notice">Annulée par {card.cancelled.by.name} le {new Date(card.cancelled.at).toLocaleString("fr-CA")}{card.cancelled.comments ? ` — ${card.cancelled.comments}` : ""}.</div>}
     {message && <div className="notice">{message}</div>}
 
     {signatures.length > 0 && <div className="oma-history"><strong>Historique des signatures</strong>{signatures.map(signature => <p key={signature.id}>
@@ -94,7 +111,7 @@ function CardView({ card, mroOrgId, viewerUid, isPrm, members }: { card: WorkCar
     {card.nextDue && <p className="muted">Prochaine échéance calculée : {card.nextDue.dueAirTime !== undefined ? `${card.nextDue.dueAirTime} h` : ""} {card.nextDue.dueDate || ""} {card.nextDue.basis === "aucun_intervalle" ? "(aucun intervalle : à définir par l’école)" : ""} — appliquée par le PRM de l’école à la remise en service.</p>}
 
     {entries.length > 0 && <div className="oma-history"><strong>Inscriptions ajoutées après signature</strong>{entries.map(entry => <p key={entry.id}>{entry.kind === "correction" ? "Correction" : "Note"} — {entry.createdBy.name} · {entry.createdAt ? new Date(entry.createdAt).toLocaleString("fr-CA") : ""}<br />{entry.text}</p>)}</div>}
-    {!open && <div className="oma-entry"><textarea rows={2} placeholder="Correction ou note (la carte et sa signature restent inchangées)…" value={entryText} onChange={e => setEntryText(e.target.value)} />
+    {!open && !cancelled && <div className="oma-entry"><textarea rows={2} placeholder="Correction ou note (la carte et sa signature restent inchangées)…" value={entryText} onChange={e => setEntryText(e.target.value)} />
       <button type="button" className="button secondary small" disabled={busy || !entryText.trim()} onClick={() => addEntry("correction")}>Ajouter une correction</button>
       <button type="button" className="button secondary small" disabled={busy || !entryText.trim()} onClick={() => addEntry("note")}>Ajouter une note</button></div>}
   </article>;
@@ -130,10 +147,13 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members }: { work
     catch (error) { setMessage(errorText(error, "Dépôt du rapport impossible.")); }
   }
 
+  const step = describeOmaStep(workOrder, project, cards, isPrm);
+  const progress = cardProgress(cards);
   return <div className="oma-project">
+    <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
     {message && <div className="notice error">{message}</div>}
-    {project && <p className="muted">{project.cardCount} carte(s) dont {project.openCardCount} ouverte(s).</p>}
-    {cards.map(card => <CardView key={card.id} card={card} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} />)}
+    {project && <p className="muted">{progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
+    {cards.map(card => <CardView key={card.id} card={card} project={project} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} />)}
     {isPrm && workOrder.status === "pris_en_charge" && project && <form className="form-grid oma-add-card" onSubmit={addCard}>
       <label>ATA<input required value={form.ata} onChange={e => setForm({ ...form, ata: e.target.value })} /></label>
       <label>Sujet<input required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} /></label>

@@ -8,10 +8,13 @@ import type { Aircraft, MaintenanceTask, Snag } from "@/features/fleet/types";
 import { subscribeOrganizations } from "@/features/organizations/firestore";
 import type { Organization } from "@/features/organizations/types";
 import {
-  closeWorkOrderAndReturnToService, createWorkOrder, startPrmControl, subscribeCards, subscribeIssuedWorkOrders, subscribeProject, transmitWorkOrder,
+  cancelWorkOrder, closeWorkOrderAndReturnToService, createWorkOrder, startPrmControl, subscribeCards, subscribeIssuedWorkOrders, subscribeProject, transmitWorkOrder,
 } from "./firestore";
 import { OmaMro } from "./OmaMro";
+import { cardProgress, describeSchoolStep } from "./statusText";
 import { WORK_ORDER_STATUS_LABELS, type Project, type WorkCard, type WorkOrder, type WorkOrderSource } from "./types";
+
+const CANCELLABLE_STATUSES = ["brouillon", "transmis", "pris_en_charge", "rapport_depose"] as const;
 
 const errorText = (value: unknown, fallback: string) => {
   const raw = value instanceof Error ? value.message : fallback;
@@ -25,6 +28,7 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
   const [cards, setCards] = useState<WorkCard[]>([]);
   const [comments, setComments] = useState("");
   const [airTimeAtReturn, setAirTimeAtReturn] = useState("");
+  const [cancelComments, setCancelComments] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const started = order.status !== "brouillon" && order.status !== "transmis";
@@ -38,12 +42,21 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
   }
 
   const allClosed = Boolean(project) && project!.openCardCount === 0 && cards.every(card => card.status === "ferme");
+  const step = describeSchoolStep(order, project, cards);
+  const progress = cardProgress(cards);
+  const canCancel = (CANCELLABLE_STATUSES as readonly string[]).includes(order.status) && (!project || project.signerUids.length === 0);
   return <div className="oma-project">
+    <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
     {message && <div className="notice">{message}</div>}
     {order.status === "brouillon" && <button className="button" disabled={busy} onClick={() => run(() => transmitWorkOrder(order.id), "Bon transmis à l’OMA.")}>Transmettre à l’OMA</button>}
-    {started && project && <p className="muted">Projet OMA : {project.cardCount} carte(s), {project.openCardCount} ouverte(s).</p>}
-    {cards.map(card => <p key={card.id}>{card.status === "ferme" ? "✓" : "○"} ATA {card.ata} — {card.subject} <small>({card.assignedUserName}{card.signedAt ? ` · signée ${new Date(card.signedAt).toLocaleString("fr-CA")}` : ""})</small></p>)}
+    {started && project && <p className="muted">Projet OMA : {progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
+    {cards.map(card => <p key={card.id}>{card.status === "ferme" ? "✓" : card.status === "annulee" ? "✗" : "○"} ATA {card.ata} — {card.subject} <small>({card.assignedUserName}{card.signedAt ? ` · signée ${new Date(card.signedAt).toLocaleString("fr-CA")}` : card.status === "annulee" ? " · annulée" : ""})</small></p>)}
     {order.report && <div className="notice">Rapport {order.report.reference} : {order.report.summary}</div>}
+    {canCancel && <div className="oma-cancel">
+      <label>Motif d’annulation (optionnel)<input value={cancelComments} onChange={e => setCancelComments(e.target.value)} /></label>
+      <button type="button" className="button secondary" disabled={busy} onClick={() => { if (window.confirm("Annuler ce bon de travail ? Cette action reste visible ensuite, elle ne supprime rien.")) run(() => cancelWorkOrder(order.id, actor, cancelComments), "Bon annulé."); }}>Annuler ce bon</button>
+    </div>}
+    {order.cancelled && <div className="notice">Annulé par {order.cancelled.by.name} le {new Date(order.cancelled.at).toLocaleString("fr-CA")}{order.cancelled.comments ? ` — ${order.cancelled.comments}` : ""}.</div>}
     {order.status === "rapport_depose" && <>
       <label>Commentaires du contrôle<textarea rows={2} value={comments} onChange={e => setComments(e.target.value)} /></label>
       <button className="button" disabled={busy} onClick={() => run(() => startPrmControl(order.id, actor, comments), "Contrôle PRM démarré.")}>Démarrer le contrôle PRM</button>
