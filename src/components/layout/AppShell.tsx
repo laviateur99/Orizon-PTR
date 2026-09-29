@@ -21,7 +21,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   if(!profile)return <main className="access-state"><section className="card"><h1>Compte en attente</h1><p>Votre compte existe, mais aucun rôle ne lui a encore été attribué. Communiquez avec un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
   if(profile.mustSetPassword)return <SetPasswordPage/>;
   if(!profile.active)return <main className="access-state"><section className="card"><h1>Compte suspendu</h1><p>L’accès à ce compte a été désactivé par un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
-  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:pathname.startsWith("/admin/test-feedback")?canViewTestFeedback(profile):can(pathModule(pathname));
+  // /maintenance héberge désormais aussi l'onglet OMA (D14, étape 1) : un compte n'ayant que la
+  // permission "oma" (ex. rôle global OMA) doit pouvoir y entrer, pas seulement "maintenance".
+  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:pathname.startsWith("/admin/test-feedback")?canViewTestFeedback(profile):pathname==="/maintenance"?(can("maintenance")||can("oma")):can(pathModule(pathname));
   return (
     <div className="app-shell">
       <aside className="sidebar">
