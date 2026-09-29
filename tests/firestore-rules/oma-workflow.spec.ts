@@ -335,4 +335,38 @@ describe.each<Stage>(["A", "B"])("Flux OMA (organisations/workOrders/projects/wo
       status: "annulee", cancelled: { by: { uid: "tech-a", name: "tech-a" }, at: new Date().toISOString(), comments: "Trop tard" }, updatedAt: serverTimestamp(),
     }));
   });
+
+  it("(D13) signature : refusée sur une carte encore ouverte d'un bon de travail annulé", async () => {
+    await seedScenario();
+    const woId = "wo-cancel6", cardId = `${woId}-card1`, sigId = "sig1", hash = "d".repeat(64);
+    // Le bon a été annulé alors que cette carte était encore ouverte (seul cas permis par la garde
+    // d'annulation : aucune carte du projet n'est signée).
+    await seedDoc(testEnv, `workOrders/${woId}`, {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "annule", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "T", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(),
+      cancelled: { by: { uid: "prm-a", name: "prm-a" }, at: new Date().toISOString(), comments: "" }, updatedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `projects/${woId}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, cardCount: 1, openCardCount: 1, signerUids: [],
+      lastCardId: cardId, openedBy: { uid: "tech-a", name: "tech-a" }, openedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `workCards/${cardId}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, ata: "05", subject: "Inspection", type: "routine",
+      assignedUserId: "tech-a", assignedUserName: "tech-a", status: "ouvert", rectification: "Fait", parts: [],
+      createdBy: { uid: "tech-a", name: "tech-a" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    const asTechA = testEnv.authenticatedContext("tech-a").firestore();
+    const batch = writeBatch(asTechA);
+    batch.update(doc(asTechA, "workCards", cardId), {
+      status: "ferme", signedAt: serverTimestamp(), signedBy: "tech-a", signedContentHash: hash, signatureId: sigId, updatedAt: serverTimestamp(),
+    });
+    batch.set(doc(asTechA, "workCards", cardId, "signatures", sigId), {
+      cardId, orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, signerUid: "tech-a",
+      contentHash: hash, hashAlgo: "sha256", licenseNumber: "ACA-1", classMatch: "unspecified", signedAt: serverTimestamp(),
+    });
+    batch.update(doc(asTechA, "projects", woId), {
+      openCardCount: 0, signerUids: ["tech-a"], lastClosedCardId: cardId, lastSignatureId: sigId,
+    });
+    await assertFails(batch.commit());
+  });
 });

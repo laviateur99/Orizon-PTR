@@ -771,12 +771,15 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rectification','parts','completedAirTime','completedDate','assignedUserId','assignedUserName','requiredClass','updatedAt'])
           && exists(/databases/$(database)/documents/organizations/$(resource.data.orgId)/members/$(request.resource.data.assignedUserId))))
         // Fermeture : uniquement avec la signature immuable créée dans le même commit (route serveur).
+        // Refusée si le bon de travail parent est annulé (D13) : une carte encore ouverte d'un bon
+        // annulé ne doit pas rester signable après coup.
         || (resource.data.status == 'ouvert' && request.resource.data.status == 'ferme'
           && orgMember(resource.data.orgId)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','signedAt','signedBy','signedContentHash','signatureId','nextDue','updatedAt'])
           && request.resource.data.signedBy == resource.data.assignedUserId
           && existsAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId))
-          && getAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId)).data.contentHash == request.resource.data.signedContentHash)
+          && getAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId)).data.contentHash == request.resource.data.signedContentHash
+          && get(/databases/$(database)/documents/workOrders/$(resource.data.projectId)).data.status != 'annule')
         // Annulation (D13) : uniquement depuis 'ouvert', donc jamais sur une carte signée — le
         // statut 'ouvert' garantit déjà l'absence de signature (même invariant que la fermeture).
         || (resource.data.status == 'ouvert' && request.resource.data.status == 'annulee'
