@@ -10,7 +10,12 @@ import {canManageAdministration,canViewTestFeedback,pathModule,type AppModule} f
 import { CommunicationGate } from "@/features/employees/CommunicationGate";
 import { FeedbackWidget } from "@/components/test/FeedbackWidget";
 
-const links:Array<[string,string,AppModule]>=[["/","Tableau de bord","dashboard"],["/schedule","Horaire","schedule"],["/ptr","PTR","ptr"],["/students","Étudiants","students"],["/theory","Formation théorique","theory"],["/fleet","Flotte","fleet"],["/maintenance","Maintenance","maintenance"],["/emergency","Urgence","emergency"],["/oma","OMA","oma"]];
+// Lien "OMA" retiré (D14, étape 1) : l'accès se fait par l'onglet OMA de /maintenance, ou par /oma
+// qui y redirige déjà (redirect() côté serveur, indépendant de cette liste). Un compte purement OMA
+// (permission "oma" seulement) n'aura donc plus de lien latéral visible; il est redirigé vers
+// /maintenance?tab=oma dès la connexion (effet ci-dessous), et y retombe même sans le paramètre
+// d'URL (topTab de MaintenancePage retombe sur "OMA" quand can("maintenance") est faux).
+const links:Array<[string,string,AppModule]>=[["/","Tableau de bord","dashboard"],["/schedule","Horaire","schedule"],["/ptr","PTR","ptr"],["/students","Étudiants","students"],["/theory","Formation théorique","theory"],["/fleet","Flotte","fleet"],["/maintenance","Maintenance","maintenance"],["/emergency","Urgence","emergency"]];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname=usePathname(),router=useRouter(),{user,profile,loading,can,logout}=useAuth();

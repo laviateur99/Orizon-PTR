@@ -579,14 +579,14 @@ export function MaintenancePage() {
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<MaintenanceTab>("Résumé");
-  // Onglet de premier niveau (D14, étape 1) : "Suivi" regroupe les 4 onglets existants ci-dessous,
+  // Onglet de premier niveau (D14, étape 1) : "PRM" regroupe les 4 onglets existants ci-dessous,
   // inchangés; "OMA" monte OmaPage telle quelle, sans aucun changement de son propre comportement.
   // Choisi une seule fois, à l'ouverture : profile est déjà chargé ici (AppShell ne monte cette page
   // qu'après); un compte purement OMA (permission "oma" seulement, sans "maintenance") démarre donc
-  // directement sur l'onglet OMA, pas sur "Suivi" (qu'il n'a pas le droit de voir).
-  const [topTab, setTopTab] = useState<"Suivi" | "OMA">(() => {
+  // directement sur l'onglet OMA, pas sur "PRM" (qu'il n'a pas le droit de voir).
+  const [topTab, setTopTab] = useState<"PRM" | "OMA">(() => {
     const wantsOma = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "oma";
-    return wantsOma || !can("maintenance") ? "OMA" : "Suivi";
+    return wantsOma || !can("maintenance") ? "OMA" : "PRM";
   });
   const [task, setTask] = useState<MaintenanceTask | null>(null),
     [taskReason, setTaskReason] = useState(""),
@@ -862,14 +862,14 @@ export function MaintenancePage() {
 
   return (
     <>
-      {/* Onglets de premier niveau (D14, étape 1) : "Suivi" = page Maintenance existante, inchangée
+      {/* Onglets de premier niveau (D14, étape 1) : "PRM" = page Maintenance existante, inchangée
           ci-dessous; "OMA" monte OmaPage telle quelle. "Inventaire" viendra dans une étape séparée. */}
-      <nav className="student-tabs maintenance-tabs" aria-label="Maintenance ou OMA">
-        {can("maintenance") && <button type="button" className={topTab === "Suivi" ? "active" : ""} aria-current={topTab === "Suivi" ? "page" : undefined} onClick={() => setTopTab("Suivi")}>Suivi</button>}
+      <nav className="student-tabs maintenance-tabs maintenance-top-tabs" aria-label="PRM ou OMA">
+        {can("maintenance") && <button type="button" className={topTab === "PRM" ? "active" : ""} aria-current={topTab === "PRM" ? "page" : undefined} onClick={() => setTopTab("PRM")}>PRM</button>}
         {can("oma") && <button type="button" className={topTab === "OMA" ? "active" : ""} aria-current={topTab === "OMA" ? "page" : undefined} onClick={() => setTopTab("OMA")}>OMA</button>}
       </nav>
       {topTab === "OMA" && can("oma") && <OmaPage />}
-      {topTab === "Suivi" && can("maintenance") && <>
+      {topTab === "PRM" && can("maintenance") && <>
       <PageHeader
         title="Maintenance"
         subtitle={`MCM Operational Control · Version 3.5 · PRM / DOM · Module V${MAINTENANCE_VERSION} — Air Time, échéances et immobilisations`}
