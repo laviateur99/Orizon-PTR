@@ -55,6 +55,14 @@ export const startPrmControl = (id: string, by: Actor, comments = "") =>
   updateDoc(doc(db, "workOrders", id), { status: "controle_prm", control: { by, at: new Date().toISOString(), comments }, updatedAt: serverTimestamp() });
 
 /**
+ * Annulation d'un bon de travail par l'école émettrice (D13) : refusée par les règles dès qu'une
+ * carte du projet a été signée (`projects/{id}.signerUids` non vide), quel que soit le statut.
+ * Jamais depuis `controle_prm` (le contrôle est déjà commencé) — voir docs/audit-maintenance.md, D13.
+ */
+export const cancelWorkOrder = (id: string, by: Actor, comments = "") =>
+  updateDoc(doc(db, "workOrders", id), { status: "annule", cancelled: { by, at: new Date().toISOString(), comments }, updatedAt: serverTimestamp() });
+
+/**
  * Clôture + remise en service par le PRM de l'école. Les règles exigent openCardCount == 0.
  * Applique ensuite les prochaines échéances calculées à la fermeture des cartes (choix de
  * modélisation D3 : l'OMA n'écrit jamais chez l'école) et libère l'avion s'il ne reste aucun SNAG ouvert.
@@ -127,6 +135,19 @@ export type CardContentPatch = { rectification: string; parts: CardPart[]; compl
 /** Modification du contenu d'une carte encore ouverte. Une carte signée est en lecture seule (règles). */
 export const updateWorkCardContent = (cardId: string, patch: CardContentPatch) =>
   updateDoc(doc(db, "workCards", cardId), clean({ ...patch, updatedAt: serverTimestamp() }));
+
+/**
+ * Annulation d'une carte de travail (D13) : uniquement depuis `ouvert`, donc jamais sur une carte
+ * signée (le statut 'ouvert' garantit déjà l'absence de signature — même mécanisme que la
+ * fermeture). Décrémente `openCardCount` du projet dans le même commit; `cardCount` ne change pas
+ * (la carte a existé, elle reste comptée historiquement, comme une fermeture normale).
+ */
+export async function cancelWorkCard(project: Project, card: WorkCard, by: Actor, comments = "") {
+  const batch = writeBatch(db);
+  batch.update(doc(db, "workCards", card.id), { status: "annulee", cancelled: { by, at: new Date().toISOString(), comments }, updatedAt: serverTimestamp() });
+  batch.update(doc(db, "projects", project.id), { openCardCount: project.openCardCount - 1, lastCancelledCardId: card.id });
+  await batch.commit();
+}
 
 export const depositReport = (id: string, report: { reference: string; summary: string }, by: Actor) =>
   updateDoc(doc(db, "workOrders", id), { status: "rapport_depose", report: { ...report, depositedBy: by, depositedAt: new Date().toISOString() }, updatedAt: serverTimestamp() });

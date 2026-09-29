@@ -30,6 +30,7 @@ export function mapWorkOrder(id: string, d: DocumentData): WorkOrder {
     report: d.report ? { reference: text(d.report.reference), summary: text(d.report.summary), depositedBy: actor(d.report.depositedBy), depositedAt: iso(d.report.depositedAt) } : undefined,
     control: d.control ? { by: actor(d.control.by), at: iso(d.control.at), comments: text(d.control.comments) } : undefined,
     rts: d.rts ? { by: actor(d.rts.by), at: iso(d.rts.at), comments: text(d.rts.comments), airTimeAtReturn: num(d.rts.airTimeAtReturn) } : undefined,
+    cancelled: d.cancelled ? { by: actor(d.cancelled.by), at: iso(d.cancelled.at), comments: text(d.cancelled.comments) } : undefined,
   };
 }
 
@@ -56,6 +57,7 @@ export function mapCard(id: string, d: DocumentData): WorkCard {
     completedAirTime: num(d.completedAirTime), completedDate: text(d.completedDate) || undefined,
     nextDue: nextDue ? { dueAirTime: num(nextDue.dueAirTime), dueDate: text(nextDue.dueDate) || undefined, lastCompletedAirTime: num(nextDue.lastCompletedAirTime), lastCompletedDate: text(nextDue.lastCompletedDate) || undefined, basis: text(nextDue.basis, "aucun_intervalle") as NextDue["basis"] } : undefined,
     signedAt: iso(d.signedAt) || undefined, signedBy: text(d.signedBy) || undefined, signedContentHash: text(d.signedContentHash) || undefined, signatureId: text(d.signatureId) || undefined,
+    cancelled: d.cancelled ? { by: actor(d.cancelled.by), at: iso(d.cancelled.at), comments: text(d.cancelled.comments) } : undefined,
     createdBy: actor(d.createdBy), createdAt: iso(d.createdAt), updatedAt: iso(d.updatedAt),
   };
 }

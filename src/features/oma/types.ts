@@ -1,9 +1,9 @@
 import type { LicenseClass, LicenseType } from "@/features/organizations/types";
 
-export type WorkOrderStatus = "brouillon" | "transmis" | "pris_en_charge" | "rapport_depose" | "controle_prm" | "cloture";
-export const WORK_ORDER_STATUSES: WorkOrderStatus[] = ["brouillon", "transmis", "pris_en_charge", "rapport_depose", "controle_prm", "cloture"];
+export type WorkOrderStatus = "brouillon" | "transmis" | "pris_en_charge" | "rapport_depose" | "controle_prm" | "cloture" | "annule";
+export const WORK_ORDER_STATUSES: WorkOrderStatus[] = ["brouillon", "transmis", "pris_en_charge", "rapport_depose", "controle_prm", "cloture", "annule"];
 export const WORK_ORDER_STATUS_LABELS: Record<WorkOrderStatus, string> = {
-  brouillon: "Brouillon", transmis: "Transmis à l’OMA", pris_en_charge: "Pris en charge", rapport_depose: "Rapport déposé", controle_prm: "Contrôle PRM", cloture: "Clôturé",
+  brouillon: "Brouillon", transmis: "Transmis à l’OMA", pris_en_charge: "Pris en charge", rapport_depose: "Rapport déposé", controle_prm: "Contrôle PRM", cloture: "Clôturé", annule: "Annulé",
 };
 export type WorkOrderSource = "status_board" | "snag" | "manuel";
 export type Actor = { uid: string; name: string };
@@ -32,6 +32,8 @@ export type WorkOrder = {
   report?: { reference: string; summary: string; depositedBy: Actor; depositedAt: string };
   control?: { by: Actor; at: string; comments: string };
   rts?: { by: Actor; at: string; comments: string; airTimeAtReturn?: number };
+  // Annulation (D13) : uniquement si aucune carte du projet n'a été signée; réservée à l'émetteur.
+  cancelled?: { by: Actor; at: string; comments: string };
 };
 
 export type Project = {
@@ -41,10 +43,11 @@ export type Project = {
   cardCount: number; openCardCount: number;
   signerUids: string[];        // croissant seulement : sert à la séparation des tâches
   openedBy: Actor; openedAt?: string;
+  lastCancelledCardId?: string; // dernière carte annulée (D13) : référencée par la règle de décrément (écrit, jamais relu côté client).
 };
 
 export type CardType = "routine" | "snag";
-export type CardStatus = "ouvert" | "ferme";
+export type CardStatus = "ouvert" | "ferme" | "annulee";
 export type CardPart = { partNumber: string; removedSerial: string; installedSerial: string; quantity: number };
 
 export type NextDue = {
@@ -65,6 +68,8 @@ export type WorkCard = {
   completedAirTime?: number; completedDate?: string;
   nextDue?: NextDue;
   signedAt?: string; signedBy?: string; signedContentHash?: string; signatureId?: string;
+  // Annulation (D13) : uniquement depuis 'ouvert', donc jamais sur une carte signée.
+  cancelled?: { by: Actor; at: string; comments: string };
   createdBy: Actor; createdAt?: string; updatedAt?: string;
 };
 

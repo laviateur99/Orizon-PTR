@@ -693,6 +693,14 @@ service cloud.firestore {
           && request.resource.data.rts.by.uid == request.auth.uid
           && get(/databases/$(database)/documents/projects/$(id)).data.openCardCount == 0
           && !(get(/databases/$(database)/documents/projects/$(id)).data.signerUids.hasAny([request.auth.uid])))
+        // École : annulation (D13) — jamais si une carte du projet a déjà été signée, quel que soit
+        // le statut du bon (sauf depuis controle_prm, où le contrôle est déjà commencé). Réservée à
+        // l'émetteur (école), jamais à l'OMA.
+        || (resource.data.status in ['brouillon','transmis','pris_en_charge','rapport_depose'] && request.resource.data.status == 'annule'
+          && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['status','cancelled','updatedAt'])
+          && request.resource.data.cancelled.by.uid == request.auth.uid
+          && (!exists(/databases/$(database)/documents/projects/$(id)) || get(/databases/$(database)/documents/projects/$(id)).data.signerUids.size() == 0))
       );
       allow delete: if resource.data.status == 'brouillon' && orgHasRole(resource.data.orgId, ['prm','admin']);
     }
@@ -730,6 +738,14 @@ service cloud.firestore {
             && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.projectId == id
             && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.signatureId == request.resource.data.lastSignatureId
             && request.resource.data.signerUids.hasAny([getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)/signatures/$(request.resource.data.lastSignatureId)).data.signerUid]))
+          // Annulation d'une carte (D13, jamais signée — même mécanisme que la fermeture) :
+          // openCardCount décrémenté, cardCount inchangé (la carte a existé, elle reste comptée).
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openCardCount','lastCancelledCardId'])
+            && resource.data.openCardCount > 0
+            && request.resource.data.openCardCount == resource.data.openCardCount - 1
+            && get(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.status == 'ouvert'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.status == 'annulee'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.projectId == id)
         );
       allow delete: if false;
     }
@@ -760,7 +776,14 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','signedAt','signedBy','signedContentHash','signatureId','nextDue','updatedAt'])
           && request.resource.data.signedBy == resource.data.assignedUserId
           && existsAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId))
-          && getAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId)).data.contentHash == request.resource.data.signedContentHash);
+          && getAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId)).data.contentHash == request.resource.data.signedContentHash)
+        // Annulation (D13) : uniquement depuis 'ouvert', donc jamais sur une carte signée — le
+        // statut 'ouvert' garantit déjà l'absence de signature (même invariant que la fermeture).
+        || (resource.data.status == 'ouvert' && request.resource.data.status == 'annulee'
+          && orgMember(resource.data.orgId)
+          && (resource.data.assignedUserId == request.auth.uid || orgHasRole(resource.data.orgId, ['prm','admin']))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelled','updatedAt'])
+          && request.resource.data.cancelled.by.uid == request.auth.uid);
       // Une carte signée (status 'ferme') n'est plus modifiable : aucune branche ne le permet.
       allow delete: if false;
 

@@ -2,7 +2,7 @@
 // projects, workCards, signatures, entries, technicianPins — exige orgId et l'appartenance à
 // l'organisation dans firestore.rules ET firestore.rules.stage-b : ces règles sont identiques
 // entre les deux fichiers, donc les tests sont exécutés une fois par étape via describe.each.
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
 import { doc, getDoc, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
 import { MRO_A, MRO_B, SCHOOL_A, SCHOOL_B, makeEnv, seedCommon, seedDoc, type Stage } from "./helpers";
@@ -257,5 +257,82 @@ describe.each<Stage>(["A", "B"])("Flux OMA (organisations/workOrders/projects/wo
       openCardCount: 0, signerUids: ["tech-a"], lastClosedCardId: cardId, lastSignatureId: sigId,
     });
     await assertSucceeds(batch.commit());
+  });
+
+  it("(D13) annulation d'un bon de travail : permise avant toute signature", async () => {
+    await seedScenario();
+    // Aucun projet créé (le bon n'a pas encore été pris en charge) : !exists(projects/id) est trivialement vrai.
+    await seedDoc(testEnv, "workOrders/wo-cancel1", {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "transmis", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "À annuler", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(),
+      transmittedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    const asPrmA = testEnv.authenticatedContext("prm-a").firestore();
+    await assertSucceeds(updateDoc(doc(asPrmA, "workOrders", "wo-cancel1"), {
+      status: "annule", cancelled: { by: { uid: "prm-a", name: "prm-a" }, at: new Date().toISOString(), comments: "Erreur de saisie" }, updatedAt: serverTimestamp(),
+    }));
+  });
+
+  it("(D13) annulation d'un bon de travail : refusée dès qu'une carte du projet est signée", async () => {
+    await seedScenario();
+    await seedWorkOrderWithSignedCard("wo-cancel2", "tech-a");
+    // Le bon reste à pris_en_charge (statut annulable), mais le projet a déjà une signature.
+    const asPrmA = testEnv.authenticatedContext("prm-a").firestore();
+    await assertFails(updateDoc(doc(asPrmA, "workOrders", "wo-cancel2"), {
+      status: "annule", cancelled: { by: { uid: "prm-a", name: "prm-a" }, at: new Date().toISOString(), comments: "Trop tard" }, updatedAt: serverTimestamp(),
+    }));
+  });
+
+  it("(D13) annulation d'un bon de travail : refusée à l'OMA (réservée à l'émetteur)", async () => {
+    await seedScenario();
+    await seedDoc(testEnv, "workOrders/wo-cancel3", {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "transmis", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "À annuler", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(),
+      transmittedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    const asOmaPrmA = testEnv.authenticatedContext("oma-prm-a").firestore();
+    await assertFails(updateDoc(doc(asOmaPrmA, "workOrders", "wo-cancel3"), {
+      status: "annule", cancelled: { by: { uid: "oma-prm-a", name: "oma-prm-a" }, at: new Date().toISOString(), comments: "Tentative côté OMA" }, updatedAt: serverTimestamp(),
+    }));
+  });
+
+  it("(D13) annulation d'une carte ouverte : permise, décrémente openCardCount sans changer cardCount", async () => {
+    await seedScenario();
+    const woId = "wo-cancel4", cardId = `${woId}-card1`;
+    await seedDoc(testEnv, `workOrders/${woId}`, {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "pris_en_charge", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "T", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `projects/${woId}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, cardCount: 1, openCardCount: 1, signerUids: [],
+      lastCardId: cardId, openedBy: { uid: "tech-a", name: "tech-a" }, openedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `workCards/${cardId}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, ata: "05", subject: "Inspection", type: "routine",
+      assignedUserId: "tech-a", assignedUserName: "tech-a", status: "ouvert", rectification: "", parts: [],
+      createdBy: { uid: "tech-a", name: "tech-a" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    const asTechA = testEnv.authenticatedContext("tech-a").firestore();
+    const batch = writeBatch(asTechA);
+    batch.update(doc(asTechA, "workCards", cardId), {
+      status: "annulee", cancelled: { by: { uid: "tech-a", name: "tech-a" }, at: new Date().toISOString(), comments: "Carte créée par erreur" }, updatedAt: serverTimestamp(),
+    });
+    batch.update(doc(asTechA, "projects", woId), { openCardCount: 0, lastCancelledCardId: cardId });
+    await assertSucceeds(batch.commit());
+
+    const projectAfter = await getDoc(doc(asTechA, "projects", woId));
+    expect(projectAfter.data()?.openCardCount).toBe(0);
+    expect(projectAfter.data()?.cardCount).toBe(1); // inchangé : la carte a existé, elle reste comptée.
+    const cardAfter = await getDoc(doc(asTechA, "workCards", cardId));
+    expect(cardAfter.data()?.status).toBe("annulee");
+  });
+
+  it("(D13) annulation d'une carte : refusée une fois signée (statut 'ferme')", async () => {
+    await seedScenario();
+    await seedWorkOrderWithSignedCard("wo-cancel5", "tech-a");
+    const asTechA = testEnv.authenticatedContext("tech-a").firestore();
+    await assertFails(updateDoc(doc(asTechA, "workCards", "wo-cancel5-card1"), {
+      status: "annulee", cancelled: { by: { uid: "tech-a", name: "tech-a" }, at: new Date().toISOString(), comments: "Trop tard" }, updatedAt: serverTimestamp(),
+    }));
   });
 });
