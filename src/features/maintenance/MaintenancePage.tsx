@@ -34,8 +34,8 @@ import {
 const MAINTENANCE_VERSION = "19.28.2";
 const MAINTENANCE_TABS = [
   "Résumé",
-  "Travaux PRM / DOM",
   "Échéances et calendriers",
+  "Travaux PRM / DOM",
   "Journal",
 ] as const;
 type MaintenanceTab = (typeof MAINTENANCE_TABS)[number];
