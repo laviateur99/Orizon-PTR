@@ -24,6 +24,7 @@ import { CalendarImportModal } from "./CalendarImportModal";
 import { MaintenanceWorkOrdersPanel } from "./MaintenanceWorkOrdersPanel";
 import { MaintenanceDashboard } from "./MaintenanceDashboard";
 import { OmaPage } from "@/features/oma/OmaPage";
+import { effectiveStatus, statusClass } from "./aircraftStatus";
 import {
   firestoreDateTimeToLocalInput,
   formatQuebecDateTime,
@@ -48,18 +49,6 @@ const ACTIVE_WORK_STATUSES = new Set([
   "Inspection complétée",
   "Retour en service refusé",
 ]);
-const effectiveStatus = (a: Aircraft): Aircraft["status"] =>
-  a.status === "En maintenance" &&
-  a.expectedReturnAt &&
-  Date.now() > new Date(a.expectedReturnAt).getTime()
-    ? "Retour en service retardé"
-    : a.status;
-const statusClass = (status: Aircraft["status"]) =>
-  status === "Disponible"
-    ? "ok"
-    : status === "Maintenance planifiée"
-      ? "warn"
-      : "danger";
 const taskRemaining = (task: MaintenanceTask, a: Aircraft) => {
   const values: string[] = [];
   if (task.dueAirTime !== undefined)
@@ -715,56 +704,11 @@ export function MaintenancePage() {
       ].filter((group) => group.items.length),
     [active, tasks],
   );
-  const aircraftInMaintenanceCount = useMemo(
-    () =>
-      new Set([
-        ...active
-          .filter((item) => effectiveStatus(item) === "En maintenance")
-          .map((item) => item.id),
-        ...workOrders
-          .filter((item) => ACTIVE_WORK_STATUSES.has(item.workStatus))
-          .map((item) => item.aircraftId),
-      ]).size,
-    [active, workOrders],
-  );
   const actor = {
     id: user?.uid || "",
     name: profile?.name || profile?.email || "",
     role: profile?.role || "",
   };
-  const maintenanceAlerts = useMemo(() => {
-    const aircraftMap = new Map(aircraft.map((a) => [a.id, a]));
-
-    let dueSoon = 0;
-    let overdue = 0;
-
-    tasks.forEach((task) => {
-      if (
-        task.completed ||
-        task.notApplicable ||
-        task.dueAirTime === undefined
-      ) {
-        return;
-      }
-
-      const a = aircraftMap.get(task.aircraftId);
-
-      if (!a) return;
-
-      const remaining = task.dueAirTime - (a.airTimeTotal || 0);
-
-      if (remaining <= 0) {
-        overdue++;
-      } else if (remaining <= AIR_TIME_ALERT_THRESHOLD_HOURS) {
-        dueSoon++;
-      }
-    });
-
-    return {
-      dueSoon,
-      overdue,
-    };
-  }, [tasks, aircraft]);
   function saveMaintenance() {
     if (!editing || editingSaving) return;
     setEditingError("");
@@ -891,50 +835,12 @@ export function MaintenancePage() {
         ))}
       </nav>
       <section className="maintenance-tab-panel" hidden={activeTab !== "Résumé"}>
-        <div className="fleet-kpis">
-        <div className="card">
-          <strong>{active.length}</strong>
-          <span>Avions actifs</span>
-        </div>
-
-        <div className="card">
-          <strong>
-            {active.filter((a) => effectiveStatus(a) === "Disponible").length}
-          </strong>
-          <span>Disponibles</span>
-        </div>
-
-        <div className="card">
-          <strong>{aircraftInMaintenanceCount}</strong>
-          <span>En maintenance</span>
-        </div>
-
-        <div className="card">
-          <strong>
-            {
-              active.filter(
-                (a) => effectiveStatus(a) === "Retour en service retardé",
-              ).length
-            }
-          </strong>
-          <span>Retards</span>
-        </div>
-
-        <div className="card">
-          <strong>{maintenanceAlerts.dueSoon}</strong>
-          <span>Planification ≤{AIR_TIME_ALERT_THRESHOLD_HOURS} h</span>
-        </div>
-
-        <div className="card">
-          <strong>{maintenanceAlerts.overdue}</strong>
-          <span>Échéances dépassées</span>
-        </div>
-        </div>{" "}
         {canEdit && (
           <MaintenanceDashboard
             aircraft={aircraft}
             tasks={tasks}
             workOrders={workOrders}
+            onSelectAircraft={setSelected}
           />
         )}
       </section>
