@@ -664,8 +664,11 @@ service cloud.firestore {
     function woMove(from, to) { return resource.data.status == from && request.resource.data.status == to; }
 
     match /workOrders/{id} {
+      // 'annule' inclus (D14) : la liste côté OMA (subscribeReceivedWorkOrders) le filtre aussi,
+      // pour qu'un bon annulé après transmission reste visible plutôt que de disparaître sans
+      // explication — une règle de liste doit couvrir tout ce que la requête peut retourner.
       allow read: if orgMember(resource.data.orgId)
-        || (resource.data.status in ['transmis','pris_en_charge','rapport_depose','controle_prm','cloture'] && orgMember(resource.data.sharedWithOrgId));
+        || (resource.data.status in ['transmis','pris_en_charge','rapport_depose','controle_prm','cloture','annule'] && orgMember(resource.data.sharedWithOrgId));
       allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
         && orgIsType(request.resource.data.orgId, 'school')
         && orgIsType(request.resource.data.sharedWithOrgId, 'mro')

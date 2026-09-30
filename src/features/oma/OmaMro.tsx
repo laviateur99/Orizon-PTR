@@ -185,8 +185,8 @@ export function OmaMro({ mroOrgId }: { mroOrgId: string }) {
   const isPrm = me?.role === "prm" || me?.role === "admin";
   const actor = { uid, name: profile?.name || profile?.email || "" };
 
-  useEffect(() => subscribeReceivedWorkOrders(mroOrgId, setOrders, caught => setError(caught.message)), [mroOrgId]);
-  useEffect(() => subscribeOrgMembers(mroOrgId, setMembers, caught => setError(caught.message)), [mroOrgId]);
+  useEffect(() => subscribeReceivedWorkOrders(mroOrgId, setOrders, caught => setError(errorText(caught, "Lecture des bons de travail impossible."))), [mroOrgId]);
+  useEffect(() => subscribeOrgMembers(mroOrgId, setMembers, caught => setError(errorText(caught, "Lecture des membres de l’OMA impossible."))), [mroOrgId]);
 
   async function accept(order: WorkOrder) {
     setError("");

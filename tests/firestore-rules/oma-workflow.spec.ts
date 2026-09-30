@@ -4,7 +4,7 @@
 // entre les deux fichiers, donc les tests sont exécutés une fois par étape via describe.each.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
-import { doc, getDoc, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch } from "firebase/firestore";
 import { MRO_A, MRO_B, SCHOOL_A, SCHOOL_B, makeEnv, seedCommon, seedDoc, type Stage } from "./helpers";
 
 describe.each<Stage>(["A", "B"])("Flux OMA (organisations/workOrders/projects/workCards) — étape %s", stage => {
@@ -368,5 +368,21 @@ describe.each<Stage>(["A", "B"])("Flux OMA (organisations/workOrders/projects/wo
       openCardCount: 0, signerUids: ["tech-a"], lastClosedCardId: cardId, lastSignatureId: sigId,
     });
     await assertFails(batch.commit());
+  });
+
+  it("(régression) la liste des bons reçus par l'OMA (statut incluant 'annule') ne renvoie pas permission-denied", async () => {
+    await seedScenario();
+    // Reproduit exactement la requête de subscribeReceivedWorkOrders : la règle de liste doit
+    // couvrir chaque valeur que la requête peut retourner, y compris 'annule' (D14).
+    await seedDoc(testEnv, "workOrders/wo-regression-annule", {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "annule", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "T", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(),
+      cancelled: { by: { uid: "prm-a", name: "prm-a" }, at: new Date().toISOString(), comments: "" }, updatedAt: serverTimestamp(),
+    });
+    const asTechA = testEnv.authenticatedContext("tech-a").firestore();
+    const q = query(collection(asTechA, "workOrders"),
+      where("sharedWithOrgId", "==", MRO_A),
+      where("status", "in", ["transmis", "pris_en_charge", "rapport_depose", "controle_prm", "cloture", "annule"]));
+    await assertSucceeds(getDocs(q));
   });
 });

@@ -86,7 +86,7 @@ function SchoolSide({ schoolOrgId }: { schoolOrgId: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const [form, setForm] = useState({ aircraftId: "", title: "", description: "", source: "status_board" as WorkOrderSource, snagId: "", taskIds: [] as string[], sharedWithOrgId: "" });
 
-  useEffect(() => subscribeIssuedWorkOrders(schoolOrgId, setOrders, caught => setError(caught.message)), [schoolOrgId]);
+  useEffect(() => subscribeIssuedWorkOrders(schoolOrgId, setOrders, caught => setError(errorText(caught, "Lecture des bons de travail impossible."))), [schoolOrgId]);
   useEffect(() => subscribeOrganizations(setOrgs, () => setOrgs([])), []);
   useEffect(() => subscribeAircraft({ next: setAircraft, error: () => setAircraft([]) }), []);
   useEffect(() => subscribeMaintenanceTasks({ next: setTasks, error: () => setTasks([]) }), []);
