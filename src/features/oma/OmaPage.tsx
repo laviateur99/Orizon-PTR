@@ -30,6 +30,7 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
   const [airTimeAtReturn, setAirTimeAtReturn] = useState("");
   const [cancelComments, setCancelComments] = useState("");
   const [message, setMessage] = useState("");
+  const [messageError, setMessageError] = useState(false);
   const [busy, setBusy] = useState(false);
   const started = order.status !== "brouillon" && order.status !== "transmis";
 
@@ -37,8 +38,8 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
   useEffect(() => started ? subscribeCards("school", schoolOrgId, order.id, setCards, () => setCards([])) : undefined, [order.id, schoolOrgId, started]);
 
   async function run(action: () => Promise<unknown>, done: string) {
-    setBusy(true); setMessage("");
-    try { await action(); setMessage(done); } catch (error) { setMessage(errorText(error, "Action impossible.")); } finally { setBusy(false); }
+    setBusy(true); setMessage(""); setMessageError(false);
+    try { await action(); if (done) setMessage(done); } catch (error) { setMessage(errorText(error, "Action impossible.")); setMessageError(true); } finally { setBusy(false); }
   }
 
   const allClosed = Boolean(project) && project!.openCardCount === 0 && cards.every(card => card.status === "ferme");
@@ -47,7 +48,7 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
   const canCancel = (CANCELLABLE_STATUSES as readonly string[]).includes(order.status) && (!project || project.signerUids.length === 0);
   return <div className="oma-project">
     <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
-    {message && <div className="notice">{message}</div>}
+    {message && <div className={`notice ${messageError ? "error" : ""}`}>{message}</div>}
     {order.status === "brouillon" && <button className="button" disabled={busy} onClick={() => run(() => transmitWorkOrder(order.id), "Bon transmis à l’OMA.")}>Transmettre à l’OMA</button>}
     {started && project && <p className="muted">Projet OMA : {progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
     {cards.map(card => <p key={card.id}>{card.status === "ferme" ? "✓" : card.status === "annulee" ? "✗" : "○"} ATA {card.ata} — {card.subject} <small>({card.assignedUserName}{card.signedAt ? ` · signée ${new Date(card.signedAt).toLocaleString("fr-CA")}` : card.status === "annulee" ? " · annulée" : ""})</small></p>)}

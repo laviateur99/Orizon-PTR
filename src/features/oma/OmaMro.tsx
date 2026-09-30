@@ -28,6 +28,7 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
   const [entryText, setEntryText] = useState("");
   const [cancelComments, setCancelComments] = useState("");
   const [message, setMessage] = useState("");
+  const [messageError, setMessageError] = useState(false);
   const [busy, setBusy] = useState(false);
   const open = card.status === "ouvert";
   const cancelled = card.status === "annulee";
@@ -40,37 +41,37 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
   const setPart = (index: number, patch: Partial<CardPart>) => setDraft(current => ({ ...current, parts: current.parts.map((part, i) => i === index ? { ...part, ...patch } : part) }));
 
   async function save() {
-    setBusy(true); setMessage("");
+    setBusy(true); setMessage(""); setMessageError(false);
     try {
       await updateWorkCardContent(card.id, { rectification: draft.rectification, parts: draft.parts, completedAirTime: draft.completedAirTime ? Number(draft.completedAirTime) : undefined, completedDate: draft.completedDate || undefined });
       setMessage("Carte enregistrée.");
-    } catch (error) { setMessage(errorText(error, "Enregistrement impossible.")); } finally { setBusy(false); }
+    } catch (error) { setMessage(errorText(error, "Enregistrement impossible.")); setMessageError(true); } finally { setBusy(false); }
   }
 
   async function sign() {
-    setBusy(true); setMessage("");
+    setBusy(true); setMessage(""); setMessageError(false);
     try {
       const result = await signWorkCard(card.id, pin);
       setPin("");
       setMessage(`Carte certifiée — classe du technicien : ${CLASS_MATCH_LABEL[result.classMatch]}.`);
-    } catch (error) { setMessage(errorText(error, "Certification impossible.")); setPin(""); } finally { setBusy(false); }
+    } catch (error) { setMessage(errorText(error, "Certification impossible.")); setMessageError(true); setPin(""); } finally { setBusy(false); }
   }
 
   async function addEntry(kind: CardEntry["kind"]) {
     if (!entryText.trim()) return;
-    setBusy(true); setMessage("");
+    setBusy(true); setMessage(""); setMessageError(false);
     try {
       await addCardEntry(card, { kind, text: entryText.trim(), supersedesSignatureId: kind === "correction" ? signatures[0]?.id : undefined }, actor);
       setEntryText("");
-    } catch (error) { setMessage(errorText(error, "Ajout impossible.")); } finally { setBusy(false); }
+    } catch (error) { setMessage(errorText(error, "Ajout impossible.")); setMessageError(true); } finally { setBusy(false); }
   }
 
   async function cancel() {
     if (!project) return;
     if (!window.confirm("Annuler cette carte ? Cette action reste visible ensuite, elle ne supprime rien.")) return;
-    setBusy(true); setMessage("");
+    setBusy(true); setMessage(""); setMessageError(false);
     try { await cancelWorkCard(project, card, actor, cancelComments); }
-    catch (error) { setMessage(errorText(error, "Annulation impossible.")); }
+    catch (error) { setMessage(errorText(error, "Annulation impossible.")); setMessageError(true); }
     finally { setBusy(false); }
   }
 
@@ -103,7 +104,7 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
       <button type="button" className="button secondary small" disabled={busy} onClick={cancel}>Annuler cette carte (créée par erreur)</button>
     </div>}
     {cancelled && card.cancelled && <div className="notice">Annulée par {card.cancelled.by.name} le {new Date(card.cancelled.at).toLocaleString("fr-CA")}{card.cancelled.comments ? ` — ${card.cancelled.comments}` : ""}.</div>}
-    {message && <div className="notice">{message}</div>}
+    {message && <div className={`notice ${messageError ? "error" : ""}`}>{message}</div>}
 
     {signatures.length > 0 && <div className="oma-history"><strong>Historique des signatures</strong>{signatures.map(signature => <p key={signature.id}>
       ✓ {signature.signerName} — {signature.licenseType} {signature.licenseNumber}{signature.licenseClass ? ` (${signature.licenseClass})` : ""} · {signature.signedAt ? new Date(signature.signedAt).toLocaleString("fr-CA") : ""}<br />
