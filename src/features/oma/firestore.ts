@@ -76,6 +76,18 @@ export async function closeWorkOrderAndReturnToService(workOrder: WorkOrder, car
     .docs.filter(item => item.data().status !== "Fermé" && item.id !== workOrder.snagId);
   const batch = writeBatch(db);
   batch.update(doc(db, "workOrders", workOrder.id), { status: "cloture", rts: clean({ by, at: new Date().toISOString(), comments, airTimeAtReturn }), updatedAt: serverTimestamp() });
+  // Ferme le SNAG lié (même logique que l'ancien système, writeMaintenanceWorkOrder/snagStatusForWorkOrder,
+  // qui ne tenait pas ce document à jour côté OMA jusqu'ici — carte 2/5 du plan D14).
+  if (workOrder.snagId) {
+    batch.update(doc(db, "snags", workOrder.snagId), clean({
+      status: "Fermé", resolvedByWorkOrderId: workOrder.id, returnedToServiceBy: by.name, returnedToServiceAt: new Date(), updatedAt: new Date().toISOString(),
+    }));
+    batch.set(doc(collection(db, "snagHistory")), {
+      action: "Fermeture par retour en service OMA", snagId: workOrder.snagId,
+      aircraftId: workOrder.aircraftId, aircraftRegistration: workOrder.aircraftRegistration,
+      actor: by.name, reason: comments || `Clôturé via le bon de travail OMA ${workOrder.id}`, createdAt: new Date().toISOString(),
+    });
+  }
   for (const card of cards) {
     if (!card.taskSnapshot?.taskId || !card.nextDue) continue;
     const patch: Record<string, unknown> = { completed: false };

@@ -88,6 +88,13 @@ function SchoolSide({ schoolOrgId }: { schoolOrgId: string }) {
   const [form, setForm] = useState({ aircraftId: "", title: "", description: "", source: "status_board" as WorkOrderSource, snagId: "", taskIds: [] as string[], sharedWithOrgId: "" });
 
   useEffect(() => subscribeIssuedWorkOrders(schoolOrgId, setOrders, caught => setError(errorText(caught, "Lecture des bons de travail impossible."))), [schoolOrgId]);
+  // Ouvre automatiquement le bon désigné par ?openOrderId= (ex. juste après une création TEA
+  // depuis MaintenanceWorkOrdersPanel, D14 étape 2) dès qu'il apparaît dans la liste.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("openOrderId");
+    if (id && orders.some(order => order.id === id)) setOpen(id);
+  }, [orders]);
   useEffect(() => subscribeOrganizations(setOrgs, () => setOrgs([])), []);
   useEffect(() => subscribeAircraft({ next: setAircraft, error: () => setAircraft([]) }), []);
   useEffect(() => subscribeMaintenanceTasks({ next: setTasks, error: () => setTasks([]) }), []);
