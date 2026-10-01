@@ -42,7 +42,7 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
     try { await action(); if (done) setMessage(done); } catch (error) { setMessage(errorText(error, "Action impossible.")); setMessageError(true); } finally { setBusy(false); }
   }
 
-  const allClosed = Boolean(project) && project!.openCardCount === 0 && cards.every(card => card.status === "ferme");
+  const allClosed = Boolean(project) && project!.openCardCount === 0 && cards.every(card => card.status === "ferme" || card.status === "annulee");
   const step = describeSchoolStep(order, project, cards);
   const progress = cardProgress(cards);
   const canCancel = (CANCELLABLE_STATUSES as readonly string[]).includes(order.status) && (!project || project.signerUids.length === 0);

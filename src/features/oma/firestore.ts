@@ -70,7 +70,7 @@ export const cancelWorkOrder = (id: string, by: Actor, comments = "") =>
  * modélisation D3 : l'OMA n'écrit jamais chez l'école) et libère l'avion s'il ne reste aucun SNAG ouvert.
  */
 export async function closeWorkOrderAndReturnToService(workOrder: WorkOrder, cards: WorkCard[], by: Actor, comments: string, airTimeAtReturn?: number) {
-  if (cards.some(card => card.status !== "ouvert" && card.status !== "ferme")) throw new Error("État de carte inconnu.");
+  if (cards.some(card => card.status !== "ouvert" && card.status !== "ferme" && card.status !== "annulee")) throw new Error("État de carte inconnu.");
   if (cards.some(card => card.status === "ouvert")) throw new Error("Toutes les cartes du projet doivent être fermées avant la remise en service.");
   const openSnags = (await getDocs(query(collection(db, "snags"), where("aircraftId", "==", workOrder.aircraftId), where("orgId", "==", workOrder.orgId))))
     .docs.filter(item => item.data().status !== "Fermé" && item.id !== workOrder.snagId);

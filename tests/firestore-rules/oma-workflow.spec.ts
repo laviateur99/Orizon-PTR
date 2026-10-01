@@ -336,6 +336,45 @@ describe.each<Stage>(["A", "B"])("Flux OMA (organisations/workOrders/projects/wo
     }));
   });
 
+  it("(régression) clôture : acceptée avec un mélange carte fermée + carte annulée (openCardCount == 0)", async () => {
+    await seedScenario();
+    const woId = "wo-cancel6", cardFermee = `${woId}-card1`, cardAnnulee = `${woId}-card2`;
+    await seedDoc(testEnv, `workOrders/${woId}`, {
+      orgId: SCHOOL_A, sharedWithOrgId: MRO_A, status: "controle_prm", aircraftId: "AC1", aircraftRegistration: "C-ABC",
+      title: "T", description: "", tasks: [], createdBy: { uid: "prm-a", name: "prm-a" }, createdAt: serverTimestamp(),
+      report: { summary: "Fait", depositedBy: { uid: "tech-a", name: "tech-a" } },
+      control: { by: { uid: "prm-a-2", name: "prm-a-2" } }, updatedAt: serverTimestamp(),
+    });
+    // openCardCount == 0 : une carte fermée (signée par tech-a) et une carte annulée (jamais signée) —
+    // la règle de clôture ne vérifie que ce compteur, jamais le statut individuel des cartes.
+    await seedDoc(testEnv, `projects/${woId}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, cardCount: 2, openCardCount: 0, signerUids: ["tech-a"],
+      lastCardId: cardAnnulee, lastClosedCardId: cardFermee, lastSignatureId: "sig1", lastCancelledCardId: cardAnnulee,
+      openedBy: { uid: "tech-a", name: "tech-a" }, openedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `workCards/${cardFermee}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, ata: "05", subject: "Inspection 100h", type: "routine",
+      assignedUserId: "tech-a", assignedUserName: "tech-a", status: "ferme", rectification: "Fait", parts: [],
+      createdBy: { uid: "tech-a", name: "tech-a" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      signedAt: serverTimestamp(), signedBy: "tech-a", signedContentHash: "a".repeat(64), signatureId: "sig1",
+    });
+    await seedDoc(testEnv, `workCards/${cardFermee}/signatures/sig1`, {
+      cardId: cardFermee, orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, signerUid: "tech-a",
+      contentHash: "a".repeat(64), hashAlgo: "sha256", licenseNumber: "ACA-1", classMatch: "unspecified", signedAt: serverTimestamp(),
+    });
+    await seedDoc(testEnv, `workCards/${cardAnnulee}`, {
+      orgId: MRO_A, workOrderOrgId: SCHOOL_A, projectId: woId, ata: "22", subject: "Radio", type: "routine",
+      assignedUserId: "tech-a-2", assignedUserName: "tech-a-2", status: "annulee", rectification: "", parts: [],
+      createdBy: { uid: "tech-a-2", name: "tech-a-2" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      cancelled: { by: { uid: "tech-a-2", name: "tech-a-2" }, at: new Date().toISOString(), comments: "Carte créée par erreur" },
+    });
+    // prm-a n'a signé aucune carte de ce projet (seul tech-a l'a fait) : séparation des tâches respectée.
+    const asPrmA = testEnv.authenticatedContext("prm-a").firestore();
+    await assertSucceeds(updateDoc(doc(asPrmA, "workOrders", woId), {
+      status: "cloture", rts: { by: { uid: "prm-a", name: "prm-a" } }, updatedAt: serverTimestamp(),
+    }));
+  });
+
   it("(D13) signature : refusée sur une carte encore ouverte d'un bon de travail annulé", async () => {
     await seedScenario();
     const woId = "wo-cancel6", cardId = `${woId}-card1`, sigId = "sig1", hash = "d".repeat(64);
