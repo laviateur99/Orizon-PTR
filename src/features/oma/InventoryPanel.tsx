@@ -12,6 +12,8 @@ import type { AircraftComponent, InventoryAction, InventoryHistory, InventoryIte
 const EMPTY_FORM: InventoryInput = { partNumber: "", description: "", serialNumber: "", quantity: 1, location: "" };
 const ACTIONS: InventoryAction[] = ["Création", "Modification", "Suppression", "Installée sur avion"];
 type StockFilter = "all" | "available" | "empty" | "installed";
+type InventorySection = "stock" | "mouvements" | "composantes";
+const SCROLL_BOX = { maxHeight: 480, overflowY: "auto" } as const;
 
 const errorText = (value: unknown, fallback: string) => {
   const raw = value instanceof Error ? value.message : fallback;
@@ -73,6 +75,7 @@ export function InventoryPanel() {
   const [busy, setBusy] = useState(false);
   const [importRows, setImportRows] = useState<InventoryImportRow[] | null>(null);
   const [importError, setImportError] = useState("");
+  const [section, setSection] = useState<InventorySection>("stock");
   // Recherche et filtres : stock
   const [stockText, setStockText] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
@@ -215,6 +218,13 @@ export function InventoryPanel() {
       {importRows && <button className="button" disabled={busy || importNew === 0} onClick={runImport}>Importer {importNew} pièce(s)</button>}
     </details>}
 
+    <div className="form-grid">
+      <label>Section à afficher<select value={section} onChange={e => setSection(e.target.value as InventorySection)}>
+        <option value="stock">Stock ({items.length})</option><option value="mouvements">Mouvements de stock ({movements.length})</option><option value="composantes">Composantes installées sur les avions ({components.length})</option>
+      </select></label>
+    </div>
+
+    {section === "stock" && <>
     <h3>Stock</h3>
     <div className="form-grid">
       <label>Rechercher (N° de pièce, description, S/N, emplacement, carte)<input value={stockText} onChange={e => setStockText(e.target.value)} placeholder="ex. 12345 ou C152" /></label>
@@ -225,7 +235,7 @@ export function InventoryPanel() {
     </div>
     <p className="muted">{filteredItems.length} pièce(s) sur {items.length}.</p>
     {items.length === 0 && <p>Aucune pièce en inventaire.</p>}
-    {filteredItems.length > 0 && <div className="table-scroll"><table className="table">
+    {filteredItems.length > 0 && <div className="table-scroll" style={SCROLL_BOX}><table className="table">
       <thead><tr><th>N° de pièce</th><th>Description</th><th>S/N</th><th>Quantité</th><th>Emplacement</th><th>Statut</th>{canWrite && <th />}</tr></thead>
       <tbody>{filteredItems.map(item => <Fragment key={item.id}>
         <tr>
@@ -242,6 +252,9 @@ export function InventoryPanel() {
       </Fragment>)}</tbody>
     </table></div>}
 
+    </>}
+
+    {section === "mouvements" && <>
     <h3>Mouvements de stock</h3>
     <div className="form-grid">
       <label>Rechercher (pièce, S/N, avion, carte, personne)<input value={moveText} onChange={e => setMoveText(e.target.value)} /></label>
@@ -256,7 +269,7 @@ export function InventoryPanel() {
         ...filteredMovements.map(line => [dateText(line.createdAt), line.action, line.partNumber, line.serialNumber, line.quantityBefore, line.quantityChange, line.quantityAfter, line.aircraftRegistration || "", line.cardId || "", line.actor.name]),
       ])}>Exporter en CSV</button>
     </div>
-    {filteredMovements.length > 0 && <div className="table-scroll"><table className="table">
+    {filteredMovements.length > 0 && <div className="table-scroll" style={SCROLL_BOX}><table className="table">
       <thead><tr><th>Date</th><th>Action</th><th>N° de pièce</th><th>S/N</th><th>Qté avant</th><th>Variation</th><th>Qté après</th><th>Avion / carte</th><th>Par</th></tr></thead>
       <tbody>{filteredMovements.map(line => <tr key={line.id}>
         <td>{dateText(line.createdAt)}</td><td>{line.action}</td><td>{line.partNumber}</td><td>{line.serialNumber || "—"}</td>
@@ -265,18 +278,22 @@ export function InventoryPanel() {
       </tr>)}</tbody>
     </table></div>}
 
+    </>}
+
+    {section === "composantes" && <>
     <h3>Composantes installées sur les avions</h3>
     <div className="form-grid">
       <label>Rechercher (pièce, S/N, carte, personne)<input value={compText} onChange={e => setCompText(e.target.value)} /></label>
       <label>Avion<select value={compAircraft} onChange={e => setCompAircraft(e.target.value)}><option value="">Tous</option>{aircraftList.map(registration => <option key={registration} value={registration}>{registration}</option>)}</select></label>
     </div>
     {filteredComponents.length === 0 && <p>Aucune composante ne correspond. Les composantes apparaissent à la certification d’une carte OMA.</p>}
-    {filteredComponents.length > 0 && <div className="table-scroll"><table className="table">
+    {filteredComponents.length > 0 && <div className="table-scroll" style={SCROLL_BOX}><table className="table">
       <thead><tr><th>Avion</th><th>Installée le</th><th>N° de pièce</th><th>S/N</th><th>Quantité</th><th>Carte</th><th>Installée par</th></tr></thead>
       <tbody>{filteredComponents.map(component => <tr key={component.id}>
         <td>{component.aircraftRegistration}</td><td>{dateText(component.installedAt)}</td><td>{component.partNumber}</td><td>{component.serialNumber || "—"}</td>
         <td>{component.quantity}</td><td>{component.cardId}</td><td>{component.installedBy.name || "—"}</td>
       </tr>)}</tbody>
     </table></div>}
+    </>}
   </section>;
 }
