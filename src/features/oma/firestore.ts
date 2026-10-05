@@ -1,11 +1,11 @@
 import {
-  addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch,
+  addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch,
   type FirestoreError, type Unsubscribe,
 } from "firebase/firestore";
 import { auth, db } from "@/services/firebase/client";
-import type { Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryItem, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource } from "./types";
+import type { Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryAction, InventoryHistory, InventoryItem, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource } from "./types";
 import type { LicenseClass } from "@/features/organizations/types";
-import { mapAircraftComponent, mapCard, mapEntry, mapInventoryItem, mapProject, mapSignature, mapWorkOrder } from "./mappers";
+import { mapAircraftComponent, mapCard, mapEntry, mapInventoryHistory, mapInventoryItem, mapProject, mapSignature, mapWorkOrder } from "./mappers";
 
 type Next<T> = (items: T[]) => void;
 type Err = (error: FirestoreError) => void;
@@ -35,6 +35,14 @@ export const subscribeEntries = (side: "mro" | "school", orgId: string, cardId: 
 /** Inventaire côté école (propriétaire) ou côté OMA (pièces partagées avec elle). */
 export const subscribeInventory = (side: "school" | "mro", orgId: string, next: Next<InventoryItem>, error: Err): Unsubscribe =>
   onSnapshot(query(collection(db, "inventoryItems"), where(side === "school" ? "orgId" : "sharedWithOrgId", "==", orgId)), snap => next(snap.docs.map(item => mapInventoryItem(item.id, item.data()))), error);
+
+/** Journal des mouvements de stock d'un côté (école ou OMA), filtré par organisation. */
+export const subscribeInventoryHistory = (side: "school" | "mro", orgId: string, next: Next<InventoryHistory>, error: Err): Unsubscribe =>
+  onSnapshot(query(collection(db, "inventoryHistory"), where(side === "school" ? "orgId" : "sharedWithOrgId", "==", orgId)), snap => next(snap.docs.map(item => mapInventoryHistory(item.id, item.data()))), error);
+
+/** Mouvements d'une seule pièce (historique de la fiche). */
+export const subscribeItemHistory = (orgId: string, itemId: string, next: Next<InventoryHistory>, error: Err): Unsubscribe =>
+  onSnapshot(query(collection(db, "inventoryHistory"), where("orgId", "==", orgId), where("itemId", "==", itemId)), snap => next(snap.docs.map(item => mapInventoryHistory(item.id, item.data()))), error);
 
 /** Composantes installées par l'OMA sur les avions de l'école. */
 export const subscribeAircraftComponents = (schoolOrgId: string, next: Next<AircraftComponent>, error: Err): Unsubscribe =>
@@ -119,16 +127,36 @@ export async function closeWorkOrderAndReturnToService(workOrder: WorkOrder, car
 
 export type InventoryInput = { partNumber: string; description: string; serialNumber: string; quantity: number; location: string };
 
-/** Ajout d'une pièce à l'inventaire de l'école, partagé avec l'OMA indiquée. */
-export const createInventoryItem = (orgId: string, sharedWithOrgId: string, input: InventoryInput, by: Actor) =>
-  addDoc(collection(db, "inventoryItems"), { ...input, orgId, sharedWithOrgId, createdBy: by, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+/** Ligne du journal côté école : chaque création, modification ou suppression passe par ici, dans le même batch. */
+function historyLine(item: { id: string; orgId: string; sharedWithOrgId: string; partNumber: string; serialNumber: string }, action: InventoryAction, quantityBefore: number, quantityAfter: number, by: Actor) {
+  return { orgId: item.orgId, sharedWithOrgId: item.sharedWithOrgId, itemId: item.id, partNumber: item.partNumber, serialNumber: item.serialNumber, action, quantityBefore, quantityAfter, quantityChange: quantityAfter - quantityBefore, actor: by, createdAt: serverTimestamp() };
+}
 
-/** Correction manuelle (stock, description, emplacement). Le partage et l'historique de pose ne changent pas. */
-export const updateInventoryItem = (id: string, input: InventoryInput) =>
-  updateDoc(doc(db, "inventoryItems", id), { ...input, updatedAt: serverTimestamp() });
+/** Ajout d'une pièce à l'inventaire de l'école, partagé avec l'OMA indiquée (fiche + journal, un seul commit). */
+export async function createInventoryItem(orgId: string, sharedWithOrgId: string, input: InventoryInput, by: Actor): Promise<string> {
+  const ref = doc(collection(db, "inventoryItems"));
+  const batch = writeBatch(db);
+  batch.set(ref, { ...input, orgId, sharedWithOrgId, createdBy: by, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  batch.set(doc(collection(db, "inventoryHistory")), historyLine({ id: ref.id, orgId, sharedWithOrgId, partNumber: input.partNumber, serialNumber: input.serialNumber }, "Création", 0, input.quantity, by));
+  await batch.commit();
+  return ref.id;
+}
+
+/** Correction de la fiche et du stock. Le partage et la traçabilité de pose ne changent pas. */
+export async function updateInventoryItem(item: InventoryItem, input: InventoryInput, by: Actor) {
+  const batch = writeBatch(db);
+  batch.update(doc(db, "inventoryItems", item.id), { ...input, updatedAt: serverTimestamp() });
+  batch.set(doc(collection(db, "inventoryHistory")), historyLine({ ...item, partNumber: input.partNumber, serialNumber: input.serialNumber }, "Modification", item.quantity, input.quantity, by));
+  await batch.commit();
+}
 
 /** Suppression refusée par les règles si la pièce a déjà été installée (traçabilité). */
-export const deleteInventoryItem = (id: string) => deleteDoc(doc(db, "inventoryItems", id));
+export async function deleteInventoryItem(item: InventoryItem, by: Actor) {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, "inventoryItems", item.id));
+  batch.set(doc(collection(db, "inventoryHistory")), historyLine(item, "Suppression", item.quantity, 0, by));
+  await batch.commit();
+}
 
 // ---------- OMA (destinataire) ----------
 

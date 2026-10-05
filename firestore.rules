@@ -866,6 +866,27 @@ service cloud.firestore {
       allow delete: if orgHasRole(resource.data.orgId, ['prm','admin']) && !resource.data.keys().hasAny(['lastInstalledCardId']);
     }
 
+    // Journal des mouvements de stock (D15) : création seulement. Chaque ligne doit correspondre à la
+    // quantité écrite dans le même commit (ou à la suppression de la fiche). École : gestion du stock;
+    // OMA : seulement l'installation d'une pièce sur une carte fermée dans le même commit.
+    match /inventoryHistory/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.sharedWithOrgId);
+      allow create: if request.resource.data.itemId is string
+        && request.resource.data.quantityBefore is int && request.resource.data.quantityAfter is int
+        && request.resource.data.quantityAfter >= 0
+        && request.resource.data.quantityChange == request.resource.data.quantityAfter - request.resource.data.quantityBefore
+        && (!existsAfter(/databases/$(database)/documents/inventoryItems/$(request.resource.data.itemId))
+          || getAfter(/databases/$(database)/documents/inventoryItems/$(request.resource.data.itemId)).data.quantity == request.resource.data.quantityAfter)
+        && ((orgHasRole(request.resource.data.orgId, ['prm','admin'])
+            && request.resource.data.action in ['Création','Modification','Suppression']
+            && request.resource.data.actor.uid == request.auth.uid)
+          || (orgMember(request.resource.data.sharedWithOrgId)
+            && request.resource.data.action == 'Installée sur avion'
+            && request.resource.data.quantityChange < 0
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.status == 'ferme'));
+      allow update, delete: if false;
+    }
+
     // Composantes installées sur les avions (D15) : création seulement, dans le commit de certification
     // (carte passée à 'ferme' avec la même organisation et le même bon). Jamais modifiées ni supprimées.
     match /aircraftComponents/{id} {

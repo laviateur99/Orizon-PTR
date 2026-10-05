@@ -120,3 +120,18 @@ export type CardEntry = {
   kind: "correction" | "note"; text: string; supersedesSignatureId?: string;
   createdBy: Actor; createdAt?: string;
 };
+
+/**
+ * Journal append-only des mouvements de stock. Écrit dans le même commit que le changement de quantité
+ * (client pour l'école, route de certification pour l'OMA); jamais modifié ni supprimé.
+ */
+export type InventoryAction = "Création" | "Modification" | "Suppression" | "Installée sur avion";
+export type InventoryHistory = {
+  id: string;
+  orgId: string; sharedWithOrgId: string;
+  itemId: string; partNumber: string; serialNumber: string;
+  action: InventoryAction;
+  quantityBefore: number; quantityAfter: number; quantityChange: number;
+  aircraftRegistration?: string; cardId?: string;
+  actor: Actor; createdAt?: string;
+};

@@ -1,6 +1,6 @@
 import type { DocumentData } from "firebase/firestore";
 import type {
-  Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryItem, NextDue, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource, WorkOrderStatus,
+  Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryHistory, InventoryItem, NextDue, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource, WorkOrderStatus,
 } from "./types";
 import type { LicenseClass } from "@/features/organizations/types";
 
@@ -90,4 +90,13 @@ export const mapAircraftComponent = (id: string, d: DocumentData): AircraftCompo
   partNumber: text(d.partNumber), description: text(d.description), serialNumber: text(d.serialNumber), quantity: num(d.quantity) ?? 1,
   cardId: text(d.cardId), workOrderId: text(d.workOrderId), inventoryItemId: text(d.inventoryItemId) || undefined,
   installedBy: actor(d.installedBy), installedAt: iso(d.installedAt) || undefined,
+});
+
+export const mapInventoryHistory = (id: string, d: DocumentData): InventoryHistory => ({
+  id, orgId: text(d.orgId), sharedWithOrgId: text(d.sharedWithOrgId),
+  itemId: text(d.itemId), partNumber: text(d.partNumber), serialNumber: text(d.serialNumber),
+  action: text(d.action, "Modification") as InventoryHistory["action"],
+  quantityBefore: num(d.quantityBefore) ?? 0, quantityAfter: num(d.quantityAfter) ?? 0, quantityChange: num(d.quantityChange) ?? 0,
+  aircraftRegistration: text(d.aircraftRegistration) || undefined, cardId: text(d.cardId) || undefined,
+  actor: actor(d.actor), createdAt: iso(d.createdAt) || undefined,
 });

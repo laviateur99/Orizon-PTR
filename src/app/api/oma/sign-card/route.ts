@@ -147,6 +147,20 @@ export async function POST(request: Request) {
           updateTransforms: [{ fieldPath: "updatedAt", setToServerValue: "REQUEST_TIME" }],
           currentDocument: { updateTime: stock.get(id)!.updateTime },
         })),
+        // Journal : une ligne par pièce d'inventaire consommée, dans le même commit que le décrément.
+        ...[...consumed].map(([id, quantity]) => {
+          const line = stock.get(id)!;
+          const after = line.item.quantity - quantity;
+          return {
+            update: { name: `${base}/inventoryHistory/${crypto.randomUUID()}`, fields: encodeFields({
+              orgId: line.item.orgId, sharedWithOrgId: card.orgId, itemId: id, partNumber: line.item.partNumber, serialNumber: line.item.serialNumber,
+              action: "Installée sur avion", quantityBefore: line.item.quantity, quantityAfter: after, quantityChange: -quantity,
+              aircraftRegistration: order.aircraftRegistration, cardId, actor: { uid: card.assignedUserId, name: signerName },
+            }) },
+            updateTransforms: [{ fieldPath: "createdAt", setToServerValue: "REQUEST_TIME" }],
+            currentDocument: { exists: false },
+          };
+        }),
         // Composantes installées sur l'avion : une par ligne de pièce, création seulement.
         ...installed.map(part => ({
           update: { name: `${base}/aircraftComponents/${crypto.randomUUID()}`, fields: encodeFields({
