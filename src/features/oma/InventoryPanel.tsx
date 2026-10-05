@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { subscribeOrganizations } from "@/features/organizations/firestore";
 import type { Organization } from "@/features/organizations/types";
 import {
-  createInventoryItem, deleteInventoryItem, subscribeAircraftComponents, subscribeInventory, subscribeInventoryHistory, subscribeItemHistory, updateInventoryItem, type InventoryInput,
+  createInventoryItem, deleteInventoryItem, importInventory, subscribeAircraftComponents, subscribeInventory, subscribeInventoryHistory, subscribeItemHistory, updateInventoryItem, type InventoryImportRow, type InventoryInput,
 } from "./firestore";
 import type { AircraftComponent, InventoryAction, InventoryHistory, InventoryItem } from "./types";
 
@@ -71,6 +71,8 @@ export function InventoryPanel() {
   const [message, setMessage] = useState("");
   const [messageError, setMessageError] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [importRows, setImportRows] = useState<InventoryImportRow[] | null>(null);
+  const [importError, setImportError] = useState("");
   // Recherche et filtres : stock
   const [stockText, setStockText] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
@@ -118,6 +120,34 @@ export function InventoryPanel() {
     .filter(component => !compAircraft || component.aircraftRegistration === compAircraft)
     .filter(component => contains([component.partNumber, component.serialNumber, component.aircraftRegistration, component.cardId, component.installedBy.name], compText))
     .sort((a, b) => (b.installedAt || "").localeCompare(a.installedAt || "")), [components, compAircraft, compText]);
+
+  const importedKeys = useMemo(() => new Set(items.map(item => item.importKey).filter((key): key is string => Boolean(key))), [items]);
+  const importNew = importRows ? importRows.filter(row => !importedKeys.has(row.importKey)).length : 0;
+
+  /** Lit le fichier JSON préparé à partir de l'export, et vérifie chaque ligne avant tout enregistrement. */
+  async function readImportFile(file?: File) {
+    setImportError(""); setImportRows(null);
+    if (!file) return;
+    try {
+      const data: unknown = JSON.parse(await file.text());
+      if (!Array.isArray(data)) throw new Error("Le fichier doit contenir une liste de pièces.");
+      const bad = data.findIndex(row => !row || typeof row.importKey !== "string" || typeof row.partNumber !== "string" || !row.partNumber || typeof row.quantity !== "number" || row.quantity < 0 || typeof row.location !== "string" || typeof row.description !== "string" || typeof row.serialNumber !== "string");
+      if (bad >= 0) throw new Error(`Ligne ${bad + 1} invalide : champs manquants ou quantité négative.`);
+      setImportRows(data as InventoryImportRow[]);
+    } catch (error) { setImportError(error instanceof Error ? error.message : "Fichier illisible."); }
+  }
+
+  async function runImport() {
+    if (!importRows) return;
+    if (!mroOrg) { setMessage("Aucune organisation OMA n’existe encore."); setMessageError(true); return; }
+    setBusy(true); setMessage(""); setMessageError(false);
+    try {
+      const count = await importInventory(schoolOrgId, mroOrg.id, importRows, importedKeys, actor, (done, total) => setMessage(`Import en cours : ${done} / ${total}`));
+      setMessage(`${count} pièce(s) importée(s). Les lignes déjà présentes ont été ignorées.`);
+      setImportRows(null);
+    } catch (error) { setMessage(errorText(error, "Import interrompu : relancez-le, les lignes déjà importées seront ignorées.")); setMessageError(true); }
+    finally { setBusy(false); }
+  }
 
   function edit(item: InventoryItem) {
     setEditingId(item.id);
@@ -176,6 +206,14 @@ export function InventoryPanel() {
         {editingId && <button type="button" className="button secondary" disabled={busy} onClick={reset}>Annuler</button>}
       </div>
     </form>}
+
+    {canWrite && <details className="oma-history">
+      <summary>Importer un inventaire (fichier JSON)</summary>
+      <input type="file" accept="application/json,.json" disabled={busy} onChange={e => readImportFile(e.target.files?.[0])} />
+      {importError && <div className="notice error">{importError}</div>}
+      {importRows && <p>{importRows.length} lignes lues · {importRows.length - importNew} déjà importées · <strong>{importNew} à importer</strong>.</p>}
+      {importRows && <button className="button" disabled={busy || importNew === 0} onClick={runImport}>Importer {importNew} pièce(s)</button>}
+    </details>}
 
     <h3>Stock</h3>
     <div className="form-grid">

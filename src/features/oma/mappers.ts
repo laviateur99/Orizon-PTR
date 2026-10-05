@@ -80,7 +80,7 @@ export const mapInventoryItem = (id: string, d: DocumentData): InventoryItem => 
   id, orgId: text(d.orgId), sharedWithOrgId: text(d.sharedWithOrgId),
   partNumber: text(d.partNumber), description: text(d.description), serialNumber: text(d.serialNumber),
   quantity: num(d.quantity) ?? 0, location: text(d.location),
-  lastInstalledCardId: text(d.lastInstalledCardId) || undefined,
+  lastInstalledCardId: text(d.lastInstalledCardId) || undefined, importKey: text(d.importKey) || undefined,
   createdBy: actor(d.createdBy), createdAt: iso(d.createdAt) || undefined, updatedAt: iso(d.updatedAt) || undefined,
 });
 

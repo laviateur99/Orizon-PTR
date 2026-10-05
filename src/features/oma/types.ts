@@ -63,6 +63,7 @@ export type InventoryItem = {
   serialNumber: string;        // "" si la pièce n'est pas suivie par numéro de série (alors quantity = stock)
   quantity: number; location: string;
   lastInstalledCardId?: string; // dernière carte ayant consommé du stock (écrit par la certification)
+  importKey?: string;           // clé de l'import initial (pour ne jamais importer deux fois la même ligne)
   createdBy: Actor; createdAt?: string; updatedAt?: string;
 };
 

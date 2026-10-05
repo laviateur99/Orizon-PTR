@@ -150,6 +150,30 @@ export async function updateInventoryItem(item: InventoryItem, input: InventoryI
   await batch.commit();
 }
 
+export type InventoryImportRow = InventoryInput & { importKey: string };
+
+/**
+ * Import initial d'un inventaire (fichier JSON préparé à partir de l'export). Chaque ligne devient une fiche
+ * + une ligne « Création » au journal, par lots de 200 (une seule écriture atomique par lot). Les lignes déjà
+ * importées (même importKey) sont ignorées : relancer l'import ne crée pas de doublons.
+ */
+export async function importInventory(orgId: string, sharedWithOrgId: string, rows: InventoryImportRow[], existingKeys: Set<string>, by: Actor, onProgress: (done: number, total: number) => void) {
+  const todo = rows.filter(row => !existingKeys.has(row.importKey));
+  const batchSize = 200;
+  for (let start = 0; start < todo.length; start += batchSize) {
+    const batch = writeBatch(db);
+    for (const row of todo.slice(start, start + batchSize)) {
+      const ref = doc(collection(db, "inventoryItems"));
+      const { importKey, ...input } = row;
+      batch.set(ref, { ...input, orgId, sharedWithOrgId, importKey, createdBy: by, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      batch.set(doc(collection(db, "inventoryHistory")), historyLine({ id: ref.id, orgId, sharedWithOrgId, partNumber: input.partNumber, serialNumber: input.serialNumber }, "Création", 0, input.quantity, by));
+    }
+    await batch.commit();
+    onProgress(Math.min(start + batchSize, todo.length), todo.length);
+  }
+  return todo.length;
+}
+
 /** Suppression refusée par les règles si la pièce a déjà été installée (traçabilité). */
 export async function deleteInventoryItem(item: InventoryItem, by: Actor) {
   const batch = writeBatch(db);
