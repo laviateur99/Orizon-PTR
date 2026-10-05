@@ -48,7 +48,35 @@ export type Project = {
 
 export type CardType = "routine" | "snag";
 export type CardStatus = "ouvert" | "ferme" | "annulee";
-export type CardPart = { partNumber: string; removedSerial: string; installedSerial: string; quantity: number };
+/** `inventoryItemId` : pièce prise de l'inventaire partagé (déduite à la certification de la carte). */
+export type CardPart = { partNumber: string; removedSerial: string; installedSerial: string; quantity: number; inventoryItemId?: string };
+
+/**
+ * Inventaire de pièces de l'école, partagé avec une OMA (`sharedWithOrgId`). Créé et ajusté par le PRM
+ * de l'école; l'OMA ne peut que le décrémenter, et seulement via la certification d'une carte (même commit).
+ */
+export type InventoryItem = {
+  id: string;
+  orgId: string;               // école propriétaire du stock
+  sharedWithOrgId: string;     // OMA qui peut prendre des pièces
+  partNumber: string; description: string;
+  serialNumber: string;        // "" si la pièce n'est pas suivie par numéro de série (alors quantity = stock)
+  quantity: number; location: string;
+  lastInstalledCardId?: string; // dernière carte ayant consommé du stock (écrit par la certification)
+  createdBy: Actor; createdAt?: string; updatedAt?: string;
+};
+
+/** Composante installée sur un avion. Création seulement, dans le commit de certification de la carte. */
+export type AircraftComponent = {
+  id: string;
+  orgId: string;               // OMA qui a installé
+  workOrderOrgId: string;      // école émettrice (propriétaire de l'avion)
+  aircraftId: string; aircraftRegistration: string;
+  partNumber: string; description: string; serialNumber: string; quantity: number;
+  cardId: string; workOrderId: string;
+  inventoryItemId?: string;
+  installedBy: Actor; installedAt?: string;
+};
 
 export type NextDue = {
   dueAirTime?: number; dueDate?: string; lastCompletedAirTime?: number; lastCompletedDate?: string;

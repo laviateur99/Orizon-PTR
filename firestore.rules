@@ -828,6 +828,58 @@ service cloud.firestore {
       }
     }
 
+    // Inventaire de pièces de l'école, partagé avec une OMA (D15). L'école (PRM/admin) crée et corrige le
+    // stock; l'OMA ne peut QUE le décrémenter, dans le même commit que la fermeture (signature) d'une de ses
+    // cartes, et jamais sous zéro. Partage et traçabilité (lastInstalledCardId) ne sont modifiables que là.
+    match /inventoryItems/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.sharedWithOrgId);
+      allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
+        && orgIsType(request.resource.data.orgId, 'school')
+        && orgIsType(request.resource.data.sharedWithOrgId, 'mro')
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.partNumber is string && request.resource.data.partNumber.size() > 0
+        && request.resource.data.description is string
+        && request.resource.data.serialNumber is string
+        && request.resource.data.location is string
+        && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+        && (request.resource.data.serialNumber == '' || request.resource.data.quantity <= 1)
+        && !request.resource.data.keys().hasAny(['lastInstalledCardId']);
+      allow update: if
+        // Gestion par l'école : correction de la fiche et du stock (ajout de réception, correction d'inventaire).
+        (orgHasRole(resource.data.orgId, ['prm','admin'])
+          && request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.sharedWithOrgId == resource.data.sharedWithOrgId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['partNumber','description','serialNumber','quantity','location','updatedAt'])
+          && request.resource.data.partNumber.size() > 0
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+          && (request.resource.data.serialNumber == '' || request.resource.data.quantity <= 1))
+        // Consommation par la certification d'une carte de l'OMA : même commit que la carte fermée.
+        || (orgMember(resource.data.sharedWithOrgId)
+          && request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.sharedWithOrgId == resource.data.sharedWithOrgId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastInstalledCardId','updatedAt'])
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+          && request.resource.data.quantity < resource.data.quantity
+          && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastInstalledCardId)).data.status == 'ferme'
+          && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastInstalledCardId)).data.orgId == resource.data.sharedWithOrgId);
+      // Une pièce déjà installée reste dans l'inventaire comme trace (pas de suppression).
+      allow delete: if orgHasRole(resource.data.orgId, ['prm','admin']) && !resource.data.keys().hasAny(['lastInstalledCardId']);
+    }
+
+    // Composantes installées sur les avions (D15) : création seulement, dans le commit de certification
+    // (carte passée à 'ferme' avec la même organisation et le même bon). Jamais modifiées ni supprimées.
+    match /aircraftComponents/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+      allow create: if orgMember(request.resource.data.orgId)
+        && request.resource.data.partNumber is string && request.resource.data.partNumber.size() > 0
+        && request.resource.data.quantity is int && request.resource.data.quantity > 0
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.status == 'ferme'
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.orgId == request.resource.data.orgId
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.workOrderOrgId == request.resource.data.workOrderOrgId
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.projectId == request.resource.data.workOrderId;
+      allow update, delete: if false;
+    }
+
     // NIP de certification des techniciens : seul le technicien définit le sien; les autres membres de
     // l'OMA ne peuvent mettre à jour que les compteurs d'essais (le verrouillage doit rester effectif).
     match /technicianPins/{userId} {

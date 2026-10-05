@@ -10,7 +10,8 @@ export function canonicalCardContent(card: WorkCard): string {
     requiredClass: card.requiredClass || "",
     taskId: card.taskSnapshot?.taskId || "",
     rectification: card.rectification,
-    parts: card.parts.map(part => ({ partNumber: part.partNumber, removedSerial: part.removedSerial, installedSerial: part.installedSerial, quantity: part.quantity })),
+    // inventoryItemId n'entre dans le hash que s'il existe : les cartes déjà signées gardent le même hash.
+    parts: card.parts.map(part => ({ partNumber: part.partNumber, removedSerial: part.removedSerial, installedSerial: part.installedSerial, quantity: part.quantity, ...(part.inventoryItemId ? { inventoryItemId: part.inventoryItemId } : {}) })),
     completedAirTime: typeof card.completedAirTime === "number" ? card.completedAirTime : null,
     completedDate: card.completedDate || "",
   };

@@ -6,11 +6,11 @@ import { subscribeOrgMembers } from "@/features/organizations/firestore";
 import { TechnicianPinPanel } from "@/features/organizations/TechnicianPinPanel";
 import { LICENSE_CLASSES, type LicenseClass, type OrgMember } from "@/features/organizations/types";
 import {
-  acceptWorkOrder, addCardEntry, addWorkCard, cancelWorkCard, depositReport, signWorkCard, subscribeCards, subscribeEntries, subscribeProject,
+  acceptWorkOrder, addCardEntry, addWorkCard, cancelWorkCard, depositReport, signWorkCard, subscribeCards, subscribeEntries, subscribeInventory, subscribeProject,
   subscribeReceivedWorkOrders, subscribeSignatures, updateWorkCardContent,
 } from "./firestore";
 import { cardProgress, describeOmaStep } from "./statusText";
-import { WORK_ORDER_STATUS_LABELS, type CardEntry, type CardPart, type CardSignature, type Project, type WorkCard, type WorkOrder } from "./types";
+import { WORK_ORDER_STATUS_LABELS, type CardEntry, type CardPart, type CardSignature, type InventoryItem, type Project, type WorkCard, type WorkOrder } from "./types";
 
 const CLASS_MATCH_LABEL = { match: "correspond à la classe requise", mismatch: "ne correspond PAS à la classe requise", unspecified: "classe requise non précisée" } as const;
 const errorText = (value: unknown, fallback: string) => {
@@ -18,7 +18,7 @@ const errorText = (value: unknown, fallback: string) => {
   return /permission/i.test(raw) ? "Refusé par les règles de sécurité (rôle, organisation ou séparation des tâches)." : raw;
 };
 
-function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card: WorkCard; project: Project | null; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[] }) {
+function CardView({ card, project, mroOrgId, viewerUid, isPrm, members, stock }: { card: WorkCard; project: Project | null; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[]; stock: InventoryItem[] }) {
   const { profile } = useAuth();
   const actor = { uid: viewerUid, name: profile?.name || profile?.email || "" };
   const [draft, setDraft] = useState({ rectification: card.rectification, parts: card.parts, completedAirTime: card.completedAirTime?.toString() || "", completedDate: card.completedDate || "" });
@@ -39,6 +39,11 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
   useEffect(() => subscribeEntries("mro", mroOrgId, card.id, setEntries, () => setEntries([])), [card.id, mroOrgId]);
 
   const setPart = (index: number, patch: Partial<CardPart>) => setDraft(current => ({ ...current, parts: current.parts.map((part, i) => i === index ? { ...part, ...patch } : part) }));
+  // Pièce prise de l'inventaire partagé : numéro et S/N viennent de la fiche; la déduction se fait à la certification.
+  const pickStock = (index: number, id: string) => {
+    const item = stock.find(entry => entry.id === id);
+    setPart(index, item ? { inventoryItemId: item.id, partNumber: item.partNumber, installedSerial: item.serialNumber, quantity: 1 } : { inventoryItemId: undefined });
+  };
 
   async function save() {
     setBusy(true); setMessage(""); setMessageError(false);
@@ -80,12 +85,18 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
     <header><strong>ATA {card.ata || "—"} · {card.subject}</strong><span className={`badge ${open ? "warn" : cancelled ? "" : "ok"}`}>{open ? "Ouverte" : cancelled ? "Annulée" : "Fermée — lecture seule"}</span></header>
     <small>{card.type === "snag" ? "SNAG" : "Routine"} · Technicien : {assignee?.displayName || card.assignedUserName}{card.requiredClass ? ` · Classe requise : ${card.requiredClass}` : ""}{card.taskSnapshot ? ` · Échéance : ${card.taskSnapshot.title}` : ""}</small>
     <label>Rectification<textarea rows={3} disabled={!canEdit} value={draft.rectification} onChange={e => setDraft({ ...draft, rectification: e.target.value })} /></label>
-    <div className="oma-parts">{draft.parts.map((part, index) => <div className="form-grid" key={index}>
-      <label>N° de pièce<input disabled={!canEdit} value={part.partNumber} onChange={e => setPart(index, { partNumber: e.target.value })} /></label>
+    <div className="oma-parts">{draft.parts.map((part, index) => {
+      const item = part.inventoryItemId ? stock.find(entry => entry.id === part.inventoryItemId) : undefined;
+      const stockLimited = Boolean(part.inventoryItemId);
+      return <div className="form-grid" key={index}>
+      <label>Pièce de l’inventaire<select disabled={!canEdit} value={part.inventoryItemId || ""} onChange={e => pickStock(index, e.target.value)}><option value="">Hors inventaire (saisie libre)</option>{stock.filter(entry => entry.quantity > 0 || entry.id === part.inventoryItemId).map(entry => <option value={entry.id} key={entry.id}>{entry.partNumber} — {entry.description || "sans description"}{entry.serialNumber ? ` · S/N ${entry.serialNumber}` : ""} ({entry.quantity} dispo.)</option>)}</select></label>
+      <label>N° de pièce<input disabled={!canEdit || stockLimited} value={part.partNumber} onChange={e => setPart(index, { partNumber: e.target.value })} /></label>
       <label>S/N retiré<input disabled={!canEdit} value={part.removedSerial} onChange={e => setPart(index, { removedSerial: e.target.value })} /></label>
-      <label>S/N installé<input disabled={!canEdit} value={part.installedSerial} onChange={e => setPart(index, { installedSerial: e.target.value })} /></label>
-      <label>Quantité<input type="number" min={1} disabled={!canEdit} value={part.quantity} onChange={e => setPart(index, { quantity: Number(e.target.value) || 1 })} /></label>
-    </div>)}
+      <label>S/N installé<input disabled={!canEdit || Boolean(item?.serialNumber)} value={part.installedSerial} onChange={e => setPart(index, { installedSerial: e.target.value })} /></label>
+      <label>Quantité<input type="number" min={1} max={stockLimited ? item?.quantity ?? 0 : undefined} disabled={!canEdit || Boolean(item?.serialNumber)} value={part.quantity} onChange={e => setPart(index, { quantity: Number(e.target.value) || 1 })} /></label>
+      {item && part.quantity > item.quantity && <p className="notice error">Stock insuffisant : {item.quantity} disponible(s) dans l’inventaire.</p>}
+    </div>; })}
+      {canEdit && <p className="muted">Une pièce prise de l’inventaire est déduite du stock et ajoutée aux composantes de l’avion à la certification de la carte.</p>}
       {canEdit && <button type="button" className="button secondary small" onClick={() => setDraft({ ...draft, parts: [...draft.parts, { partNumber: "", removedSerial: "", installedSerial: "", quantity: 1 }] })}>+ Pièce</button>}</div>
     <div className="form-grid">
       <label>Heures cellule à l’accomplissement<input type="number" step="0.1" disabled={!canEdit} value={draft.completedAirTime} onChange={e => setDraft({ ...draft, completedAirTime: e.target.value })} /></label>
@@ -118,7 +129,7 @@ function CardView({ card, project, mroOrgId, viewerUid, isPrm, members }: { card
   </article>;
 }
 
-function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members }: { workOrder: WorkOrder; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[] }) {
+function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members, stock }: { workOrder: WorkOrder; mroOrgId: string; viewerUid: string; isPrm: boolean; members: OrgMember[]; stock: InventoryItem[] }) {
   const { profile } = useAuth();
   const actor = { uid: viewerUid, name: profile?.name || profile?.email || "" };
   const [project, setProject] = useState<Project | null>(null);
@@ -154,7 +165,7 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members }: { work
     <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
     {message && <div className="notice error">{message}</div>}
     {project && <p className="muted">{progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
-    {cards.map(card => <CardView key={card.id} card={card} project={project} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} />)}
+    {cards.map(card => <CardView key={card.id} card={card} project={project} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} stock={stock} />)}
     {isPrm && workOrder.status === "pris_en_charge" && project && <form className="form-grid oma-add-card" onSubmit={addCard}>
       <label>ATA<input required value={form.ata} onChange={e => setForm({ ...form, ata: e.target.value })} /></label>
       <label>Sujet<input required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} /></label>
@@ -181,6 +192,7 @@ export function OmaMro({ mroOrgId }: { mroOrgId: string }) {
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [error, setError] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  const [stock, setStock] = useState<InventoryItem[]>([]);
   const uid = user?.uid || "";
   const me = members.find(member => member.userId === uid);
   const isPrm = me?.role === "prm" || me?.role === "admin";
@@ -188,6 +200,8 @@ export function OmaMro({ mroOrgId }: { mroOrgId: string }) {
 
   useEffect(() => subscribeReceivedWorkOrders(mroOrgId, setOrders, caught => setError(errorText(caught, "Lecture des bons de travail impossible."))), [mroOrgId]);
   useEffect(() => subscribeOrgMembers(mroOrgId, setMembers, caught => setError(errorText(caught, "Lecture des membres de l’OMA impossible."))), [mroOrgId]);
+  // Inventaire partagé par l'école avec cette OMA (lecture seule ici; la déduction passe par la certification).
+  useEffect(() => subscribeInventory("mro", mroOrgId, setStock, () => setStock([])), [mroOrgId]);
 
   async function accept(order: WorkOrder) {
     setError("");
@@ -206,7 +220,7 @@ export function OmaMro({ mroOrgId }: { mroOrgId: string }) {
         <span className="badge">{WORK_ORDER_STATUS_LABELS[order.status]}</span>
         {order.status === "transmis" && isPrm && <button className="button" onClick={() => accept(order)}>Prendre en charge</button>}
         {order.status !== "transmis" && <button className="button secondary" onClick={() => setOpen(open === order.id ? null : order.id)}>{open === order.id ? "Masquer" : "Ouvrir le projet"}</button>}</div>
-      {open === order.id && order.status !== "transmis" && <ProjectPanel workOrder={order} mroOrgId={mroOrgId} viewerUid={uid} isPrm={isPrm} members={members} />}
+      {open === order.id && order.status !== "transmis" && <ProjectPanel workOrder={order} mroOrgId={mroOrgId} viewerUid={uid} isPrm={isPrm} members={members} stock={stock} />}
     </div>)}
   </section>;
 }

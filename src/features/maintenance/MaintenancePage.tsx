@@ -24,6 +24,7 @@ import { CalendarImportModal } from "./CalendarImportModal";
 import { MaintenanceWorkOrdersPanel } from "./MaintenanceWorkOrdersPanel";
 import { MaintenanceDashboard } from "./MaintenanceDashboard";
 import { OmaPage } from "@/features/oma/OmaPage";
+import { InventoryPanel } from "@/features/oma/InventoryPanel";
 import { effectiveStatus, statusClass } from "./aircraftStatus";
 import {
   firestoreDateTimeToLocalInput,
@@ -573,7 +574,7 @@ export function MaintenancePage() {
   // Choisi une seule fois, à l'ouverture : profile est déjà chargé ici (AppShell ne monte cette page
   // qu'après); un compte purement OMA (permission "oma" seulement, sans "maintenance") démarre donc
   // directement sur l'onglet OMA, pas sur "PRM" (qu'il n'a pas le droit de voir).
-  const [topTab, setTopTab] = useState<"PRM" | "OMA">(() => {
+  const [topTab, setTopTab] = useState<"PRM" | "OMA" | "Inventaire">(() => {
     const wantsOma = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "oma";
     return wantsOma || !can("maintenance") ? "OMA" : "PRM";
   });
@@ -807,12 +808,14 @@ export function MaintenancePage() {
   return (
     <>
       {/* Onglets de premier niveau (D14, étape 1) : "PRM" = page Maintenance existante, inchangée
-          ci-dessous; "OMA" monte OmaPage telle quelle. "Inventaire" viendra dans une étape séparée. */}
+          ci-dessous; "OMA" monte OmaPage telle quelle; "Inventaire" = stock de pièces partagé avec l'OMA (D15). */}
       <nav className="student-tabs maintenance-tabs maintenance-top-tabs" aria-label="PRM ou OMA">
         {can("maintenance") && <button type="button" className={topTab === "PRM" ? "active" : ""} aria-current={topTab === "PRM" ? "page" : undefined} onClick={() => setTopTab("PRM")}>PRM</button>}
         {can("oma") && <button type="button" className={topTab === "OMA" ? "active" : ""} aria-current={topTab === "OMA" ? "page" : undefined} onClick={() => setTopTab("OMA")}>OMA</button>}
+        {can("maintenance") && <button type="button" className={topTab === "Inventaire" ? "active" : ""} aria-current={topTab === "Inventaire" ? "page" : undefined} onClick={() => setTopTab("Inventaire")}>Inventaire</button>}
       </nav>
       {topTab === "OMA" && can("oma") && <OmaPage />}
+      {topTab === "Inventaire" && can("maintenance") && <InventoryPanel />}
       {topTab === "PRM" && can("maintenance") && <>
       <PageHeader
         title="Maintenance"

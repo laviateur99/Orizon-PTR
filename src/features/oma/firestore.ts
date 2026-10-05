@@ -1,11 +1,11 @@
 import {
-  addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch,
+  addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch,
   type FirestoreError, type Unsubscribe,
 } from "firebase/firestore";
 import { auth, db } from "@/services/firebase/client";
-import type { Actor, CardEntry, CardPart, CardSignature, ClassMatch, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource } from "./types";
+import type { Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryItem, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource } from "./types";
 import type { LicenseClass } from "@/features/organizations/types";
-import { mapCard, mapEntry, mapProject, mapSignature, mapWorkOrder } from "./mappers";
+import { mapAircraftComponent, mapCard, mapEntry, mapInventoryItem, mapProject, mapSignature, mapWorkOrder } from "./mappers";
 
 type Next<T> = (items: T[]) => void;
 type Err = (error: FirestoreError) => void;
@@ -31,6 +31,14 @@ export const subscribeSignatures = (side: "mro" | "school", orgId: string, cardI
 
 export const subscribeEntries = (side: "mro" | "school", orgId: string, cardId: string, next: Next<CardEntry>, error: Err): Unsubscribe =>
   onSnapshot(query(collection(db, "workCards", cardId, "entries"), where(side === "mro" ? "orgId" : "workOrderOrgId", "==", orgId)), snap => next(snap.docs.map(item => mapEntry(item.id, item.data()))), error);
+
+/** Inventaire côté école (propriétaire) ou côté OMA (pièces partagées avec elle). */
+export const subscribeInventory = (side: "school" | "mro", orgId: string, next: Next<InventoryItem>, error: Err): Unsubscribe =>
+  onSnapshot(query(collection(db, "inventoryItems"), where(side === "school" ? "orgId" : "sharedWithOrgId", "==", orgId)), snap => next(snap.docs.map(item => mapInventoryItem(item.id, item.data()))), error);
+
+/** Composantes installées par l'OMA sur les avions de l'école. */
+export const subscribeAircraftComponents = (schoolOrgId: string, next: Next<AircraftComponent>, error: Err): Unsubscribe =>
+  onSnapshot(query(collection(db, "aircraftComponents"), where("workOrderOrgId", "==", schoolOrgId)), snap => next(snap.docs.map(item => mapAircraftComponent(item.id, item.data()))), error);
 
 // ---------- École (émetteur) ----------
 
@@ -109,6 +117,19 @@ export async function closeWorkOrderAndReturnToService(workOrder: WorkOrder, car
   return { aircraftReleased: !openSnags.length, openSnagCount: openSnags.length };
 }
 
+export type InventoryInput = { partNumber: string; description: string; serialNumber: string; quantity: number; location: string };
+
+/** Ajout d'une pièce à l'inventaire de l'école, partagé avec l'OMA indiquée. */
+export const createInventoryItem = (orgId: string, sharedWithOrgId: string, input: InventoryInput, by: Actor) =>
+  addDoc(collection(db, "inventoryItems"), { ...input, orgId, sharedWithOrgId, createdBy: by, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+
+/** Correction manuelle (stock, description, emplacement). Le partage et l'historique de pose ne changent pas. */
+export const updateInventoryItem = (id: string, input: InventoryInput) =>
+  updateDoc(doc(db, "inventoryItems", id), { ...input, updatedAt: serverTimestamp() });
+
+/** Suppression refusée par les règles si la pièce a déjà été installée (traçabilité). */
+export const deleteInventoryItem = (id: string) => deleteDoc(doc(db, "inventoryItems", id));
+
 // ---------- OMA (destinataire) ----------
 
 /** Prise en charge : le projet est ouvert (même id que le bon) dans le même commit atomique. */
@@ -148,7 +169,7 @@ export type CardContentPatch = { rectification: string; parts: CardPart[]; compl
 
 /** Modification du contenu d'une carte encore ouverte. Une carte signée est en lecture seule (règles). */
 export const updateWorkCardContent = (cardId: string, patch: CardContentPatch) =>
-  updateDoc(doc(db, "workCards", cardId), clean({ ...patch, updatedAt: serverTimestamp() }));
+  updateDoc(doc(db, "workCards", cardId), clean({ ...patch, parts: patch.parts.map(part => clean(part)), updatedAt: serverTimestamp() }));
 
 /**
  * Annulation d'une carte de travail (D13) : uniquement depuis `ouvert`, donc jamais sur une carte

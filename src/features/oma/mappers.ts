@@ -1,6 +1,6 @@
 import type { DocumentData } from "firebase/firestore";
 import type {
-  Actor, CardEntry, CardPart, CardSignature, ClassMatch, NextDue, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource, WorkOrderStatus,
+  Actor, AircraftComponent, CardEntry, CardPart, CardSignature, ClassMatch, InventoryItem, NextDue, Project, TaskSnapshot, WorkCard, WorkOrder, WorkOrderSource, WorkOrderStatus,
 } from "./types";
 import type { LicenseClass } from "@/features/organizations/types";
 
@@ -53,7 +53,7 @@ export function mapCard(id: string, d: DocumentData): WorkCard {
     requiredClass: (text(d.requiredClass) || undefined) as LicenseClass | undefined,
     taskSnapshot: mapSnapshot(d.taskSnapshot),
     rectification: text(d.rectification),
-    parts: Array.isArray(d.parts) ? d.parts.map((part: Record<string, unknown>): CardPart => ({ partNumber: text(part.partNumber), removedSerial: text(part.removedSerial), installedSerial: text(part.installedSerial), quantity: num(part.quantity) ?? 1 })) : [],
+    parts: Array.isArray(d.parts) ? d.parts.map((part: Record<string, unknown>): CardPart => ({ partNumber: text(part.partNumber), removedSerial: text(part.removedSerial), installedSerial: text(part.installedSerial), quantity: num(part.quantity) ?? 1, inventoryItemId: text(part.inventoryItemId) || undefined })) : [],
     completedAirTime: num(d.completedAirTime), completedDate: text(d.completedDate) || undefined,
     nextDue: nextDue ? { dueAirTime: num(nextDue.dueAirTime), dueDate: text(nextDue.dueDate) || undefined, lastCompletedAirTime: num(nextDue.lastCompletedAirTime), lastCompletedDate: text(nextDue.lastCompletedDate) || undefined, basis: text(nextDue.basis, "aucun_intervalle") as NextDue["basis"] } : undefined,
     signedAt: iso(d.signedAt) || undefined, signedBy: text(d.signedBy) || undefined, signedContentHash: text(d.signedContentHash) || undefined, signatureId: text(d.signatureId) || undefined,
@@ -76,3 +76,18 @@ export const mapEntry = (id: string, d: DocumentData): CardEntry => ({
   createdBy: actor(d.createdBy), createdAt: iso(d.createdAt),
 });
 
+export const mapInventoryItem = (id: string, d: DocumentData): InventoryItem => ({
+  id, orgId: text(d.orgId), sharedWithOrgId: text(d.sharedWithOrgId),
+  partNumber: text(d.partNumber), description: text(d.description), serialNumber: text(d.serialNumber),
+  quantity: num(d.quantity) ?? 0, location: text(d.location),
+  lastInstalledCardId: text(d.lastInstalledCardId) || undefined,
+  createdBy: actor(d.createdBy), createdAt: iso(d.createdAt) || undefined, updatedAt: iso(d.updatedAt) || undefined,
+});
+
+export const mapAircraftComponent = (id: string, d: DocumentData): AircraftComponent => ({
+  id, orgId: text(d.orgId), workOrderOrgId: text(d.workOrderOrgId),
+  aircraftId: text(d.aircraftId), aircraftRegistration: text(d.aircraftRegistration),
+  partNumber: text(d.partNumber), description: text(d.description), serialNumber: text(d.serialNumber), quantity: num(d.quantity) ?? 1,
+  cardId: text(d.cardId), workOrderId: text(d.workOrderId), inventoryItemId: text(d.inventoryItemId) || undefined,
+  installedBy: actor(d.installedBy), installedAt: iso(d.installedAt) || undefined,
+});
