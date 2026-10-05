@@ -23,6 +23,9 @@ import maintenanceSeed from "./maintenance-seed.json";
 import { CalendarImportModal } from "./CalendarImportModal";
 import { MaintenanceWorkOrdersPanel } from "./MaintenanceWorkOrdersPanel";
 import { MaintenanceDashboard } from "./MaintenanceDashboard";
+import { OmaPage } from "@/features/oma/OmaPage";
+import { InventoryPanel } from "@/features/oma/InventoryPanel";
+import { effectiveStatus, statusClass } from "./aircraftStatus";
 import {
   firestoreDateTimeToLocalInput,
   formatQuebecDateTime,
@@ -32,8 +35,8 @@ import {
 const MAINTENANCE_VERSION = "19.28.2";
 const MAINTENANCE_TABS = [
   "Résumé",
-  "Travaux PRM / DOM",
   "Échéances et calendriers",
+  "Travaux PRM / DOM",
   "Journal",
 ] as const;
 type MaintenanceTab = (typeof MAINTENANCE_TABS)[number];
@@ -47,18 +50,6 @@ const ACTIVE_WORK_STATUSES = new Set([
   "Inspection complétée",
   "Retour en service refusé",
 ]);
-const effectiveStatus = (a: Aircraft): Aircraft["status"] =>
-  a.status === "En maintenance" &&
-  a.expectedReturnAt &&
-  Date.now() > new Date(a.expectedReturnAt).getTime()
-    ? "Retour en service retardé"
-    : a.status;
-const statusClass = (status: Aircraft["status"]) =>
-  status === "Disponible"
-    ? "ok"
-    : status === "Maintenance planifiée"
-      ? "warn"
-      : "danger";
 const taskRemaining = (task: MaintenanceTask, a: Aircraft) => {
   const values: string[] = [];
   if (task.dueAirTime !== undefined)
@@ -565,7 +556,7 @@ const maintenanceMatrixRows = (
 };
 
 export function MaintenancePage() {
-  const { user, profile } = useAuth();
+  const { user, profile, can } = useAuth();
   const [aircraft, setAircraft] = useState<Aircraft[]>([]),
     [tasks, setTasks] = useState<MaintenanceTask[]>([]),
     [workOrders, setWorkOrders] = useState<MaintenanceWorkOrder[]>([]),
@@ -578,6 +569,15 @@ export function MaintenancePage() {
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<MaintenanceTab>("Résumé");
+  // Onglet de premier niveau (D14, étape 1) : "PRM" regroupe les 4 onglets existants ci-dessous,
+  // inchangés; "OMA" monte OmaPage telle quelle, sans aucun changement de son propre comportement.
+  // Choisi une seule fois, à l'ouverture : profile est déjà chargé ici (AppShell ne monte cette page
+  // qu'après); un compte purement OMA (permission "oma" seulement, sans "maintenance") démarre donc
+  // directement sur l'onglet OMA, pas sur "PRM" (qu'il n'a pas le droit de voir).
+  const [topTab, setTopTab] = useState<"PRM" | "OMA" | "Inventaire">(() => {
+    const wantsOma = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "oma";
+    return wantsOma || !can("maintenance") ? "OMA" : "PRM";
+  });
   const [task, setTask] = useState<MaintenanceTask | null>(null),
     [taskReason, setTaskReason] = useState(""),
     [taskError, setTaskError] = useState(""),
@@ -593,6 +593,9 @@ export function MaintenancePage() {
       setActiveTab("Travaux PRM / DOM");
   }, []);
   useEffect(() => {
+    // Un compte purement OMA (permission "oma" seulement) n'a pas accès à ces collections — les
+    // règles refuseraient ces lectures. Ne pas les tenter pour lui (D14, étape 1).
+    if (!can("maintenance")) return;
     const a = subscribeAircraft({
         next: setAircraft,
         error: (e) => setError(e.message),
@@ -610,6 +613,7 @@ export function MaintenancePage() {
       b();
       c();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     if (!canEdit || tasks.length || importStarted.current) return;
@@ -701,56 +705,11 @@ export function MaintenancePage() {
       ].filter((group) => group.items.length),
     [active, tasks],
   );
-  const aircraftInMaintenanceCount = useMemo(
-    () =>
-      new Set([
-        ...active
-          .filter((item) => effectiveStatus(item) === "En maintenance")
-          .map((item) => item.id),
-        ...workOrders
-          .filter((item) => ACTIVE_WORK_STATUSES.has(item.workStatus))
-          .map((item) => item.aircraftId),
-      ]).size,
-    [active, workOrders],
-  );
   const actor = {
     id: user?.uid || "",
     name: profile?.name || profile?.email || "",
     role: profile?.role || "",
   };
-  const maintenanceAlerts = useMemo(() => {
-    const aircraftMap = new Map(aircraft.map((a) => [a.id, a]));
-
-    let dueSoon = 0;
-    let overdue = 0;
-
-    tasks.forEach((task) => {
-      if (
-        task.completed ||
-        task.notApplicable ||
-        task.dueAirTime === undefined
-      ) {
-        return;
-      }
-
-      const a = aircraftMap.get(task.aircraftId);
-
-      if (!a) return;
-
-      const remaining = task.dueAirTime - (a.airTimeTotal || 0);
-
-      if (remaining <= 0) {
-        overdue++;
-      } else if (remaining <= AIR_TIME_ALERT_THRESHOLD_HOURS) {
-        dueSoon++;
-      }
-    });
-
-    return {
-      dueSoon,
-      overdue,
-    };
-  }, [tasks, aircraft]);
   function saveMaintenance() {
     if (!editing || editingSaving) return;
     setEditingError("");
@@ -848,6 +807,16 @@ export function MaintenancePage() {
 
   return (
     <>
+      {/* Onglets de premier niveau (D14, étape 1) : "PRM" = page Maintenance existante, inchangée
+          ci-dessous; "OMA" monte OmaPage telle quelle; "Inventaire" = stock de pièces partagé avec l'OMA (D15). */}
+      <nav className="student-tabs maintenance-tabs maintenance-top-tabs" aria-label="PRM ou OMA">
+        {can("maintenance") && <button type="button" className={topTab === "PRM" ? "active" : ""} aria-current={topTab === "PRM" ? "page" : undefined} onClick={() => setTopTab("PRM")}>PRM</button>}
+        {can("oma") && <button type="button" className={topTab === "OMA" ? "active" : ""} aria-current={topTab === "OMA" ? "page" : undefined} onClick={() => setTopTab("OMA")}>OMA</button>}
+        {can("maintenance") && <button type="button" className={topTab === "Inventaire" ? "active" : ""} aria-current={topTab === "Inventaire" ? "page" : undefined} onClick={() => setTopTab("Inventaire")}>Inventaire</button>}
+      </nav>
+      {topTab === "OMA" && can("oma") && <OmaPage />}
+      {topTab === "Inventaire" && can("maintenance") && <InventoryPanel />}
+      {topTab === "PRM" && can("maintenance") && <>
       <PageHeader
         title="Maintenance"
         subtitle={`MCM Operational Control · Version 3.5 · PRM / DOM · Module V${MAINTENANCE_VERSION} — Air Time, échéances et immobilisations`}
@@ -869,50 +838,12 @@ export function MaintenancePage() {
         ))}
       </nav>
       <section className="maintenance-tab-panel" hidden={activeTab !== "Résumé"}>
-        <div className="fleet-kpis">
-        <div className="card">
-          <strong>{active.length}</strong>
-          <span>Avions actifs</span>
-        </div>
-
-        <div className="card">
-          <strong>
-            {active.filter((a) => effectiveStatus(a) === "Disponible").length}
-          </strong>
-          <span>Disponibles</span>
-        </div>
-
-        <div className="card">
-          <strong>{aircraftInMaintenanceCount}</strong>
-          <span>En maintenance</span>
-        </div>
-
-        <div className="card">
-          <strong>
-            {
-              active.filter(
-                (a) => effectiveStatus(a) === "Retour en service retardé",
-              ).length
-            }
-          </strong>
-          <span>Retards</span>
-        </div>
-
-        <div className="card">
-          <strong>{maintenanceAlerts.dueSoon}</strong>
-          <span>Planification ≤{AIR_TIME_ALERT_THRESHOLD_HOURS} h</span>
-        </div>
-
-        <div className="card">
-          <strong>{maintenanceAlerts.overdue}</strong>
-          <span>Échéances dépassées</span>
-        </div>
-        </div>{" "}
         {canEdit && (
           <MaintenanceDashboard
             aircraft={aircraft}
             tasks={tasks}
             workOrders={workOrders}
+            onSelectAircraft={setSelected}
           />
         )}
       </section>
@@ -1539,6 +1470,7 @@ export function MaintenancePage() {
           onComplete={setMessage}
         />
       )}{" "}
+      </>}
     </>
   );
 }

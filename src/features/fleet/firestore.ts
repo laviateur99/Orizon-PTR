@@ -15,6 +15,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { schoolScope, withSchoolOrg } from "@/features/organizations/scope";
 import { app } from "@/services/firebase/client";
 import {
   collection as liteCollection,
@@ -122,7 +123,7 @@ export function subscribeAircraft(
   handlers: LiveHandlers<Aircraft>,
 ): Unsubscribe {
   return onSnapshot(
-    collection(db, "aircraft"),
+    query(collection(db, "aircraft"), ...schoolScope()),
     (snapshot) =>
       handlers.next(
         snapshot.docs.map((item) => {
@@ -473,6 +474,7 @@ async function writeMaintenanceWorkOrder(
       query(
         collection(db, "snags"),
         where("aircraftId", "==", next.aircraftId),
+        ...schoolScope(),
       ),
     );
     const other = aircraftSnags.docs.find(
@@ -627,7 +629,7 @@ async function writeMaintenanceWorkOrder(
     );
     batch.set(
       liteDoc(liteDb, "reservations", schedulerReservationId),
-      schedulerPayload,
+      visible ? withSchoolOrg(schedulerPayload) : schedulerPayload,
       { merge: true },
     );
   }
@@ -833,7 +835,7 @@ export async function restoreMaintenanceSchedulerHistory(
       technicianName: order.technician?.name || "",
       status: "Complété",
       updatedAt: serverTimestamp(),
-      ...(!reservation.exists() ? { createdAt: serverTimestamp() } : {}),
+      ...(!reservation.exists() ? withSchoolOrg({ createdAt: serverTimestamp() }) : {}),
     }),
     { merge: true },
   );
@@ -1054,7 +1056,7 @@ export async function returnAircraftToService(
 
 export function subscribeSnags(handlers: LiveHandlers<Snag>): Unsubscribe {
   return onSnapshot(
-    collection(db, "snags"),
+    query(collection(db, "snags"), ...schoolScope()),
     (snapshot) =>
       handlers.next(
         snapshot.docs.map((item) => {
@@ -1095,14 +1097,14 @@ export function subscribeSnags(handlers: LiveHandlers<Snag>): Unsubscribe {
 }
 
 export async function replaceFleet() {
-  const existing = await getDocs(collection(db, "aircraft"));
+  const existing = await getDocs(query(collection(db, "aircraft"), ...schoolScope()));
   const batch = writeBatch(db);
   existing.docs.forEach((item) => batch.delete(item.ref));
   ORIZON_AIRCRAFT.forEach((aircraft) => {
-    batch.set(doc(db, "aircraft", aircraft.id), {
+    batch.set(doc(db, "aircraft", aircraft.id), withSchoolOrg({
       ...aircraft,
       updatedAt: new Date().toISOString(),
-    });
+    }));
   });
   await batch.commit();
 }
@@ -1110,10 +1112,10 @@ export async function replaceFleet() {
 export async function saveAircraft(aircraft: Aircraft) {
   await setDoc(
     doc(db, "aircraft", aircraft.id),
-    cleanFirestoreValue({
+    cleanFirestoreValue(withSchoolOrg({
       ...aircraft,
       updatedAt: new Date().toISOString(),
-    }),
+    })),
     { merge: true },
   );
 }
@@ -1171,14 +1173,14 @@ export async function createSnag(
   const reportedAt = now.toISOString();
   const snagNumber = makeSnagNumber(now);
 
-  const payload = cleanFirestoreValue({
+  const payload = cleanFirestoreValue(withSchoolOrg({
     ...value,
     snagNumber,
     reportedAt,
     status: "Ouvert",
     createdAt: serverTimestamp(),
     updatedAt: reportedAt,
-  });
+  }));
 
   const reference = await addDoc(collection(db, "snags"), payload);
 
@@ -1192,7 +1194,7 @@ export async function createSnag(
 
   await addDoc(
     collection(db, "notifications"),
-    cleanFirestoreValue({
+    cleanFirestoreValue(withSchoolOrg({
       type: "SNAG",
       title: `${snagNumber} · ${value.aircraftRegistration} — ${value.defectTitle}`,
       message: value.description,
@@ -1201,7 +1203,7 @@ export async function createSnag(
       snagId: reference.id,
       createdAt: reportedAt,
       readBy: [],
-    }),
+    })),
   );
 
   await addSnagHistory(
@@ -1369,7 +1371,7 @@ export async function deleteSnagAsAdmin(
   );
 
   const notifications = await getDocs(
-    query(collection(db, "notifications"), where("snagId", "==", snag.id)),
+    query(collection(db, "notifications"), where("snagId", "==", snag.id), ...schoolScope()),
   );
 
   const batch = writeBatch(db);
@@ -1378,7 +1380,7 @@ export async function deleteSnagAsAdmin(
   await batch.commit();
 
   const remaining = await getDocs(
-    query(collection(db, "snags"), where("aircraftId", "==", snag.aircraftId)),
+    query(collection(db, "snags"), where("aircraftId", "==", snag.aircraftId), ...schoolScope()),
   );
 
   const hasOpen = remaining.docs.some(
@@ -1464,6 +1466,7 @@ export async function findImpactedReservations(
     query(
       collection(db, "reservations"),
       where("aircraftId", "==", aircraftId),
+      ...schoolScope(),
     ),
   );
   return snap.docs

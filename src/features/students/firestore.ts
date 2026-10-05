@@ -4,6 +4,7 @@ import {
   type DocumentData, type FirestoreError, type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { schoolScope } from "@/features/organizations/scope";
 import type {
   InstructorOption, Student, StudentDocument, StudentHistoryItem,
   StudentLesson, StudentNote, StudentReservation, StudentProgram,
@@ -147,8 +148,8 @@ export function subscribeReservations(id:string,h:LiveHandlers<StudentReservatio
   const values=new Map<string,StudentReservation>();
   const mapped=(docId:string,d:DocumentData):StudentReservation=>{const status=d.theoryAttendance&&typeof d.theoryAttendance==="object"?(d.theoryAttendance as Record<string,unknown>)[id]:undefined;return{id:docId,studentId:id,date:text(d.date),startTime:text(d.startTime),endTime:text(d.endTime),type:text(d.type),title:text(d.title)||text(d.lesson),aircraftId:text(d.aircraftId),instructorId:text(d.instructorId),status:text(d.status,"Planifié"),hobbsStart:typeof d.hobbsStart==="number"?d.hobbsStart:undefined,hobbsEnd:typeof d.hobbsEnd==="number"?d.hobbsEnd:undefined,airtimeMinutes:typeof d.airtimeMinutes==="number"?d.airtimeMinutes:undefined,groundTimeHours:typeof d.groundTimeHours==="number"?d.groundTimeHours:undefined,attendanceStatus:status==="Présent"||status==="Absent"?status:undefined,resourceId:text(d.resourceId)||undefined,simulatorTcId:text(d.simulatorTcId)||undefined};};
   const emit=()=>h.next(Array.from(values.values()));
-  const direct=query(collection(db,"reservations"),where("studentId","==",id));
-  const group=query(collection(db,"reservations"),where("participantStudentIds","array-contains",id));
+  const direct=query(collection(db,"reservations"),where("studentId","==",id),...schoolScope());
+  const group=query(collection(db,"reservations"),where("participantStudentIds","array-contains",id),...schoolScope());
   const a=onSnapshot(direct,snapshot=>{snapshot.docChanges().forEach(change=>change.type==="removed"?values.delete(change.doc.id):values.set(change.doc.id,mapped(change.doc.id,change.doc.data())));emit();},h.error);
   const b=onSnapshot(group,snapshot=>{snapshot.docChanges().forEach(change=>change.type==="removed"?values.delete(change.doc.id):values.set(change.doc.id,mapped(change.doc.id,change.doc.data())));emit();},h.error);
   return()=>{a();b();};

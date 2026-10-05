@@ -294,6 +294,8 @@ export function SchedulerPage() {
         profile.role,
       ),
   );
+  // Étudiant : pas d'accès à aircraft/snags, réservations limitées aux siennes (règles Firestore).
+  const studentScope = profile?.role === "Étudiant" ? profile.linkedStudentId ?? "" : undefined;
   const [date, setDate] = useState(localDate);
   const [events, setEvents] = useState<SchedulerEvent[]>([]);
   const [snagBlocks, setSnagBlocks] = useState<SchedulerEvent[]>([]);
@@ -355,21 +357,21 @@ export function SchedulerPage() {
           done();
         },
         error: fail,
-      }),
+      }, studentScope),
       b = subscribeReservations({
         next: (x) => {
           setEvents(x);
           done();
         },
         error: fail,
-      }),
+      }, studentScope),
       c = subscribeSnagBlocks({
         next: (x) => {
           setSnagBlocks(x);
           done();
         },
         error: fail,
-      }),
+      }, studentScope),
       d = subscribeStudents({
         next: (x) => {
           setStudents(x);
@@ -403,7 +405,7 @@ export function SchedulerPage() {
       g();
       h();
     };
-  }, []);
+  }, [studentScope, profile?.schoolOrgId]);
   useEffect(() => {
     const i = setInterval(() => setTick((x) => x + 1), 60000);
     return () => clearInterval(i);

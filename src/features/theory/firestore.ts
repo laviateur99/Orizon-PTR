@@ -1,5 +1,6 @@
 import {arrayRemove,arrayUnion,collection,deleteDoc,doc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where,writeBatch,type DocumentData,type FirestoreError,type Unsubscribe} from "firebase/firestore";
 import {db} from "@/services/firebase/client";
+import {withSchoolOrg} from "@/features/organizations/scope";
 import type{SchedulerEvent}from"@/features/scheduler/types";
 import{schedulerEventPayload}from"@/features/scheduler/firestore";
 import type{TheoryCohort,TheorySession}from"./types";
@@ -28,7 +29,7 @@ export async function saveTheoryCohort(value:TheoryCohort){
     const previousAttendance=attendance(data.attendance);
     const nextAttendance=Object.fromEntries(Object.entries(previousAttendance).filter(([id])=>participantIds.includes(id)));
     batch.update(item.ref,{cohortName:value.name,studentIds:participantIds,studentNames:participantNames,additionalStudentIds,additionalParticipantsVersion:2,attendance:nextAttendance,updatedAt:serverTimestamp()});
-    batch.set(doc(db,"reservations",`theory-${item.id}`),{participantStudentIds:participantIds,participantStudentNames:participantNames,theoryAttendance:nextAttendance,updatedAt:serverTimestamp()},{merge:true});
+    batch.set(doc(db,"reservations",`theory-${item.id}`),withSchoolOrg({participantStudentIds:participantIds,participantStudentNames:participantNames,theoryAttendance:nextAttendance,updatedAt:serverTimestamp()}),{merge:true});
   });
   await batch.commit();
 }
@@ -54,7 +55,7 @@ export async function saveTheorySession(value:TheorySession){
   };
   const batch=writeBatch(db);
   batch.set(doc(db,"theorySessions",value.id),{...value,additionalStudentIds:value.additionalStudentIds||[],additionalParticipantsVersion:2,updatedAt:serverTimestamp()},{merge:true});
-  batch.set(doc(db,"reservations",event.id),{...schedulerEventPayload(event),updatedAt:serverTimestamp()},{merge:true});
+  batch.set(doc(db,"reservations",event.id),withSchoolOrg({...schedulerEventPayload(event),updatedAt:serverTimestamp()}),{merge:true});
   await batch.commit();
 }
 export async function deleteTheorySession(value:TheorySession){

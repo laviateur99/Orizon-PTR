@@ -1,0 +1,931 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function active() { return signedIn() && profile().data.active == true; }
+    function has(module) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny([module])); }
+    function any(modules) { return active() && (profile().data.role == 'Administrateur' || profile().data.permissions.hasAny(modules)); }
+    function admin() { return active() && profile().data.role == 'Administrateur'; }
+    // --- Organisations (école / OMA) : l'appartenance fait foi dans organizations/{orgId}/members/{uid} ---
+    function memberPath(orgId) { return /databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid); }
+    function orgMember(orgId) { return active() && orgId is string && exists(memberPath(orgId)) && get(memberPath(orgId)).data.active == true; }
+    function orgHasRole(orgId, roles) { return orgMember(orgId) && get(memberPath(orgId)).data.role in roles; }
+    function orgIsType(orgId, kind) { return get(/databases/$(database)/documents/organizations/$(orgId)).data.type == kind; }
+    function linkedInstructor(instructorId) { return profile().data.linkedInstructorId == instructorId; }
+    function trainingStaff() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
+    function feedbackManager() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Instructeur']; }
+    function scheduleAccess() { return has('schedule') || (active() && profile().data.role == 'Chef instructeur'); }
+    function maintenanceReservation(data) {
+      return data.keys().hasAny(['maintenanceWorkOrderId'])
+        && data.maintenanceWorkOrderId is string
+        && data.maintenanceWorkOrderId.size() > 0;
+    }
+    function studentRole() { return active() && profile().data.role == 'Étudiant'; }
+    function ownPtr(studentId) { return !studentRole() || profile().data.linkedStudentId == studentId; }
+    function ownInstructorPin(instructorId) { return profile().data.role != 'Instructeur' || profile().data.linkedInstructorId == instructorId; }
+    function managesInstructors() { return active() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function ptrStaff() {
+      return has('ptr') && profile().data.role in ['Administrateur','Chef instructeur','Instructeur'];
+    }
+    function employeeAccess() { return active() && profile().data.role in ['Administrateur','Chef instructeur','Dispatch','Instructeur','Maintenance','Directeur de maintenance']; }
+    function managesCommunications() { return employeeAccess() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function managesPayroll() { return employeeAccess() && profile().data.role in ['Administrateur','Chef instructeur']; }
+    function ownEmployee(employeeId) { return employeeAccess() && (employeeId == request.auth.uid || employeeId == profile().data.linkedInstructorId); }
+    function employeeQualificationValid() {
+      return request.resource.data.keys().hasAll([
+          'employeeId','aircraftType','qualificationType','qualificationName','status',
+          'source','createdBy','createdAt','updatedBy','updatedAt'
+        ])
+        && request.resource.data.employeeId is string
+        && request.resource.data.employeeId.size() > 0
+        && request.resource.data.aircraftType is string
+        && request.resource.data.aircraftType.size() > 0
+        && request.resource.data.qualificationType in ['aircraft','flight']
+        && request.resource.data.qualificationName is string
+        && request.resource.data.status in ['valid','not-applicable']
+        && request.resource.data.source == 'employee-aircraft-qualification'
+        && request.resource.data.createdBy.uid is string
+        && request.resource.data.updatedBy.uid == request.auth.uid
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && (!request.resource.data.keys().hasAny(['completedAt']) || request.resource.data.completedAt is string)
+        && (!request.resource.data.keys().hasAny(['expiresAt']) || request.resource.data.expiresAt is string)
+        && (!request.resource.data.keys().hasAny(['notes']) || request.resource.data.notes is string);
+    }
+    function payrollPeriodOpen(periodId) { return !(periodId is string) || !exists(/databases/$(database)/documents/payPeriods/$(periodId)) || get(/databases/$(database)/documents/payPeriods/$(periodId)).data.status != 'Verrouillée'; }
+    function maintenanceManager() { return employeeAccess() && profile().data.role in ['Administrateur','Directeur de maintenance']; }
+    function maintenanceWorkStatusValid() {
+      return request.resource.data.workStatus in ['Planifiée','Assignée','En cours','Travail terminé','Inspection requise','Inspection complétée','Autorisée pour retour en service','Fermée','En attente de pièces','Suspendue','Annulée','Retour en service refusé'];
+    }
+    function maintenanceWorkOrderValid() {
+      return request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.source in ['Échéance maintenance existante','SNAG','Intervention manuelle']
+        && request.resource.data.priority in ['Critique','Haute','Normale','Basse','Surveillance','Urgente']
+        && (request.resource.data.source != 'Échéance maintenance existante' || request.resource.data.maintenanceTaskId is string)
+        && (request.resource.data.source != 'SNAG' || request.resource.data.snagId is string);
+    }
+    function maintenanceWorkTransitionValid() {
+      let before = resource.data.workStatus;
+      let after = request.resource.data.workStatus;
+      return before == after
+        || (before == 'Planifiée' && after in ['Assignée','Annulée'])
+        || (before == 'Assignée' && after in ['En cours','Suspendue','Annulée'])
+        || (before == 'En cours' && after in ['En attente de pièces','Suspendue','Travail terminé','Inspection requise','Annulée'])
+        || (before == 'Travail terminé' && after in ['Inspection requise','Autorisée pour retour en service','En cours','Annulée'])
+        || (before == 'En attente de pièces' && after in ['En cours','Suspendue','Annulée'])
+        || (before == 'Suspendue' && after in ['Assignée','En cours','Annulée'])
+        || (before == 'Inspection requise' && after in ['Inspection complétée','Retour en service refusé'])
+        || (before == 'Inspection complétée' && after in ['Autorisée pour retour en service','Retour en service refusé'])
+        || (before == 'Retour en service refusé' && after in ['En cours','Inspection requise','Annulée'])
+        || (before == 'Autorisée pour retour en service' && after in ['Fermée','Retour en service refusé']);
+    }
+    function maintenanceAccess() {
+      return active() && profile().data.role in ['Administrateur','Maintenance','Directeur de maintenance'];
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && (uid == request.auth.uid || admin());
+      allow list: if admin();
+      allow update: if admin() || (signedIn() && uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['lastLoginAt','lastLoginAtServer','mustSetPassword','passwordCreatedAt']))
+        // Personnel formateur : peut lier un compte élève non lié au dossier étudiant qu'il vient de créer.
+        || (trainingStaff() && resource.data.role == 'Étudiant' && resource.data.linkedStudentId == ''
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['linkedStudentId']));
+      allow create: if admin() || (signedIn() && uid == request.auth.uid
+        && exists(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email))
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.role
+        && request.resource.data.permissions == get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.permissions);
+      allow delete: if admin() && uid != request.auth.uid;
+    }
+    match /pendingInvitations/{email} {
+      allow get: if admin() || (signedIn() && request.auth.token.email == email);
+      allow list, create, update: if admin();
+      allow delete: if admin() || (signedIn() && request.auth.token.email == email);
+    }
+
+    match /reservations/{id} {
+      // Un étudiant ne lit que ses propres réservations (studentId ou participants), jamais celles d'autrui.
+      allow read: if (any(['dashboard','students','instructors','ptr','theory']) || scheduleAccess())
+        && (!studentRole()
+          || (profile().data.linkedStudentId != '' && (resource.data.studentId == profile().data.linkedStudentId
+            || resource.data.get('participantStudentIds', []).hasAny([profile().data.linkedStudentId]))))
+        && orgMember(resource.data.orgId);
+      allow create: if ((maintenanceReservation(request.resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(request.resource.data)))
+        && orgMember(request.resource.data.orgId);
+      allow update: if ((maintenanceReservation(resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(resource.data)))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
+      allow delete: if ((maintenanceReservation(resource.data) && maintenanceAccess())
+        || ((scheduleAccess() || has('theory'))
+          && !maintenanceReservation(resource.data)))
+        && orgMember(resource.data.orgId);
+    }
+    match /cancellations/{id} { allow read, write: if scheduleAccess(); }
+
+    match /students/{id} {
+      allow read: if any(['dashboard','schedule','students','ptr','theory']) && ownPtr(id);
+      allow create, delete: if has('students') && !studentRole();
+      allow update: if (has('students') && !studentRole()) || (studentRole() && profile().data.linkedStudentId == id && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rentalAgreementSigned','rentalAgreementSignedAt','rentalAgreementVersion','updatedAt'])
+          && request.resource.data.rentalAgreementSigned == true
+          && existsAfter(/databases/$(database)/documents/studentAgreements/$(id))
+          && request.resource.data.rentalAgreementSignedAt == getAfter(/databases/$(database)/documents/studentAgreements/$(id)).data.signedAt
+          && request.resource.data.rentalAgreementVersion == getAfter(/databases/$(database)/documents/studentAgreements/$(id)).data.documentVersion)
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainingProgramAgreementSigned','trainingProgramAgreementSignedAt','trainingProgramAgreementVersion','trainingProgramAgreementProgram','trainingProgramAgreementKey','updatedAt'])
+          && request.resource.data.trainingProgramAgreementSigned == true
+          && request.resource.data.trainingProgramAgreementProgram == resource.data.program
+          && existsAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey))
+          && request.resource.data.trainingProgramAgreementSignedAt == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.signedAt
+          && request.resource.data.trainingProgramAgreementVersion == getAfter(/databases/$(database)/documents/students/$(id)/programAgreements/$(request.resource.data.trainingProgramAgreementKey)).data.documentVersion)
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['phone','address','emergencyContact','emergencyPhone','updatedAt']))
+      ));
+    }
+    match /students/{studentId}/programAgreements/{agreementKey} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow create: if any(['students','ptr']) && ownPtr(request.resource.data.studentId)
+        && request.resource.data.studentId == studentId
+        && request.resource.data.documentKey == agreementKey
+        && request.resource.data.accepted == true;
+      allow update: if false;
+      allow delete: if admin();
+    }
+    match /studentDocuments/{id} {
+      allow read: if (has('students') && !studentRole()) || (studentRole() && ownPtr(resource.data.studentId));
+      allow write: if has('students') && !studentRole();
+    }
+    match /studentNotes/{id} {
+      allow read: if (has('students') && !studentRole()) || (studentRole() && ownPtr(resource.data.studentId));
+      allow create: if (has('students') && !studentRole()) || (studentRole() && ownPtr(request.resource.data.studentId));
+      allow update, delete: if has('students') && !studentRole();
+    }
+    match /studentHistory/{id} {
+      allow read: if any(['students','ptr']) && ownPtr(resource.data.studentId);
+      allow write: if (any(['students','ptr']) && ownPtr(request.resource.data.studentId) && !studentRole())
+        || (studentRole() && ownPtr(request.resource.data.studentId) && request.resource.data.type == 'Note');
+    }
+    // Lecture accessible à l'élève propriétaire; l'écriture (autorisation officielle) reste réservée au personnel.
+    match /preSoloChecklists/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow write: if any(['students','ptr']) && ownPtr(studentId) && !studentRole();
+    }
+    match /flightTestRecommendations/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow write: if any(['students','ptr']) && ownPtr(studentId) && !studentRole();
+    }
+    // NIP de signature électronique — même palier de permission que preSoloChecklists/
+    // flightTestRecommendations (personnel avec accès 'students'/'ptr', ou l'étudiant lui-même
+    // via son propre compte). La route serveur de vérification (api/pin/verify/[kind]/[id])
+    // utilise le jeton de l'appelant et est donc soumise exactement à cette même règle.
+    match /studentPins/{studentId} {
+      allow read, write: if any(['students','ptr']) && ownPtr(studentId);
+    }
+    // Même mécanisme pour le NIP d'un instructeur — accès réservé au personnel PTR, ou à
+    // l'instructeur lui-même via son propre compte.
+    // Le hash n'est écrit que par l'instructeur lui-même (compte lié à sa fiche). Les autres membres
+    // du personnel PTR peuvent seulement mettre à jour les compteurs d'essais (verrouillage) et un
+    // responsable peut RÉINITIALISER (supprimer) — jamais choisir le NIP d'autrui.
+    match /instructorPins/{instructorId} {
+      allow read: if ptrStaff() && ownInstructorPin(instructorId) && orgMember(resource.data.orgId);
+      allow create: if ptrStaff() && linkedInstructor(instructorId) && orgMember(request.resource.data.orgId);
+      allow update: if ptrStaff() && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId && (linkedInstructor(instructorId)
+        || (ownInstructorPin(instructorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['failedAttempts','lockedUntil','updatedAt'])));
+      allow delete: if ptrStaff() && orgMember(resource.data.orgId) && (linkedInstructor(instructorId) || managesInstructors());
+    }
+    match /studentAgreements/{studentId} {
+      allow read: if any(['students','ptr']) && ownPtr(studentId);
+      allow create: if any(['students','ptr']) && ownPtr(request.resource.data.studentId)
+        && request.resource.data.studentId == studentId
+        && request.resource.data.accepted == true
+        && request.resource.data.privacyAccepted == true;
+      allow update: if false;
+      allow delete: if admin();
+    }
+
+    // Lecture accessible à l'élève propriétaire; l'écriture (évaluation officielle) reste réservée au personnel.
+    match /ptrLessons/{id} {
+      allow read: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId);
+      allow create: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow update: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow delete: if (any(['ptr','students']) || scheduleAccess()) && ownPtr(resource.data.studentId) && !studentRole();
+    }
+    match /ptrEvaluations/{id} {
+      allow read: if any(['ptr','students']) && ownPtr(resource.data.studentId);
+      allow create: if any(['ptr','students']) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow update: if any(['ptr','students']) && ownPtr(resource.data.studentId) && ownPtr(request.resource.data.studentId) && !studentRole();
+      allow delete: if any(['ptr','students']) && ownPtr(resource.data.studentId) && !studentRole();
+    }
+    match /ptrLessonHistory/{id} {
+      allow read: if ptrStaff()
+        && resource.data.studentId is string;
+      allow create: if ptrStaff()
+        && request.resource.data.studentId is string
+        && request.resource.data.lessonId is string
+        && request.resource.data.lessonTitle is string
+        && request.resource.data.activityId is string
+        && request.resource.data.action in ['Activité supprimée','Activité désassociée']
+        && request.resource.data.activityType in ['Vol','Sol','Simulateur']
+        && request.resource.data.previousStatus in ['Non commencé','En cours','Réussi','À reprendre']
+        && request.resource.data.newStatus == 'Non commencé'
+        && request.resource.data.reason is string
+        && request.resource.data.deletedBy is map
+        && request.resource.data.deletedBy.uid is string
+        && request.resource.data.deletedBy.name is string
+        && request.resource.data.deletedBy.role is string;
+      allow update, delete: if false;
+    }
+
+    match /instructors/{id} {
+      allow read: if any(['dashboard','schedule','instructors','ptr','theory']);
+      allow write: if has('instructors') && managesInstructors();
+    }
+    match /instructorDocuments/{id} {
+      allow read: if has('instructors');
+      allow write: if has('instructors') && managesInstructors();
+    }
+
+    match /employeeCommunications/{id} {
+      allow read: if employeeAccess() && (managesPayroll() || resource.data.requestedBy == request.auth.uid || resource.data.employeeId == profile().data.linkedInstructorId);
+      allow create, update, delete: if managesCommunications();
+    }
+    match /employeeAbsences/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /communicationAcknowledgements/{id} {
+      allow read: if employeeAccess() && (resource.data.uid == request.auth.uid || managesCommunications());
+      allow create: if employeeAccess()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.communicationId is string;
+      allow update, delete: if managesCommunications();
+    }
+    match /employeeLeaves/{id} {
+      allow read: if employeeAccess();
+      allow create: if employeeAccess() && (managesPayroll() || request.resource.data.requestedBy == request.auth.uid);
+      allow update, delete: if managesPayroll() || (employeeAccess() && resource.data.requestedBy == request.auth.uid && resource.data.status == 'En attente');
+    }
+    match /employeeTimeClock/{id} {
+      allow read: if employeeAccess() && (maintenanceManager() || resource.data.employeeId == request.auth.uid);
+      allow create: if employeeAccess() && request.resource.data.employeeId == request.auth.uid;
+      allow update, delete: if maintenanceManager() || (employeeAccess() && resource.data.employeeId == request.auth.uid);
+    }
+    match /timeEntries/{id} {
+      allow read: if managesPayroll()
+        || ownEmployee(resource.data.employeeId)
+        || (has('schedule') && resource.data.source == 'scheduler');
+      allow create: if request.resource.data.createdBy.uid == request.auth.uid
+        && payrollPeriodOpen(request.resource.data.payPeriodId)
+        && (managesPayroll()
+          || (ownEmployee(request.resource.data.employeeId)
+            && request.resource.data.status == 'Brouillon')
+          || (has('schedule')
+            && request.resource.data.source == 'scheduler'
+            && request.resource.data.sourceId is string
+            && request.resource.data.status in ['Brouillon','Ajustement']));
+      allow update: if request.resource.data.updatedBy.uid == request.auth.uid
+        && resource.data.status != 'Verrouillé'
+        && payrollPeriodOpen(resource.data.payPeriodId)
+        && (managesPayroll()
+          && ((resource.data.status == 'Soumis employé'
+              && request.resource.data.status in ['Approuvé administration','Correction requise','Refusé'])
+            || (resource.data.status == 'Approuvé administration'
+              && request.resource.data.status == 'Verrouillé')
+            || (resource.data.status in ['Brouillon','Correction requise','Refusé','Ajustement']
+              && request.resource.data.status in ['Brouillon','Correction requise','Refusé','Ajustement']))
+          || (ownEmployee(resource.data.employeeId)
+            && request.resource.data.employeeId == resource.data.employeeId
+            && ((resource.data.status in ['Brouillon','Ajustement']
+                && request.resource.data.status in ['Brouillon','Soumis employé','Correction requise'])
+              || (resource.data.status == 'Soumis employé'
+                && request.resource.data.status == 'Correction requise')))
+          || (has('schedule')
+            && resource.data.source == 'scheduler'
+            && resource.data.status == 'Brouillon'
+            && request.resource.data.status == 'Brouillon'
+            && request.resource.data.employeeId == resource.data.employeeId
+            && request.resource.data.sourceId == resource.data.sourceId));
+      allow delete: if managesPayroll() && resource.data.status == 'Brouillon';
+    }
+    match /timeEntryHistory/{id} {
+      allow read: if managesPayroll() || ownEmployee(resource.data.employeeId);
+      allow create: if employeeAccess()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && (managesPayroll() || ownEmployee(request.resource.data.employeeId) || has('schedule'));
+      allow update, delete: if false;
+    }
+    match /payPeriods/{id} {
+      allow read: if employeeAccess();
+      allow create: if (employeeAccess()
+          && request.resource.data.status == 'Ouverte'
+          && request.resource.data.validationMode == 'Tests internes Flight Director'
+          && request.resource.data.createdBy.uid == request.auth.uid
+          && request.resource.data.startDate is string
+          && request.resource.data.endDate is string)
+        || (managesPayroll()
+          && request.resource.data.status in ['Ouverte','Validation','Approbation administration','Approbation comptabilité','Approuvée','Exportée']);
+      allow update: if managesPayroll()
+        && resource.data.status != 'Verrouillée'
+        && request.resource.data.status in ['Ouverte','Validation','Approbation administration','Approbation comptabilité','Approuvée','Exportée','Verrouillée'];
+      allow delete: if false;
+    }
+    match /payrollExports/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.format == 'CSV'
+        && request.resource.data.generatedBy.uid == request.auth.uid
+        && request.resource.data.checksum is string
+        && request.resource.data.fileName is string;
+      allow update, delete: if false;
+    }
+    match /payrollHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    match /employeePayrollProfiles/{id} {
+      allow read: if employeeAccess() && (managesPayroll() || resource.data.employeeId == profile().data.linkedInstructorId || resource.data.employeeId == request.auth.uid);
+      allow create, update, delete: if managesPayroll();
+    }
+    match /payrollClassRates/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /employeeTraining/{id} {
+      allow read: if employeeAccess();
+      allow create, update, delete: if managesPayroll();
+    }
+    match /employeeQualifications/{id} {
+      allow read: if employeeAccess();
+      allow create, update: if managesPayroll() && employeeQualificationValid();
+      allow delete: if false;
+    }
+    match /employeeQualificationHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actor.uid == request.auth.uid
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+    match /employeeCompliance/{id} {
+      allow read: if employeeAccess();
+      allow create, update: if managesPayroll()
+        && request.resource.data.employeeId is string
+        && request.resource.data.recordType in ['medical','instructor-rating','ifr-recency']
+        && request.resource.data.updatedBy.uid == request.auth.uid;
+      allow delete: if false;
+    }
+    match /employeeComplianceHistory/{id} {
+      allow read: if managesPayroll();
+      allow create: if managesPayroll()
+        && request.resource.data.actor.uid == request.auth.uid
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+
+    match /theoryCohorts/{id} { allow read, write: if has('theory'); }
+    match /theorySessions/{id} {
+      allow read: if has('theory') || (studentRole() && resource.data.studentIds.hasAny([profile().data.linkedStudentId]));
+      allow write: if has('theory');
+    }
+
+    match /aircraft/{id} {
+      // Plus lisible par le rôle Étudiant; appartenance à l'organisation du document obligatoire.
+      allow read: if !studentRole() && (any(['dashboard','schedule','fleet','maintenance','ptr']) || maintenanceAccess()) && orgMember(resource.data.orgId);
+      allow create: if maintenanceAccess() && orgMember(request.resource.data.orgId);
+      allow update: if (maintenanceAccess()
+          || (has('schedule') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['airTimeTotal','airTimeUpdatedAt','lastAirTimeReservationId'])))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
+      // Un avion ayant un historique MCM doit être désactivé, jamais supprimé.
+      allow delete: if false;
+    }
+    match /maintenanceTasks/{id} {
+      allow read: if maintenanceAccess() || scheduleAccess();
+      allow create, update: if maintenanceAccess();
+      // Le référentiel réglementaire demeure traçable même lorsqu'il est remplacé.
+      allow delete: if false;
+    }
+    match /maintenanceHistory/{id} {
+      allow read: if maintenanceAccess();
+      allow create: if maintenanceAccess()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.actorName is string
+        && request.resource.data.actorRole is string
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    match /maintenanceWorkOrders/{id} {
+      allow read: if maintenanceAccess();
+      allow create: if maintenanceAccess()
+        && maintenanceWorkStatusValid()
+        && maintenanceWorkOrderValid()
+        && request.resource.data.aircraftId is string
+        && request.resource.data.aircraftRegistration is string
+        && request.resource.data.title is string
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.workStatus == 'Planifiée';
+      allow update: if maintenanceAccess()
+        && maintenanceWorkStatusValid()
+        && maintenanceWorkOrderValid()
+        && maintenanceWorkTransitionValid()
+        && request.resource.data.aircraftId == resource.data.aircraftId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedBy.uid == request.auth.uid
+        && (!(request.resource.data.workStatus in ['Travail terminé','Inspection requise']) || resource.data.workStatus != 'En cours' || request.resource.data.workCompletedBy.uid == request.auth.uid)
+        && (request.resource.data.workStatus != 'Inspection complétée' || (maintenanceAccess() && request.resource.data.inspectionPerformedBy.uid == request.auth.uid && request.resource.data.inspectionResult == 'Accepté' && (request.resource.data.workCompletedBy.uid != request.auth.uid || admin())))
+        && (request.resource.data.workStatus != 'Autorisée pour retour en service' || (maintenanceAccess() && request.resource.data.rtsAuthorizedBy.uid == request.auth.uid && resource.data.workStatus in ['Travail terminé','Inspection complétée'] && (request.resource.data.inspectionRequired != true || request.resource.data.workCompletedBy.uid != request.auth.uid || admin())))
+        && (request.resource.data.workStatus != 'Fermée' || (maintenanceAccess() && resource.data.workStatus == 'Autorisée pour retour en service'));
+      allow delete: if false;
+    }
+    match /resources/{id} {
+      allow read: if any(['schedule','fleet','theory']);
+      allow write: if has('fleet');
+    }
+    match /snags/{id} {
+      allow read: if !studentRole() && (any(['dashboard','schedule','fleet','snags']) || maintenanceAccess()) && orgMember(resource.data.orgId);
+      allow create: if any(['fleet','snags']) && orgMember(request.resource.data.orgId);
+      allow update: if ((any(['fleet','snags'])
+          && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+          && request.resource.data.status != 'Fermé')
+        || (maintenanceAccess()
+          && (request.resource.data.status != 'Fermé'
+            || (request.resource.data.resolvedByWorkOrderId is string
+              && request.resource.data.returnedToServiceBy is string
+              && request.resource.data.returnedToServiceAt is timestamp))))
+        && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
+      allow delete: if any(['fleet','snags'])
+        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+        && orgMember(resource.data.orgId);
+    }
+    match /snagHistory/{id} {
+      allow read: if any(['fleet','snags']) || maintenanceAccess();
+      allow create: if (any(['fleet','snags']) || maintenanceAccess())
+        && request.resource.data.actor is string
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+    // Créées à la création d'un SNAG (forme validée); lecture/suppression réservées à la maintenance
+    // et aux responsables (suppression d'un SNAG); mise à jour limitée à l'accusé de lecture.
+    match /notifications/{id} {
+      allow create: if any(['fleet','snags'])
+        && request.resource.data.type is string
+        && request.resource.data.snagId is string
+        && request.resource.data.title is string && request.resource.data.title.size() <= 300
+        && orgMember(request.resource.data.orgId);
+      allow read, delete: if (maintenanceAccess() || managesInstructors()) && orgMember(resource.data.orgId);
+      allow update: if maintenanceAccess() && orgMember(resource.data.orgId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+    }
+    match /operationalNotifications/{id} { allow read, write: if any(['schedule','fleet','snags']); }
+
+    match /emergencies/{id} { allow read, write: if has('emergency'); }
+    match /trainingPrograms/{id} {
+      allow read: if has('programs');
+      allow write: if has('programs') && profile().data.role in ['Administrateur','Chef instructeur'];
+    }
+    match /trainingRates/{id} {
+      allow read, create, update: if admin();
+      allow delete: if admin();
+    }
+    match /trainingQuotes/{id} {
+      allow read, create, update: if admin();
+      allow delete: if admin();
+    }
+    match /trainingQuoteTemplates/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingQuoteSettings/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingEmailTemplates/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /tuitionTaxForms/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /tuitionTaxSettings/{id} {
+      allow read, create, update: if admin();
+      allow delete: if false;
+    }
+    match /trainingProgressObjectiveHistory/{id} {
+      allow read: if managesInstructors();
+      allow create: if managesInstructors()
+        && request.resource.data.author == request.auth.uid
+        && request.resource.data.objectiveId is string
+        && request.resource.data.programId is string
+        && request.resource.data.scope in ['cohort','student']
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
+    }
+    match /trainingProgressObjectives/{id} {
+      allow read: if managesInstructors();
+      allow create, update: if managesInstructors()
+        && request.resource.data.programId is string
+        && request.resource.data.scope in ['cohort','student']
+        && request.resource.data.updatedBy == request.auth.uid
+        && ((request.resource.data.scope == 'cohort'
+              && request.resource.data.cohortId is string
+              && request.resource.data.cohortId.size() > 0
+              && request.resource.data.phaseId is string
+              && request.resource.data.phaseId.size() > 0
+              && request.resource.data.milestoneType in ['Fin de phase','Examen','Évaluation','Remise de notes']
+              && request.resource.data.targetDate is string
+              && request.resource.data.targetDate.size() > 0
+              && request.resource.data.notes is string
+              && request.resource.data.notes.size() > 0)
+          || (request.resource.data.scope == 'student'
+              && request.resource.data.studentId is string
+              && request.resource.data.studentId.size() > 0));
+      allow delete: if false;
+    }
+    match /trainingCohorts/{id} {
+      allow read: if managesInstructors();
+      allow create, update: if managesInstructors()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.programId is string
+        && request.resource.data.programId.size() > 0
+        && request.resource.data.startDate is string
+        && request.resource.data.studentIds is list
+        && request.resource.data.status in ['Planifiée','Active','Terminée','Archivée']
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /trainingProgressTargets/{id} {
+      // Ancienne structure conservée pour éviter une suppression de données.
+      // Structure historique désactivée; les objectifs actifs ont leur collection dédiée.
+      allow read, write: if false;
+    }
+
+    match /appSettings/{id} {
+      allow read: if active();
+      allow write: if has('admin');
+    }
+    match /settings/{id} {
+      allow read: if any(['snags','fleet','admin']);
+      allow write: if has('admin');
+    }
+
+    // Demande d'inscription publique (page de connexion) — écriture possible sans être connecté,
+    // strictement validée. Seul un administrateur approuve/rejette (status); le personnel formateur
+    // (instructeur, chef instructeur, administrateur) peut seulement y attacher le dossier étudiant
+    // créé (studentId) une fois la demande approuvée.
+    match /signupRequests/{id} {
+      allow create: if request.resource.data.firstName is string
+        && request.resource.data.firstName.size() > 0
+        && request.resource.data.firstName.size() <= 100
+        && request.resource.data.lastName is string
+        && request.resource.data.lastName.size() > 0
+        && request.resource.data.lastName.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('.+@.+[.].+')
+        && request.resource.data.email.size() <= 200
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.status == 'En attente'
+        && request.resource.data.keys().hasOnly(['firstName','lastName','email','phone','status','createdAt']);
+      allow read: if trainingStaff();
+      allow update: if admin()
+        || (trainingStaff() && resource.data.status == 'Approuvée'
+          && (!resource.data.keys().hasAny(['studentId']) || resource.data.studentId == '')
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentId','studentCreatedAt','studentCreatedBy']));
+      allow delete: if admin();
+    }
+
+    match /testFeedback/{id} {
+      allow create: if active()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 5000;
+      allow read: if feedbackManager();
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','statusUpdatedAt','statusUpdatedBy']);
+      allow delete: if admin();
+    }
+    match /testFeedback/{feedbackId}/replies/{replyId} {
+      allow read: if feedbackManager();
+      allow create: if admin()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 5000;
+      allow update: if admin()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 5000;
+      allow delete: if false;
+    }
+
+    // =====================================================================================
+    // Organisations et flux OMA (bon de travail -> projet -> cartes -> signatures).
+    // Toutes ces collections exigent un orgId et l'appartenance à l'organisation concernée.
+    // =====================================================================================
+    match /organizations/{orgId} {
+      // Nom et type seulement (l'école doit pouvoir désigner l'OMA destinataire); les membres restent privés.
+      allow read: if active();
+      allow create, update: if admin();
+      allow delete: if false;
+
+      match /members/{userId} {
+        allow read: if orgMember(orgId) || admin();
+        allow create: if admin()
+          || (signedIn() && request.auth.uid == userId
+            && exists(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email))
+            && get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.orgId == orgId
+            && get(/databases/$(database)/documents/pendingInvitations/$(request.auth.token.email)).data.orgRole == request.resource.data.role
+            && request.resource.data.userId == userId
+            && request.resource.data.active == true);
+        // Un responsable de l'organisation ne peut modifier que la licence (jamais le rôle).
+        allow update: if admin()
+          || (orgHasRole(orgId, ['admin','prm'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['licenseType','licenseNumber','licenseClass','updatedAt']));
+        allow delete: if admin();
+      }
+    }
+
+    function woKeep() { return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['orgId','sharedWithOrgId','createdBy','createdAt','aircraftId','source']); }
+    function woOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+    function woMove(from, to) { return resource.data.status == from && request.resource.data.status == to; }
+
+    match /workOrders/{id} {
+      // 'annule' inclus (D14) : la liste côté OMA (subscribeReceivedWorkOrders) le filtre aussi,
+      // pour qu'un bon annulé après transmission reste visible plutôt que de disparaître sans
+      // explication — une règle de liste doit couvrir tout ce que la requête peut retourner.
+      allow read: if orgMember(resource.data.orgId)
+        || (resource.data.status in ['transmis','pris_en_charge','rapport_depose','controle_prm','cloture','annule'] && orgMember(resource.data.sharedWithOrgId));
+      allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
+        && orgIsType(request.resource.data.orgId, 'school')
+        && orgIsType(request.resource.data.sharedWithOrgId, 'mro')
+        && request.resource.data.status == 'brouillon'
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.aircraftId is string
+        && request.resource.data.title is string && request.resource.data.title.size() > 0;
+      allow update: if woKeep() && (
+        // Brouillon : l'émetteur modifie le contenu.
+        (woMove('brouillon','brouillon') && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['title','description','tasks','snagId','airTimeAtIssue','aircraftRegistration','updatedAt']))
+        // École : transmission à l'OMA.
+        || (woMove('brouillon','transmis') && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['status','transmittedAt','updatedAt']))
+        // OMA : prise en charge — le projet (même id) est créé dans le même commit.
+        || (woMove('transmis','pris_en_charge') && orgHasRole(resource.data.sharedWithOrgId, ['prm','admin'])
+          && woOnly(['status','acceptedBy','acceptedAt','updatedAt'])
+          && request.resource.data.acceptedBy.uid == request.auth.uid
+          && existsAfter(/databases/$(database)/documents/projects/$(id)))
+        // OMA : dépôt du rapport.
+        || (woMove('pris_en_charge','rapport_depose') && orgHasRole(resource.data.sharedWithOrgId, ['prm','admin'])
+          && woOnly(['status','report','updatedAt'])
+          && request.resource.data.report.summary is string && request.resource.data.report.summary.size() > 0
+          && request.resource.data.report.depositedBy.uid == request.auth.uid)
+        // École : début du contrôle PRM. SÉPARATION DES TÂCHES (bloquante, sans exception) :
+        // celui qui a signé une carte du projet ne peut pas exécuter cette transition.
+        || (woMove('rapport_depose','controle_prm') && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['status','control','updatedAt'])
+          && request.resource.data.control.by.uid == request.auth.uid
+          && !(get(/databases/$(database)/documents/projects/$(id)).data.signerUids.hasAny([request.auth.uid])))
+        // École : remise en service — refusée tant qu'une carte du projet reste ouverte.
+        // SÉPARATION DES TÂCHES (bloquante, sans exception) : celui qui a signé une carte
+        // du projet ne peut pas non plus exécuter cette transition.
+        || (woMove('controle_prm','cloture') && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['status','rts','updatedAt'])
+          && request.resource.data.rts.by.uid == request.auth.uid
+          && get(/databases/$(database)/documents/projects/$(id)).data.openCardCount == 0
+          && !(get(/databases/$(database)/documents/projects/$(id)).data.signerUids.hasAny([request.auth.uid])))
+        // École : annulation (D13) — jamais si une carte du projet a déjà été signée, quel que soit
+        // le statut du bon (sauf depuis controle_prm, où le contrôle est déjà commencé). Réservée à
+        // l'émetteur (école), jamais à l'OMA.
+        || (resource.data.status in ['brouillon','transmis','pris_en_charge','rapport_depose'] && request.resource.data.status == 'annule'
+          && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && woOnly(['status','cancelled','updatedAt'])
+          && request.resource.data.cancelled.by.uid == request.auth.uid
+          && (!exists(/databases/$(database)/documents/projects/$(id)) || get(/databases/$(database)/documents/projects/$(id)).data.signerUids.size() == 0))
+      );
+      allow delete: if resource.data.status == 'brouillon' && orgHasRole(resource.data.orgId, ['prm','admin']);
+    }
+
+    match /projects/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+      allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
+        && get(/databases/$(database)/documents/workOrders/$(id)).data.status == 'transmis'
+        && getAfter(/databases/$(database)/documents/workOrders/$(id)).data.status == 'pris_en_charge'
+        && request.resource.data.orgId == get(/databases/$(database)/documents/workOrders/$(id)).data.sharedWithOrgId
+        && request.resource.data.workOrderOrgId == get(/databases/$(database)/documents/workOrders/$(id)).data.orgId
+        && request.resource.data.cardCount == 0 && request.resource.data.openCardCount == 0
+        && request.resource.data.signerUids.size() == 0
+        && request.resource.data.openedBy.uid == request.auth.uid;
+      allow update: if orgMember(resource.data.orgId)
+        && request.resource.data.orgId == resource.data.orgId
+        && request.resource.data.workOrderOrgId == resource.data.workOrderOrgId
+        && (
+          // Ajout d'une carte (même commit que la création de la carte).
+          (orgHasRole(resource.data.orgId, ['prm','admin'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cardCount','openCardCount','lastCardId'])
+            && request.resource.data.cardCount == resource.data.cardCount + 1
+            && request.resource.data.openCardCount == resource.data.openCardCount + 1
+            && !exists(/databases/$(database)/documents/workCards/$(request.resource.data.lastCardId))
+            && existsAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCardId))
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCardId)).data.projectId == id)
+          // Fermeture d'une carte (même commit que la signature immuable); signerUids ne fait que croître.
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openCardCount','signerUids','lastClosedCardId','lastSignatureId'])
+            && resource.data.openCardCount > 0
+            && request.resource.data.openCardCount == resource.data.openCardCount - 1
+            && request.resource.data.signerUids.hasAll(resource.data.signerUids)
+            && request.resource.data.signerUids.size() <= resource.data.signerUids.size() + 1
+            && get(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.status == 'ouvert'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.status == 'ferme'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.projectId == id
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)).data.signatureId == request.resource.data.lastSignatureId
+            && request.resource.data.signerUids.hasAny([getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastClosedCardId)/signatures/$(request.resource.data.lastSignatureId)).data.signerUid]))
+          // Annulation d'une carte (D13, jamais signée — même mécanisme que la fermeture) :
+          // openCardCount décrémenté, cardCount inchangé (la carte a existé, elle reste comptée).
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openCardCount','lastCancelledCardId'])
+            && resource.data.openCardCount > 0
+            && request.resource.data.openCardCount == resource.data.openCardCount - 1
+            && get(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.status == 'ouvert'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.status == 'annulee'
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastCancelledCardId)).data.projectId == id)
+        );
+      allow delete: if false;
+    }
+
+    match /workCards/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+      allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
+        && request.resource.data.status == 'ouvert'
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.orgId == get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.orgId
+        && request.resource.data.workOrderOrgId == get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.workOrderOrgId
+        && get(/databases/$(database)/documents/workOrders/$(request.resource.data.projectId)).data.status == 'pris_en_charge'
+        && getAfter(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.lastCardId == id
+        && exists(/databases/$(database)/documents/organizations/$(request.resource.data.orgId)/members/$(request.resource.data.assignedUserId))
+        && !request.resource.data.keys().hasAny(['signedAt','signedBy','signedContentHash','signatureId','nextDue']);
+      allow update: if
+        // Carte ouverte : le technicien assigné renseigne le contenu; le PRM de l'OMA peut aussi réassigner.
+        ((resource.data.status == 'ouvert' && request.resource.data.status == 'ouvert'
+          && resource.data.assignedUserId == request.auth.uid && orgMember(resource.data.orgId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rectification','parts','completedAirTime','completedDate','updatedAt']))
+        || (resource.data.status == 'ouvert' && request.resource.data.status == 'ouvert'
+          && orgHasRole(resource.data.orgId, ['prm','admin'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rectification','parts','completedAirTime','completedDate','assignedUserId','assignedUserName','requiredClass','updatedAt'])
+          && exists(/databases/$(database)/documents/organizations/$(resource.data.orgId)/members/$(request.resource.data.assignedUserId))))
+        // Fermeture : uniquement avec la signature immuable créée dans le même commit (route serveur).
+        // Refusée si le bon de travail parent est annulé (D13) : une carte encore ouverte d'un bon
+        // annulé ne doit pas rester signable après coup.
+        || (resource.data.status == 'ouvert' && request.resource.data.status == 'ferme'
+          && orgMember(resource.data.orgId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','signedAt','signedBy','signedContentHash','signatureId','nextDue','updatedAt'])
+          && request.resource.data.signedBy == resource.data.assignedUserId
+          && existsAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId))
+          && getAfter(/databases/$(database)/documents/workCards/$(id)/signatures/$(request.resource.data.signatureId)).data.contentHash == request.resource.data.signedContentHash
+          && get(/databases/$(database)/documents/workOrders/$(resource.data.projectId)).data.status != 'annule')
+        // Annulation (D13) : uniquement depuis 'ouvert', donc jamais sur une carte signée — le
+        // statut 'ouvert' garantit déjà l'absence de signature (même invariant que la fermeture).
+        || (resource.data.status == 'ouvert' && request.resource.data.status == 'annulee'
+          && orgMember(resource.data.orgId)
+          && (resource.data.assignedUserId == request.auth.uid || orgHasRole(resource.data.orgId, ['prm','admin']))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelled','updatedAt'])
+          && request.resource.data.cancelled.by.uid == request.auth.uid);
+      // Une carte signée (status 'ferme') n'est plus modifiable : aucune branche ne le permet.
+      allow delete: if false;
+
+      // Signature immuable : création seulement, liée au hash du contenu au moment de la signature.
+      match /signatures/{sigId} {
+        allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+        allow create: if orgMember(request.resource.data.orgId)
+          && get(/databases/$(database)/documents/workCards/$(id)).data.status == 'ouvert'
+          && getAfter(/databases/$(database)/documents/workCards/$(id)).data.status == 'ferme'
+          && getAfter(/databases/$(database)/documents/workCards/$(id)).data.signatureId == sigId
+          && request.resource.data.cardId == id
+          && request.resource.data.orgId == get(/databases/$(database)/documents/workCards/$(id)).data.orgId
+          && request.resource.data.workOrderOrgId == get(/databases/$(database)/documents/workCards/$(id)).data.workOrderOrgId
+          && request.resource.data.projectId == get(/databases/$(database)/documents/workCards/$(id)).data.projectId
+          && request.resource.data.signerUid == get(/databases/$(database)/documents/workCards/$(id)).data.assignedUserId
+          && request.resource.data.contentHash is string && request.resource.data.contentHash.size() == 64
+          && request.resource.data.hashAlgo == 'sha256'
+          && request.resource.data.licenseNumber is string && request.resource.data.licenseNumber.size() > 0
+          && request.resource.data.classMatch in ['match','mismatch','unspecified']
+          && getAfter(/databases/$(database)/documents/projects/$(get(/databases/$(database)/documents/workCards/$(id)).data.projectId)).data.signerUids.hasAny([request.resource.data.signerUid]);
+        allow update, delete: if false;
+      }
+
+      // Corrections/notes après signature : nouvelles inscriptions, jamais de remplacement.
+      match /entries/{entryId} {
+        allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+        allow create: if orgMember(request.resource.data.orgId)
+          && request.resource.data.cardId == id
+          && request.resource.data.createdBy.uid == request.auth.uid
+          && request.resource.data.orgId == get(/databases/$(database)/documents/workCards/$(id)).data.orgId
+          && request.resource.data.workOrderOrgId == get(/databases/$(database)/documents/workCards/$(id)).data.workOrderOrgId
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 5000
+          && request.resource.data.kind in ['correction','note']
+          && (request.resource.data.kind == 'note' || get(/databases/$(database)/documents/workCards/$(id)).data.status == 'ferme');
+        allow update, delete: if false;
+      }
+    }
+
+    // Inventaire de pièces de l'école, partagé avec une OMA (D15). L'école (PRM/admin) crée et corrige le
+    // stock; l'OMA ne peut QUE le décrémenter, dans le même commit que la fermeture (signature) d'une de ses
+    // cartes, et jamais sous zéro. Partage et traçabilité (lastInstalledCardId) ne sont modifiables que là.
+    match /inventoryItems/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.sharedWithOrgId);
+      allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
+        && orgIsType(request.resource.data.orgId, 'school')
+        && orgIsType(request.resource.data.sharedWithOrgId, 'mro')
+        && request.resource.data.createdBy.uid == request.auth.uid
+        && request.resource.data.partNumber is string && request.resource.data.partNumber.size() > 0
+        && request.resource.data.description is string
+        && request.resource.data.serialNumber is string
+        && request.resource.data.location is string
+        && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+        && (request.resource.data.serialNumber == '' || request.resource.data.quantity <= 1)
+        && !request.resource.data.keys().hasAny(['lastInstalledCardId']);
+      allow update: if
+        // Gestion par l'école : correction de la fiche et du stock (ajout de réception, correction d'inventaire).
+        (orgHasRole(resource.data.orgId, ['prm','admin'])
+          && request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.sharedWithOrgId == resource.data.sharedWithOrgId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['partNumber','description','serialNumber','quantity','location','updatedAt'])
+          && request.resource.data.partNumber.size() > 0
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+          && (request.resource.data.serialNumber == '' || request.resource.data.quantity <= 1))
+        // Consommation par la certification d'une carte de l'OMA : même commit que la carte fermée.
+        || (orgMember(resource.data.sharedWithOrgId)
+          && request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.sharedWithOrgId == resource.data.sharedWithOrgId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastInstalledCardId','updatedAt'])
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 0
+          && request.resource.data.quantity < resource.data.quantity
+          && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastInstalledCardId)).data.status == 'ferme'
+          && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.lastInstalledCardId)).data.orgId == resource.data.sharedWithOrgId);
+      // Une pièce déjà installée reste dans l'inventaire comme trace (pas de suppression).
+      allow delete: if orgHasRole(resource.data.orgId, ['prm','admin']) && !resource.data.keys().hasAny(['lastInstalledCardId']);
+    }
+
+    // Journal des mouvements de stock (D15) : création seulement. Chaque ligne doit correspondre à la
+    // quantité écrite dans le même commit (ou à la suppression de la fiche). École : gestion du stock;
+    // OMA : seulement l'installation d'une pièce sur une carte fermée dans le même commit.
+    match /inventoryHistory/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.sharedWithOrgId);
+      allow create: if request.resource.data.itemId is string
+        && request.resource.data.quantityBefore is int && request.resource.data.quantityAfter is int
+        && request.resource.data.quantityAfter >= 0
+        && request.resource.data.quantityChange == request.resource.data.quantityAfter - request.resource.data.quantityBefore
+        && (!existsAfter(/databases/$(database)/documents/inventoryItems/$(request.resource.data.itemId))
+          || getAfter(/databases/$(database)/documents/inventoryItems/$(request.resource.data.itemId)).data.quantity == request.resource.data.quantityAfter)
+        && ((orgHasRole(request.resource.data.orgId, ['prm','admin'])
+            && request.resource.data.action in ['Création','Modification','Suppression']
+            && request.resource.data.actor.uid == request.auth.uid)
+          || (orgMember(request.resource.data.sharedWithOrgId)
+            && request.resource.data.action == 'Installée sur avion'
+            && request.resource.data.quantityChange < 0
+            && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.status == 'ferme'));
+      allow update, delete: if false;
+    }
+
+    // Composantes installées sur les avions (D15) : création seulement, dans le commit de certification
+    // (carte passée à 'ferme' avec la même organisation et le même bon). Jamais modifiées ni supprimées.
+    match /aircraftComponents/{id} {
+      allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
+      allow create: if orgMember(request.resource.data.orgId)
+        && request.resource.data.partNumber is string && request.resource.data.partNumber.size() > 0
+        && request.resource.data.quantity is int && request.resource.data.quantity > 0
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.status == 'ferme'
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.orgId == request.resource.data.orgId
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.workOrderOrgId == request.resource.data.workOrderOrgId
+        && getAfter(/databases/$(database)/documents/workCards/$(request.resource.data.cardId)).data.projectId == request.resource.data.workOrderId;
+      allow update, delete: if false;
+    }
+
+    // NIP de certification des techniciens : seul le technicien définit le sien; les autres membres de
+    // l'OMA ne peuvent mettre à jour que les compteurs d'essais (le verrouillage doit rester effectif).
+    match /technicianPins/{userId} {
+      allow read: if orgMember(resource.data.orgId);
+      allow create: if request.auth.uid == userId
+        && orgMember(request.resource.data.orgId)
+        && orgIsType(request.resource.data.orgId, 'mro')
+        && request.resource.data.hash is string && request.resource.data.salt is string;
+      allow update: if orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId
+        && (request.auth.uid == userId
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['failedAttempts','lockedUntil','updatedAt']));
+      allow delete: if request.auth.uid == userId || orgHasRole(resource.data.orgId, ['prm','admin']);
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

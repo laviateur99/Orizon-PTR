@@ -20,6 +20,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { schoolScope, withSchoolOrg } from "@/features/organizations/scope";
 import type {
   Cancellation,
   FlightOperationUpdate,
@@ -112,6 +113,7 @@ export async function assertAircraftMaintenanceCompliance(
         query(
           collection(db, "reservations"),
           where("aircraftId", "==", aircraftId),
+          ...schoolScope(),
         ),
       ),
     ]);
@@ -236,8 +238,15 @@ function mapResource(
         ].includes(status)),
   };
 }
+/**
+ * Étudiant : les règles interdisent la lecture de aircraft / snags et limitent reservations aux
+ * réservations de l'étudiant. `studentId` = fiche liée de l'étudiant ("" si aucune). Les autres rôles
+ * passent `undefined`.
+ */
+export type StudentReadScope = string | undefined;
 export function subscribeResources(
   h: LiveHandlers<SchedulerResource>,
+  studentId?: StudentReadScope,
 ): Unsubscribe {
   const values = new Map<string, SchedulerResource[]>();
   const emit = () =>
@@ -251,9 +260,13 @@ export function subscribeResources(
     { name: "instructors", kind: "instructor" as const },
     { name: "resources", kind: "room" as const },
   ];
-  const offs = configs.map((c) =>
-    onSnapshot(
-      collection(db, c.name),
+  const offs = configs.map((c) => {
+    if (studentId !== undefined && c.name === "aircraft") {
+      values.set("aircraft", []);
+      return () => {};
+    }
+    return onSnapshot(
+      c.name === "aircraft" ? query(collection(db, c.name), ...schoolScope()) : collection(db, c.name),
       (s) => {
         values.set(
           c.name,
@@ -268,8 +281,8 @@ export function subscribeResources(
         emit();
       },
       h.error,
-    ),
-  );
+    );
+  });
   return () => offs.forEach((x) => x());
 }
 function mapEvent(id: string, d: DocumentData): SchedulerEvent {
@@ -358,23 +371,58 @@ function mapEvent(id: string, d: DocumentData): SchedulerEvent {
 }
 export function subscribeReservations(
   h: LiveHandlers<SchedulerEvent>,
+  studentId?: StudentReadScope,
 ): Unsubscribe {
-  return onSnapshot(
-    collection(db, "reservations"),
-    (s) =>
-      h.next(
-        s.docs
-          .filter((i) => text(i.data().status) !== "Annulé")
-          .map((i) => mapEvent(i.id, i.data())),
-      ),
-    h.error,
-  );
+  const publish = (docs: Array<{ id: string; data: () => DocumentData }>) =>
+    h.next(
+      docs
+        .filter((i) => text(i.data().status) !== "Annulé")
+        .map((i) => mapEvent(i.id, i.data())),
+    );
+  if (studentId === undefined)
+    return onSnapshot(
+      query(collection(db, "reservations"), ...schoolScope()),
+      (s) => publish(s.docs),
+      h.error,
+    );
+  // Étudiant : ses réservations seulement (studentId) + celles où il est participant (théorie/groupe).
+  if (!studentId) {
+    h.next([]);
+    return () => {};
+  }
+  const direct = new Map<string, { id: string; data: () => DocumentData }>(),
+    group = new Map<string, { id: string; data: () => DocumentData }>();
+  const emit = () => publish([...new Map([...direct, ...group]).values()]);
+  const fill = (target: typeof direct, s: { docs: Array<{ id: string; data: () => DocumentData }> }) => {
+    target.clear();
+    s.docs.forEach((i) => target.set(i.id, i));
+    emit();
+  };
+  const a = onSnapshot(
+      query(collection(db, "reservations"), where("studentId", "==", studentId), ...schoolScope()),
+      (s) => fill(direct, s),
+      h.error,
+    ),
+    b = onSnapshot(
+      query(collection(db, "reservations"), where("participantStudentIds", "array-contains", studentId), ...schoolScope()),
+      (s) => fill(group, s),
+      h.error,
+    );
+  return () => {
+    a();
+    b();
+  };
 }
 export function subscribeSnagBlocks(
   h: LiveHandlers<SchedulerEvent>,
+  studentId?: StudentReadScope,
 ): Unsubscribe {
+  if (studentId !== undefined) {
+    h.next([]);
+    return () => {};
+  }
   return onSnapshot(
-    collection(db, "snags"),
+    query(collection(db, "snags"), ...schoolScope()),
     (snapshot) => {
       const blocks: SchedulerEvent[] = [];
       snapshot.docs.forEach((item) => {
@@ -564,10 +612,12 @@ export async function saveReservation(e: SchedulerEvent, exists: boolean) {
   else
     await setDoc(
       r,
-      cleanFirestoreData({
-        ...schedulerEventPayload(e),
-        createdAt: serverTimestamp(),
-      }),
+      cleanFirestoreData(
+        withSchoolOrg({
+          ...schedulerEventPayload(e),
+          createdAt: serverTimestamp(),
+        }),
+      ),
     );
 }
 export async function updateMaintenanceReservationSchedule(

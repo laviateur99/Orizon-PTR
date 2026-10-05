@@ -22,6 +22,13 @@ import {
   formatQuebecDateTime,
   quebecLocalInputToIso,
 } from "@/lib/quebecDateTime";
+// Règle TEA / non-TEA (D14, étape 2) : un travail nécessitant un TEA est créé directement dans le
+// système OMA plutôt que dans maintenanceWorkOrders — createWorkOrder() est déjà écrite et testée,
+// aucune logique de statut n'est dupliquée ici.
+import { createWorkOrder } from "@/features/oma/firestore";
+import { subscribeOrganizations } from "@/features/organizations/firestore";
+import { getSchoolOrgId } from "@/features/organizations/orgContext";
+import type { Organization } from "@/features/organizations/types";
 
 const STATUSES: MaintenanceWorkStatus[] = [
   "Planifiée",
@@ -154,7 +161,10 @@ export function MaintenanceWorkOrdersPanel({
     [statusFilter, setStatusFilter] = useState<
       MaintenanceWorkStatus | "Actifs" | "Tous"
     >("Actifs"),
-    [aircraftFilter, setAircraftFilter] = useState("Tous");
+    [aircraftFilter, setAircraftFilter] = useState("Tous"),
+    [tea, setTea] = useState(false),
+    [organizations, setOrganizations] = useState<Organization[]>([]);
+  useEffect(() => subscribeOrganizations(setOrganizations, () => undefined), []);
   const manager =
     actor.role === "Administrateur" ||
     actor.role === "Directeur de maintenance";
@@ -269,6 +279,7 @@ export function MaintenanceWorkOrdersPanel({
     [snags],
   );
   function beginNew(snag?: Snag) {
+    setTea(false);
     const plane = snag
       ? aircraft.find((item) => item.id === snag.aircraftId)
       : aircraft.find((item) => item.active) || aircraft[0];
@@ -355,6 +366,40 @@ export function MaintenanceWorkOrdersPanel({
       ].includes(status) || manager
     );
   }
+  /**
+   * TEA (D14, étape 2) : créé uniquement à la création d'un nouveau travail (jamais original, donc
+   * jamais en édition d'un travail existant). Écrit dans workOrders (OMA), jamais dans
+   * maintenanceWorkOrders — les deux systèmes restent mutuellement exclusifs pour un même travail.
+   */
+  async function createAsOma() {
+    if (!editing || saving) return;
+    if (!editing.title.trim()) { setError("Le titre du travail est obligatoire."); return; }
+    const mro = organizations.find((item) => item.type === "mro");
+    if (!mro) { setError("Aucune organisation OMA n’existe — exécutez d’abord la migration des organisations (Administration)."); return; }
+    const schoolOrgId = getSchoolOrgId();
+    if (!schoolOrgId) { setError("Votre compte n’est rattaché à aucune organisation école."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const id = await createWorkOrder(
+        {
+          orgId: schoolOrgId, sharedWithOrgId: mro.id,
+          source: editing.source === "SNAG" ? "snag" : editing.source === "Échéance maintenance existante" ? "status_board" : "manuel",
+          aircraftId: editing.aircraftId, aircraftRegistration: editing.aircraftRegistration,
+          title: editing.title.trim(), description: editing.description || "",
+          snagId: editing.snagId, tasks: [],
+        },
+        { uid: actor.id, name: actor.name },
+      );
+      setEditing(null);
+      window.location.href = `/maintenance?tab=oma&openOrderId=${encodeURIComponent(id)}`;
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Création du bon OMA impossible.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function save(candidate: MaintenanceWorkOrder | null = editing) {
     if (!candidate || saving) return;
     if (!candidate.aircraftId || !candidate.title.trim()) {
@@ -670,6 +715,20 @@ export function MaintenanceWorkOrdersPanel({
               {error && (
                 <div className="notice error" role="alert">
                   {error}
+                </div>
+              )}
+              {!original && (
+                <label>
+                  Ce travail nécessite-t-il un TEA ?
+                  <select value={tea ? "oui" : "non"} onChange={(event) => setTea(event.target.value === "oui")}>
+                    <option value="non">Non — travail élémentaire / entretien courant (MCM art. 14)</option>
+                    <option value="oui">Oui — doit passer par l’OMA</option>
+                  </select>
+                </label>
+              )}
+              {!original && tea && (
+                <div className="notice warning">
+                  Ce travail sera créé comme bon de travail OMA (pas dans le suivi PRM/DOM ci-dessous) : à transmettre ensuite depuis l’onglet OMA.
                 </div>
               )}
               <div className="form-grid">
@@ -1119,9 +1178,9 @@ export function MaintenanceWorkOrdersPanel({
               <button
                 className="button"
                 disabled={saving}
-                onClick={() => void save()}
+                onClick={() => (!original && tea ? void createAsOma() : void save())}
               >
-                {saving ? "Enregistrement…" : "Enregistrer"}
+                {saving ? "Enregistrement…" : !original && tea ? "Créer le bon OMA" : "Enregistrer"}
               </button>
             </footer>
           </section>

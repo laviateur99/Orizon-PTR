@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { ReactNode, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { OrizonLogo } from "@/components/branding/OrizonLogo";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { SetPasswordPage } from "@/features/auth/SetPasswordPage";
@@ -10,16 +10,25 @@ import {canManageAdministration,canViewTestFeedback,pathModule,type AppModule} f
 import { CommunicationGate } from "@/features/employees/CommunicationGate";
 import { FeedbackWidget } from "@/components/test/FeedbackWidget";
 
+// Lien "OMA" retiré (D14, étape 1) : l'accès se fait par l'onglet OMA de /maintenance, ou par /oma
+// qui y redirige déjà (redirect() côté serveur, indépendant de cette liste). Un compte purement OMA
+// (permission "oma" seulement) n'aura donc plus de lien latéral visible; il est redirigé vers
+// /maintenance?tab=oma dès la connexion (effet ci-dessous), et y retombe même sans le paramètre
+// d'URL (topTab de MaintenancePage retombe sur "OMA" quand can("maintenance") est faux).
 const links:Array<[string,string,AppModule]>=[["/","Tableau de bord","dashboard"],["/schedule","Horaire","schedule"],["/ptr","PTR","ptr"],["/students","Étudiants","students"],["/theory","Formation théorique","theory"],["/fleet","Flotte","fleet"],["/maintenance","Maintenance","maintenance"],["/emergency","Urgence","emergency"]];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname=usePathname(),{user,profile,loading,can,logout}=useAuth();
+  const pathname=usePathname(),router=useRouter(),{user,profile,loading,can,logout}=useAuth();
+  // Le personnel de l'OMA n'a aucune permission école : sa page d'accueil est le module OMA.
+  useEffect(()=>{if(profile?.role==="OMA"&&pathname==="/")router.replace("/oma")},[profile?.role,pathname,router]);
   if(loading)return <main className="auth-loading"><OrizonLogo/><strong>Chargement de Flight Director…</strong></main>;
   if(!user)return <LoginPage/>;
   if(!profile)return <main className="access-state"><section className="card"><h1>Compte en attente</h1><p>Votre compte existe, mais aucun rôle ne lui a encore été attribué. Communiquez avec un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
   if(profile.mustSetPassword)return <SetPasswordPage/>;
   if(!profile.active)return <main className="access-state"><section className="card"><h1>Compte suspendu</h1><p>L’accès à ce compte a été désactivé par un administrateur.</p><button className="button secondary" onClick={logout}>Déconnexion</button></section></main>;
-  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:pathname.startsWith("/admin/test-feedback")?canViewTestFeedback(profile):can(pathModule(pathname));
+  // /maintenance héberge désormais aussi l'onglet OMA (D14, étape 1) : un compte n'ayant que la
+  // permission "oma" (ex. rôle global OMA) doit pouvoir y entrer, pas seulement "maintenance".
+  const administrationVisible=canManageAdministration(profile)||can("instructors")||can("employees")||can("programs")||can("admin"),allowed=pathname==="/admin"?administrationVisible:pathname.startsWith("/admin/test-feedback")?canViewTestFeedback(profile):pathname==="/maintenance"?(can("maintenance")||can("oma")):can(pathModule(pathname));
   return (
     <div className="app-shell">
       <aside className="sidebar">

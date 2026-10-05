@@ -13,7 +13,7 @@
 // déterminé ayant déjà accès à Firestore — la protection réelle ici vise le devinage occasionnel
 // et les tentatives externes, pas un employé malveillant avec accès légitime.
 
-export type PinRecord = { hash: string; salt: string; failedAttempts: number; lockedUntil?: string; updatedAt: string };
+export type PinRecord = { hash: string; salt: string; algo?: string; orgId?: string; failedAttempts: number; lockedUntil?: string; updatedAt: string };
 
 export const PIN_LENGTH = 4;
 export const PIN_MAX_ATTEMPTS = 5;
@@ -37,4 +37,20 @@ export async function hashPin(pin: string, salt: string): Promise<string> {
 
 export function isValidPin(pin: string): boolean {
   return new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pin);
+}
+
+// Hachage v2 : PBKDF2-HMAC-SHA256 salé. Un NIP de 4 chiffres reste faible face à un attaquant qui
+// lirait le hash (10 000 combinaisons) : PBKDF2 ne fait que renchérir chaque essai hors ligne. Les
+// enregistrements créés avant (sans champ `algo`) restent vérifiables en SHA-256 salé (v1).
+export const PIN_ALGO_V2 = "pbkdf2-sha256-310000";
+const PIN_PBKDF2_ITERATIONS = 310000;
+
+export async function hashPinV2(pin: string, salt: string): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: new TextEncoder().encode(salt), iterations: PIN_PBKDF2_ITERATIONS, hash: "SHA-256" }, key, 256);
+  return toHex(bits);
+}
+
+export function hashPinForAlgo(pin: string, salt: string, algo?: string): Promise<string> {
+  return algo === PIN_ALGO_V2 ? hashPinV2(pin, salt) : hashPin(pin, salt);
 }

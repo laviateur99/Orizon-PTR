@@ -1,5 +1,6 @@
-import { collection, onSnapshot, type FirestoreError, type Unsubscribe } from "firebase/firestore";
+import { collection, onSnapshot, query, type FirestoreError, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
+import { schoolScope } from "@/features/organizations/scope";
 
 export type DashboardSnapshot = {
   aircraftTotal:number;
@@ -24,7 +25,7 @@ export function subscribeDashboard(
   const today=new Date().toISOString().slice(0,10);
   const now=new Date();const nowMinutes=now.getHours()*60+now.getMinutes();
 
-  const offAircraft=onSnapshot(collection(db,"aircraft"),snap=>{
+  const offAircraft=onSnapshot(query(collection(db,"aircraft"),...schoolScope()),snap=>{
     const docs=snap.docs.map(x=>x.data()).filter(x=>x.active!==false);
     state.aircraftTotal=docs.length;
     state.aircraftAvailable=docs.filter(x=>String(x.status||"Disponible")==="Disponible").length;
@@ -33,8 +34,8 @@ export function subscribeDashboard(
 
   const offInstructors=onSnapshot(collection(db,"instructors"),snap=>{state.instructorTotal=snap.docs.filter(x=>x.data().active!==false).length;emit();},error);
   const offStudents=onSnapshot(collection(db,"students"),snap=>{state.studentTotal=snap.docs.filter(x=>String(x.data().status||"Actif")!=="Retiré").length;emit();},error);
-  const offSnags=onSnapshot(collection(db,"snags"),snap=>{state.openSnags=snap.docs.filter(x=>String(x.data().status)!=="Fermé").length;emit();},error);
-  const offReservations=onSnapshot(collection(db,"reservations"),snap=>{
+  const offSnags=onSnapshot(query(collection(db,"snags"),...schoolScope()),snap=>{state.openSnags=snap.docs.filter(x=>String(x.data().status)!=="Fermé").length;emit();},error);
+  const offReservations=onSnapshot(query(collection(db,"reservations"),...schoolScope()),snap=>{
     const todays=snap.docs.map(x=>x.data()).filter(x=>String(x.date)===today);
     state.todaysReservations=todays.length;
     state.lateFlights=todays.filter(x=>{

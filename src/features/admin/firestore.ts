@@ -1,10 +1,11 @@
 import {
-  collection, doc, getDocs, serverTimestamp, setDoc, writeBatch,
+  collection, doc, getDocs, query, serverTimestamp, setDoc, writeBatch,
   type DocumentReference,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { inviteUser } from "@/features/auth/inviteUser";
 import { hashPin, randomPinSalt } from "@/features/auth/pin";
+import { schoolScope, withSchoolOrg } from "@/features/organizations/scope";
 
 const BATCH_LIMIT = 450;
 
@@ -23,7 +24,8 @@ async function commitInChunks(references: DocumentReference[], action: "delete" 
 }
 
 async function referencesFor(collectionName: string) {
-  const snapshot = await getDocs(collection(db, collectionName));
+  const tagged = ["reservations", "aircraft", "snags", "notifications"].includes(collectionName);
+  const snapshot = await getDocs(tagged ? query(collection(db, collectionName), ...schoolScope()) : collection(db, collectionName));
   return snapshot.docs.map(item => item.ref);
 }
 
@@ -80,13 +82,13 @@ export async function createTestData() {
     { id: "demo-v19-2", student: students[1], resourceId: "c-gxyz", type: "Solo", startMinutes: 600, endMinutes: 660, title: "Circuits de démonstration" },
     { id: "demo-v19-3", student: students[2], resourceId: "briefing", type: "Sol", startMinutes: 780, endMinutes: 840, title: "Briefing de démonstration" },
   ];
-  reservations.forEach(item => batch.set(doc(db, "reservations", item.id), {
+  reservations.forEach(item => batch.set(doc(db, "reservations", item.id), withSchoolOrg({
     date, resourceId: item.resourceId, studentId: item.student.id,
     studentName: `${item.student.firstName} ${item.student.lastName}`,
     type: item.type, startMinutes: item.startMinutes, endMinutes: item.endMinutes,
     title: item.title, status: "Planifié", isTestData: true,
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-  }));
+  })));
   await batch.commit();
   return { students: students.length, reservations: reservations.length };
 }
@@ -122,13 +124,13 @@ export async function createPayrollTestData(){
   },{merge:true}));
   const completed=(id:string,instructorIndex:number,studentIndex:number,daysAgo:number,type:string,hours:number,title:string,extra:Record<string,unknown>={})=>{
     const instructor=instructors[instructorIndex],student=students[studentIndex],startMinutes=540;
-    batch.set(doc(db,"reservations",id),{
+    batch.set(doc(db,"reservations",id),withSchoolOrg({
       date:localDateDaysAgo(daysAgo),resourceId:instructor.id,instructorId:instructor.id,studentId:student.id,
       studentName:`${student.firstName} ${student.lastName}`,type,startMinutes,endMinutes:startMinutes+Math.round(hours*60),title,
       status:"Complété",checkedInBy:"Données de démonstration",checkedOutBy:"Données de démonstration",
       checkedInAt:`${localDateDaysAgo(daysAgo)}T09:00:00`,checkedOutAt:`${localDateDaysAgo(daysAgo)}T12:00:00`,
       isTestData:true,payrollTestData:true,...extra,updatedAt:serverTimestamp(),createdAt:serverTimestamp()
-    },{merge:true});
+    }),{merge:true});
   };
   completed("demo-payroll-a-flight-1",0,0,13,"Double commande",1.2,"Vol — exercices en altitude",{dayHours:1.2,flightCrewRole:"Double"});
   completed("demo-payroll-a-ground",0,0,12,"Sol",1,"Sol préparatoire — exercices en altitude",{groundTimeHours:1});

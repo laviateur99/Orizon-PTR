@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
-import { hashPin, isValidPin, PIN_LENGTH, randomPinSalt } from "./pin";
+import { hashPinV2, isValidPin, PIN_ALGO_V2, PIN_LENGTH, randomPinSalt } from "./pin";
+import { getMroOrgId, getSchoolOrgId } from "@/features/organizations/orgContext";
 
 type PinStatus = { exists: boolean; updatedAt?: string } | undefined;
 
-const COLLECTIONS = { student: "studentPins", instructor: "instructorPins" } as const;
+const COLLECTIONS = { student: "studentPins", instructor: "instructorPins", technician: "technicianPins" } as const;
 
 /**
  * NIP de signature électronique — partagé entre étudiants et instructeurs (kind).
@@ -18,7 +19,7 @@ const COLLECTIONS = { student: "studentPins", instructor: "instructorPins" } as 
  * statut (configuré ou non) et le RÉINITIALISER (suppression, jamais un remplacement choisi par
  * lui) — la personne devra alors se connecter à son propre compte pour en redéfinir un.
  */
-export function PersonPinPanel({ kind, personId, personName, isSelf }: { kind: "student" | "instructor"; personId: string; personName: string; isSelf: boolean }) {
+export function PersonPinPanel({ kind, personId, personName, isSelf }: { kind: "student" | "instructor" | "technician"; personId: string; personName: string; isSelf: boolean }) {
   const [status, setStatus] = useState<PinStatus>(undefined);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -38,8 +39,9 @@ export function PersonPinPanel({ kind, personId, personName, isSelf }: { kind: "
     setBusy(true);
     try {
       const salt = randomPinSalt();
-      const hash = await hashPin(pin, salt);
-      await setDoc(doc(db, COLLECTIONS[kind], personId), { hash, salt, failedAttempts: 0, lockedUntil: new Date().toISOString(), updatedAt: serverTimestamp() });
+      const hash = await hashPinV2(pin, salt);
+      const orgId = kind === "instructor" ? getSchoolOrgId() : kind === "technician" ? getMroOrgId() : undefined;
+      await setDoc(doc(db, COLLECTIONS[kind], personId), { hash, salt, algo: PIN_ALGO_V2, failedAttempts: 0, lockedUntil: new Date().toISOString(), updatedAt: serverTimestamp(), ...(orgId ? { orgId } : {}) });
       setMessage("NIP enregistré.");
       setPin(""); setConfirmPin("");
     } catch (e) {

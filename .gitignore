@@ -10,4 +10,7 @@ node_modules
 .installer-backups/
 tmp/
 .env*
-docs/
+# Seuls les devis PDF (données commerciales) sont ignorés; docs/audit-maintenance.md est suivi par git.
+docs/devis-source/
+# Exports locaux de scripts/backup-migration-data.mjs : données réelles potentiellement sensibles.
+backups/

@@ -3,6 +3,9 @@ import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 
 import { deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db, firebaseConfig } from "@/services/firebase/client";
 import { rolePermissions, type UserRole } from "./types";
+import { addOrgMember } from "@/features/organizations/firestore";
+import { orgRoleForUserRole } from "@/features/organizations/types";
+import { getSchoolOrgId } from "@/features/organizations/orgContext";
 
 const temporaryPassword = () => `${crypto.randomUUID()}-Aa1!`;
 
@@ -36,17 +39,24 @@ export async function inviteUser({ name, email, role, linkedStudentId = "", link
     invitedAt: new Date().toISOString(), invitedBy: auth.currentUser?.email || "", createdAtServer: serverTimestamp()
   });
   try {
+    // Organisation de l'invitant : tout nouvel utilisateur de l'école en devient membre.
+    // Le personnel de l'OMA n'est jamais membre de l'école (isolation) : son organisation est ajoutée à part.
+    const schoolOrgId = role === "OMA" ? undefined : getSchoolOrgId();
+    const orgRole = orgRoleForUserRole(role);
     if (existing) {
       await updateDoc(doc(db, "users", existing.uid), invitation());
+      if (schoolOrgId) await addOrgMember(schoolOrgId, "school", existing.uid, { role: orgRole, displayName: name.trim() });
     } else {
       secondary = initializeApp(firebaseConfig, `activation-${Date.now()}`);
       try {
         const result = await createUserWithEmailAndPassword(getAuth(secondary), normalizedEmail, temporaryPassword());
         uid = result.user.uid;
         await setDoc(doc(db, "users", result.user.uid), invitation());
+        if (schoolOrgId) await addOrgMember(schoolOrgId, "school", result.user.uid, { role: orgRole, displayName: name.trim() });
       } catch (error) {
         if ((error as { code?: string }).code !== "auth/email-already-in-use") throw error;
-        await setDoc(doc(db, "pendingInvitations", normalizedEmail), invitation());
+        // Compte Auth déjà existant : le membre sera créé à l'acceptation (AuthProvider), d'après ces champs.
+        await setDoc(doc(db, "pendingInvitations", normalizedEmail), { ...invitation(), ...(schoolOrgId ? { orgId: schoolOrgId, orgType: "school", orgRole } : {}) });
       }
     }
     await sendPasswordResetEmail(auth, normalizedEmail);

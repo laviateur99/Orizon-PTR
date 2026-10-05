@@ -16,6 +16,7 @@ import type {
   Snag,
 } from "@/features/fleet/types";
 import { formatQuebecDateTime, quebecToday } from "@/lib/quebecDateTime";
+import { effectiveStatus, statusClass } from "./aircraftStatus";
 
 const CLOSED = new Set(["Fermée", "Annulée"]);
 const DAY = 86_400_000;
@@ -48,10 +49,14 @@ export function MaintenanceDashboard({
   aircraft,
   tasks,
   workOrders,
+  onSelectAircraft,
 }: {
   aircraft: Aircraft[];
   tasks: MaintenanceTask[];
   workOrders: MaintenanceWorkOrder[];
+  // Clic sur un avion de la bande du haut : réutilise le panneau de détail déjà construit dans
+  // MaintenancePage (échéances + historique de cet avion), plutôt que d'en bâtir un nouveau.
+  onSelectAircraft: (aircraft: Aircraft) => void;
 }) {
   const [snags, setSnags] = useState<Snag[]>([]);
   const [history, setHistory] = useState<MaintenanceHistory[]>([]);
@@ -158,6 +163,18 @@ export function MaintenanceDashboard({
       .sort((a, b) => a.rank - b.rank || (a.hours ?? 999999) - (b.hours ?? 999999) || (a.days ?? 999999) - (b.days ?? 999999));
     return rows.slice(0, 40);
   }, [tasks, aircraftById]);
+  // Regroupement par avion (une ligne par avion, pas par tâche) : chaque groupe trié par sa tâche
+  // la plus urgente (même rang), les avions eux-mêmes triés du plus urgent au moins urgent.
+  const upcomingByAircraft = useMemo(() => {
+    const groups = new Map<string, { key: string; registration: string; items: typeof upcomingTasks }>();
+    for (const row of upcomingTasks) {
+      const key = row.plane?.id || row.task.aircraftId;
+      const existing = groups.get(key);
+      if (existing) existing.items.push(row);
+      else groups.set(key, { key, registration: row.plane?.registration || row.task.aircraftId, items: [row] });
+    }
+    return [...groups.values()].sort((a, b) => a.items[0].rank - b.items[0].rank);
+  }, [upcomingTasks]);
   const cutoff30Days = now - 30 * DAY;
   const fleetMetrics = useMemo(
     () =>
@@ -286,6 +303,17 @@ export function MaintenanceDashboard({
       <button className="button" onClick={() => setReportOpen(true)}>Générer rapport maintenance du jour</button>
     </header>
     {error && <div className="notice error">{error}</div>}
+    <div className="maintenance-fleet-strip">
+      {activeAircraft.map((plane) => {
+        const status = effectiveStatus(plane);
+        return (
+          <button type="button" className={`maintenance-fleet-strip-item ${statusClass(status)}`} key={plane.id} onClick={() => onSelectAircraft(plane)}>
+            <strong>{plane.registration}</strong>
+            <span>{status}</span>
+          </button>
+        );
+      })}
+    </div>
     <div className="maintenance-dashboard-kpis">
       {kpis.map(([label, value, tone]) => <article className={`maintenance-dashboard-kpi ${tone}`} key={label}><strong>{value}</strong><span>{label}</span></article>)}
     </div>
@@ -324,6 +352,18 @@ export function MaintenanceDashboard({
       </table>
     </DashboardTable>
 
+    <DashboardTable title="Travaux à venir" empty="Aucune échéance." showEmpty={!upcomingByAircraft.length}>
+      <table><thead><tr><th>Avion</th><th>Tâches</th></tr></thead><tbody>
+        {upcomingByAircraft.map((group) => <tr key={group.key}><td><b>{group.registration}</b></td><td><div className="maintenance-upcoming-tasks">
+          {group.items.map(({ task, hours, days, rank }) => <div className="maintenance-upcoming-task" key={task.id}>
+            <span>{task.title}</span>
+            <span>{hours === undefined ? "—" : `${hours.toFixed(1)} h`}{days === undefined ? "" : ` · ${days} j`}</span>
+            <Status value={rank === 0 ? "Retardé" : rank === 1 ? "≤15 h" : rank === 2 ? "≤30 jours" : "Normal"} danger={rank === 0} warning={rank === 1 || rank === 2} />
+          </div>)}
+        </div></td></tr>)}
+      </tbody></table>
+    </DashboardTable>
+
     <div className="maintenance-dashboard-columns">
       <DashboardTable title="Temps hors service — 30 derniers jours" empty="Aucune immobilisation." showEmpty={!fleetMetrics.some((item) => item.immobilizations)}>
         <table><thead><tr><th>Avion</th><th>Immobilisations</th><th>Temps total</th><th>Work Orders</th><th>SNAG</th><th>Moyenne maintenance</th></tr></thead><tbody>{fleetMetrics.map((item) => <tr key={item.plane.id}><td><b>{item.plane.registration}</b></td><td>{item.immobilizations}</td><td>{item.totalHours.toFixed(1)} h</td><td>{item.workOrders}</td><td>{item.snags}</td><td>{item.averageHours.toFixed(1)} h</td></tr>)}</tbody></table>
@@ -333,18 +373,11 @@ export function MaintenanceDashboard({
       </DashboardTable>
     </div>
 
-    <div className="maintenance-dashboard-columns">
-      <DashboardTable title="Retour en service prévu" empty="Aucun retour planifié." showEmpty={!returnRows.length}>
-        <table><thead><tr><th>Avion</th><th>Travail</th><th>Retour prévu</th><th>Responsable</th><th>État</th></tr></thead><tbody>
-          {returnRows.map((item) => { const late = dateValue(item.plannedEndAt) < now; return <tr key={item.id}><td><b>{item.aircraftRegistration}</b></td><td>{item.title}</td><td>{formatQuebecDateTime(item.plannedEndAt)}</td><td>{workOwner(item)}</td><td><Status value={late ? "⚠ Retard RTS" : item.workStatus} danger={late} /></td></tr>; })}
-        </tbody></table>
-      </DashboardTable>
-      <DashboardTable title="Travaux à venir" empty="Aucune échéance." showEmpty={!upcomingTasks.length}>
-        <table><thead><tr><th>Avion</th><th>Tâche</th><th>Air Time restant</th><th>Jours restants</th><th>Priorité</th></tr></thead><tbody>
-          {upcomingTasks.map(({ task, plane, hours, days, rank }) => <tr key={task.id}><td><b>{plane?.registration || task.aircraftId}</b></td><td>{task.title}</td><td>{hours === undefined ? "—" : `${hours.toFixed(1)} h`}</td><td>{days === undefined ? "—" : `${days} j`}</td><td><Status value={rank === 0 ? "Retardé" : rank === 1 ? "≤15 h" : rank === 2 ? "≤30 jours" : "Normal"} danger={rank === 0} warning={rank === 1 || rank === 2} /></td></tr>)}
-        </tbody></table>
-      </DashboardTable>
-    </div>
+    <DashboardTable title="Retour en service prévu" empty="Aucun retour planifié." showEmpty={!returnRows.length}>
+      <table><thead><tr><th>Avion</th><th>Travail</th><th>Retour prévu</th><th>Responsable</th><th>État</th></tr></thead><tbody>
+        {returnRows.map((item) => { const late = dateValue(item.plannedEndAt) < now; return <tr key={item.id}><td><b>{item.aircraftRegistration}</b></td><td>{item.title}</td><td>{formatQuebecDateTime(item.plannedEndAt)}</td><td>{workOwner(item)}</td><td><Status value={late ? "⚠ Retard RTS" : item.workStatus} danger={late} /></td></tr>; })}
+      </tbody></table>
+    </DashboardTable>
 
     {auditTarget && createPortal(auditView, auditTarget)}
 
