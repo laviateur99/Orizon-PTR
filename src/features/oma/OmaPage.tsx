@@ -11,6 +11,7 @@ import {
   cancelWorkOrder, closeWorkOrderAndReturnToService, createWorkOrder, startPrmControl, subscribeCards, subscribeIssuedWorkOrders, subscribeProject, transmitWorkOrder,
 } from "./firestore";
 import { OmaMro } from "./OmaMro";
+import { ProjectNumberingPanel } from "./ProjectNumberingPanel";
 import { cardProgress, describeSchoolStep } from "./statusText";
 import { WORK_ORDER_STATUS_LABELS, type Project, type WorkCard, type WorkOrder, type WorkOrderSource } from "./types";
 
@@ -50,7 +51,7 @@ function SchoolOrderPanel({ order, schoolOrgId }: { order: WorkOrder; schoolOrgI
     <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
     {message && <div className={`notice ${messageError ? "error" : ""}`}>{message}</div>}
     {order.status === "brouillon" && <button className="button" disabled={busy} onClick={() => run(() => transmitWorkOrder(order.id), "Bon transmis à l’OMA.")}>Transmettre à l’OMA</button>}
-    {started && project && <p className="muted">Projet OMA : {progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
+    {started && project && <p className="muted">Projet OMA n° {project.projectNumber ?? "—"} : {progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
     {allClosed && <p><a className="button secondary" href={`/oma/dossier-vol/${order.id}`} target="_blank" rel="noreferrer">Ouvrir le dossier de vol (impression)</a></p>}
     {cards.map(card => <p key={card.id}>{card.status === "ferme" ? "✓" : card.status === "annulee" ? "✗" : "○"} ATA {card.ata} — {card.subject} <small>({card.assignedUserName}{card.signedAt ? ` · signée ${new Date(card.signedAt).toLocaleString("fr-CA")}` : card.status === "annulee" ? " · annulée" : ""})</small></p>)}
     {order.report && <div className="notice">Rapport {order.report.reference} : {order.report.summary}</div>}
@@ -151,6 +152,7 @@ export function OmaPage() {
   return <>
     <PageHeader title="OMA — bons de travail" subtitle="Bon de travail → projet → cartes de travail → certification par NIP → contrôle et remise en service" />
     {!profile?.schoolOrgId && !profile?.mroOrgId && <div className="notice warning">Ce compte n’est rattaché à aucune organisation. Un administrateur doit exécuter la migration des organisations (Administration → Paramètres) et vous ajouter à votre organisation.</div>}
+    {profile?.role === "Administrateur" && <ProjectNumberingPanel />}
     {profile?.schoolOrgId && schoolPrm && <SchoolSide schoolOrgId={profile.schoolOrgId} />}
     {profile?.mroOrgId && <OmaMro mroOrgId={profile.mroOrgId} />}
   </>;

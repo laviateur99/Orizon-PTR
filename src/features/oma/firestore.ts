@@ -1,5 +1,5 @@
 import {
-  addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch,
+  addDoc, collection, doc, getDocs, onSnapshot, query, runTransaction, serverTimestamp, setDoc, updateDoc, where, writeBatch,
   type FirestoreError, type Unsubscribe,
 } from "firebase/firestore";
 import { auth, db } from "@/services/firebase/client";
@@ -185,14 +185,28 @@ export async function deleteInventoryItem(item: InventoryItem, by: Actor) {
 // ---------- OMA (destinataire) ----------
 
 /** Prise en charge : le projet est ouvert (même id que le bon) dans le même commit atomique. */
+/** Compteur des numéros de projet : un seul document, fixé par l'administrateur (numéro de départ de la migration). */
+export const PROJECT_COUNTER_PATH = ["projectNumbering", "counter"] as const;
+export const subscribeProjectCounter = (next: (nextNumber: number | null) => void, error: Err): Unsubscribe =>
+  onSnapshot(doc(db, ...PROJECT_COUNTER_PATH), snap => next(snap.exists() ? Number(snap.data().nextNumber) : null), error);
+export async function setProjectCounter(nextNumber: number) {
+  await setDoc(doc(db, ...PROJECT_COUNTER_PATH), { nextNumber, updatedAt: serverTimestamp() });
+}
+
+/** Accepte le bon et crée le projet avec le prochain numéro, dans une seule transaction (le compteur avance avec le projet). */
 export async function acceptWorkOrder(workOrder: WorkOrder, by: Actor) {
-  const batch = writeBatch(db);
-  batch.update(doc(db, "workOrders", workOrder.id), { status: "pris_en_charge", acceptedBy: by, acceptedAt: serverTimestamp(), updatedAt: serverTimestamp() });
-  batch.set(doc(db, "projects", workOrder.id), {
-    orgId: workOrder.sharedWithOrgId, workOrderOrgId: workOrder.orgId,
-    cardCount: 0, openCardCount: 0, signerUids: [], openedBy: by, openedAt: serverTimestamp(),
+  await runTransaction(db, async transaction => {
+    const counterRef = doc(db, ...PROJECT_COUNTER_PATH);
+    const counter = await transaction.get(counterRef);
+    if (!counter.exists()) throw new Error("La numérotation des projets n’est pas configurée : l’administrateur doit fixer le prochain numéro.");
+    const projectNumber = Number(counter.data().nextNumber);
+    transaction.update(doc(db, "workOrders", workOrder.id), { status: "pris_en_charge", acceptedBy: by, acceptedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    transaction.set(doc(db, "projects", workOrder.id), {
+      projectNumber, orgId: workOrder.sharedWithOrgId, workOrderOrgId: workOrder.orgId,
+      cardCount: 0, openCardCount: 0, signerUids: [], openedBy: by, openedAt: serverTimestamp(),
+    });
+    transaction.update(counterRef, { nextNumber: projectNumber + 1, updatedAt: serverTimestamp() });
   });
-  await batch.commit();
 }
 
 export type CardInput = {

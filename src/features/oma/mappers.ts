@@ -36,7 +36,7 @@ export function mapWorkOrder(id: string, d: DocumentData): WorkOrder {
 
 export function mapProject(id: string, d: DocumentData): Project {
   return {
-    id, orgId: text(d.orgId), workOrderOrgId: text(d.workOrderOrgId),
+    id, projectNumber: num(d.projectNumber), orgId: text(d.orgId), workOrderOrgId: text(d.workOrderOrgId),
     cardCount: num(d.cardCount) ?? 0, openCardCount: num(d.openCardCount) ?? 0,
     signerUids: Array.isArray(d.signerUids) ? d.signerUids.filter((item: unknown): item is string => typeof item === "string") : [],
     openedBy: actor(d.openedBy), openedAt: iso(d.openedAt),

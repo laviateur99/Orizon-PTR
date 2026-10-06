@@ -86,7 +86,7 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
 
   // Valeurs d'origine, recalculées à chaque mise à jour des données. Le brouillon garde les modifications faites à l'écran.
   const originals = useMemo<Record<HeaderKey, string>>(() => ({
-    projet: order ? order.id.slice(-6).toUpperCase() : "",
+    projet: project?.projectNumber !== undefined ? String(project.projectNumber) : order ? order.id.slice(-6).toUpperCase() : "",
     immatriculation: order?.aircraftRegistration || "",
     entre: project ? project.id.slice(-6).toUpperCase() : "",
     tt: airTime !== undefined ? `${fmtHours(airTime)} hrs` : "",

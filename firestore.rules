@@ -708,6 +708,18 @@ service cloud.firestore {
       allow delete: if resource.data.status == 'brouillon' && orgHasRole(resource.data.orgId, ['prm','admin']);
     }
 
+    // Compteur de numéros de projet (un seul document). Lu par les comptes actifs (transaction d'acceptation),
+    // ajusté par l'administrateur (numéro de départ de la migration); l'avancement par un PRM se fait dans le
+    // même commit que la création du projet (règle projects/create).
+    match /projectNumbering/{id} {
+      allow read: if active();
+      allow create, update: if admin() && request.resource.data.nextNumber is int && request.resource.data.nextNumber >= 1
+        && request.resource.data.keys().hasOnly(['nextNumber','updatedAt']);
+      allow update: if active() && request.resource.data.nextNumber is int
+        && request.resource.data.nextNumber == resource.data.nextNumber + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nextNumber','updatedAt']);
+    }
+
     match /projects/{id} {
       allow read: if orgMember(resource.data.orgId) || orgMember(resource.data.workOrderOrgId);
       allow create: if orgHasRole(request.resource.data.orgId, ['prm','admin'])
@@ -717,7 +729,11 @@ service cloud.firestore {
         && request.resource.data.workOrderOrgId == get(/databases/$(database)/documents/workOrders/$(id)).data.orgId
         && request.resource.data.cardCount == 0 && request.resource.data.openCardCount == 0
         && request.resource.data.signerUids.size() == 0
-        && request.resource.data.openedBy.uid == request.auth.uid;
+        && request.resource.data.openedBy.uid == request.auth.uid
+        // Numéro de projet : celui du compteur avant le commit, et le compteur avance dans le même commit.
+        && request.resource.data.projectNumber is int
+        && get(/databases/$(database)/documents/projectNumbering/counter).data.nextNumber == request.resource.data.projectNumber
+        && getAfter(/databases/$(database)/documents/projectNumbering/counter).data.nextNumber == request.resource.data.projectNumber + 1;
       allow update: if orgMember(resource.data.orgId)
         && request.resource.data.orgId == resource.data.orgId
         && request.resource.data.workOrderOrgId == resource.data.workOrderOrgId

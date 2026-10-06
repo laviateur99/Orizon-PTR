@@ -38,6 +38,7 @@ export type WorkOrder = {
 
 export type Project = {
   id: string;                  // = id du bon de travail (relation 1:1)
+  projectNumber?: number;      // numéro de suivi OMA, attribué à la création du projet (compteur projectNumbering/counter)
   orgId: string;               // OMA
   workOrderOrgId: string;      // école émettrice
   cardCount: number; openCardCount: number;
