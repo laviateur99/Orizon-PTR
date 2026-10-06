@@ -178,6 +178,7 @@ export function DashboardPage(){
 
   return <>
     <PageHeader title="Tableau de bord" subtitle="Vue opérationnelle en temps réel" />
+    <p className="muted" style={{fontSize:"0.8rem",marginTop:"-0.5rem"}}>Version {process.env.NEXT_PUBLIC_APP_VERSION}</p>
     {error&&<div className="notice error">{error}</div>}
     {leaveMessage&&<div className="notice">{leaveMessage}</div>}
     {leaveManager&&pendingLeaves===0&&<section className="card dashboard-leave-example"><div><h2>Exemple de demande de congé</h2><p>Créez une demande fictive de vacances pour Camille Bérubé afin de vérifier le processus d’approbation.</p></div><button className="button" type="button" disabled={creatingLeave} onClick={createCamilleExample}>{creatingLeave?"Création…":"Créer l’exemple de Camille"}</button></section>}
