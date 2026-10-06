@@ -6,18 +6,16 @@ import { subscribeCards, subscribeIssuedWorkOrders, subscribeProject, subscribeR
 import type { CardSignature, Project, WorkCard, WorkOrder } from "./types";
 import type { DossierVolFixture } from "./dossierVolFixture";
 
-// Collant « Dossier de vol » : le texte est généré à partir des cartes fermées, puis modifiable à l'écran
-// (responsable de maintenance, PRM ou TEA) avant impression. Les modifications restent dans cette page :
-// elles ne changent ni les cartes ni les signatures, qui sont figées à la certification.
+// Collant « Dossier de vol », mis en page comme le modèle papier du dossier. Le texte est généré à partir des
+// cartes fermées, puis modifiable à l'écran (responsable de maintenance, PRM ou TEA) avant impression.
+// Les modifications restent dans cette page : elles ne changent ni les cartes ni les signatures.
 
 type Side = "school" | "mro";
 type CardDraft = { subject: string; rectification: string; parts: string; nextDue: string; signers: string; note: string };
 type HeaderKey = "projet" | "immatriculation" | "entre" | "tt" | "reference" | "travaux";
 type Draft = { header: Record<HeaderKey, string>; cards: Record<string, CardDraft>; footerNote: string };
 
-const HEADER_LABELS: Record<HeaderKey, string> = {
-  projet: "Projet", immatriculation: "Immatriculation", entre: "Entré ID", tt: "Aéronef TT", reference: "Référence client", travaux: "Travaux demandés",
-};
+const EMPTY_HEADER: Record<HeaderKey, string> = { projet: "", immatriculation: "", entre: "", tt: "", reference: "", travaux: "" };
 
 const fmtDate = (value?: string) => {
   if (!value) return "—";
@@ -26,7 +24,7 @@ const fmtDate = (value?: string) => {
 };
 const fmtHours = (value?: number) => typeof value === "number" ? value.toLocaleString("fr-CA", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "—";
 const cardRef = (card: WorkCard) => card.id.slice(-6).toUpperCase();
-const linesOf = (text: string) => text.split("\n").length;
+const linesOf = (text: string) => Math.max(1, text.split("\n").length);
 
 function nextDueText(card: WorkCard) {
   const due = card.nextDue;
@@ -57,7 +55,7 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
   const [project, setProject] = useState<Project | null>(fixture?.project ?? null);
   const [cards, setCards] = useState<WorkCard[]>(fixture?.cards ?? []);
   const [signatures, setSignatures] = useState<Record<string, CardSignature[]>>(fixture?.signatures ?? {});
-  const [draft, setDraft] = useState<Draft>({ header: { projet: "", immatriculation: "", entre: "", tt: "", reference: "", travaux: "" }, cards: {}, footerNote: "" });
+  const [draft, setDraft] = useState<Draft>({ header: EMPTY_HEADER, cards: {}, footerNote: "" });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -114,7 +112,7 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
   }
   function resetDraft() {
     if (!window.confirm("Rétablir tous les textes d’origine ? Vos modifications seront perdues.")) return;
-    setDraft({ header: { projet: "", immatriculation: "", entre: "", tt: "", reference: "", travaux: "" }, cards: {}, footerNote: "" });
+    setDraft({ header: EMPTY_HEADER, cards: {}, footerNote: "" });
   }
 
   if (error) return <div className="notice error">{error}</div>;
@@ -123,35 +121,36 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
 
   return <div className="dv-page">
     <style>{`
-      .dv-page{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;max-width:215mm;margin:0 auto;padding:12px;font-size:11px}
+      .dv-page{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;max-width:215mm;margin:0 auto;padding:12px;font-size:12px}
       .dv-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-      .dv-sheet{border:1.5px solid #111;padding:10px}
       .dv-watermark{border:2px solid #b00000;color:#b00000;font-weight:bold;text-align:center;padding:6px;margin-bottom:8px}
-      .dv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #111;padding-bottom:6px;margin-bottom:6px}
-      .dv-head h1{font-size:16px;margin:0}
-      .dv-fields{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #111}
-      .dv-fields>div{padding:4px 6px;border-right:1px solid #111;border-bottom:1px solid #111}
-      .dv-fields>div:nth-child(4n){border-right:0}
-      .dv-fields span{display:block;font-size:9px;color:#444}
-      .dv-wide{grid-column:1/-1}
-      .dv-field{width:100%;border:0;background:transparent;font:inherit;font-weight:bold;color:inherit;padding:0;resize:none;outline:none}
-      .dv-card{border-bottom:1px dashed #666;padding:6px 0;break-inside:avoid}
-      .dv-card .dv-field{font-weight:normal}
-      .dv-card label{display:block;margin:2px 0}
-      .dv-card label>span{font-weight:bold;margin-right:4px}
-      .dv-edit{width:100%;border:1px dashed #bbb;background:#fafafa;font:inherit;padding:3px;box-sizing:border-box;resize:vertical}
-      .dv-sign{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:14px;align-items:end}
-      .dv-line{border-top:1px solid #111;padding-top:3px;font-size:9px;text-align:center}
+      .dv-sheet{border:1.5px solid #111}
+      .dv-band{background:#111;color:#fff;font-weight:bold;font-size:13px;padding:4px 8px;display:flex;justify-content:space-between}
+      .dv-top{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #111}
+      .dv-top>div{padding:8px}
+      .dv-logo{height:58px;display:block;margin-bottom:4px}
+      .dv-small{font-size:9px;color:#333;line-height:1.3}
+      .dv-cell{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:center;padding:3px 0}
+      .dv-cell b{white-space:nowrap}
+      .dv-body{padding:8px 10px}
+      .dv-line-item{margin:0 0 4px}
+      .dv-card{border-top:1px solid #bbb;padding:6px 0;break-inside:avoid}
+      .dv-edit{width:100%;border:1px dashed #bbb;background:#fafafa;font:inherit;padding:2px 4px;box-sizing:border-box;resize:vertical}
+      .dv-plain{width:100%;border:0;background:transparent;font:inherit;padding:0;resize:none;outline:none;color:inherit}
+      .dv-label{font-weight:bold}
+      .dv-cert{border-top:1px solid #111;margin-top:10px;padding:8px 10px;font-size:11px;font-style:italic;text-align:center}
+      .dv-signs{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;padding:14px 10px 8px;align-items:end}
+      .dv-line{border-top:1px solid #111;padding-top:3px;font-size:10px;text-align:center}
+      .dv-footer{border-top:1px solid #111;padding:6px 10px;font-size:9px;text-align:center;color:#333}
       @media print{
         body{background:#fff!important}
         .sidebar,.dv-toolbar,.dv-editor-only,.app-shell .topbar{display:none!important}
         .app-shell{display:block!important}
         .main{padding:0!important;width:100%!important;max-width:none!important}
-        .dv-page{padding:0;max-width:none}
-        .dv-sheet{border-width:1px}
-        .dv-edit,.dv-field{border:0!important;background:transparent!important;padding:0!important}
-        .dv-card label{display:block}
-        @page{size:letter;margin:12mm}
+        .dv-page{padding:0;max-width:none;font-size:11px}
+        .dv-edit{border:0!important;background:transparent!important;padding:0!important}
+        .dv-card{break-inside:avoid}
+        @page{size:letter;margin:10mm}
       }
     `}</style>
 
@@ -168,60 +167,76 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
     </div>
 
     {fixture && <div className="dv-watermark">EXEMPLE FICTIF — NON VALIDE — NE PAS UTILISER COMME DOSSIER DE VOL</div>}
+
     <div className="dv-sheet">
-      <div className="dv-head">
+      <div className="dv-band"><span>Maintenance</span><span>Dossier de vol</span></div>
+
+      <div className="dv-top">
         <div>
-          <h1>ORIZON AVIATION Maintenance</h1>
-          <div>O.M.A. 22-20 — 820, 8e Avenue de l’Aéroport, Aéroport Intl Jean-Lesage, Québec (Québec) G2G 0M4</div>
+          <img className="dv-logo" src="/branding/orizon-aviation-logo.png" alt="Orizon Aviation" />
+          <div className="dv-small">O.M.A. 22-20 · 820, 8e Avenue de l’Aéroport · Aéroport Intl Jean-Lesage · Québec (Québec) G2G 0M4</div>
         </div>
-        <strong style={{fontSize:"14px"}}>DOSSIER DE VOL</strong>
+        <div>
+          <div className="dv-cell"><b>Projet :</b><input className="dv-plain" value={draft.header.projet} onChange={e => setHeader("projet", e.target.value)} /></div>
+          <div className="dv-cell"><b>Entré ID :</b><input className="dv-plain" value={draft.header.entre} onChange={e => setHeader("entre", e.target.value)} /></div>
+          <div className="dv-cell"><b>Imm. :</b><input className="dv-plain" value={draft.header.immatriculation} onChange={e => setHeader("immatriculation", e.target.value)} /></div>
+          <div className="dv-cell"><b>Aéronef TT :</b><input className="dv-plain" value={draft.header.tt} onChange={e => setHeader("tt", e.target.value)} /></div>
+        </div>
       </div>
 
-      <div className="dv-fields">
-        {(["projet", "immatriculation", "entre", "tt"] as HeaderKey[]).map(key => <div key={key}>
-          <span>{HEADER_LABELS[key]}</span>
-          <input className="dv-field" value={draft.header[key]} onChange={e => setHeader(key, e.target.value)} />
-        </div>)}
-        {(["reference", "travaux"] as HeaderKey[]).map(key => <div key={key} className="dv-wide">
-          <span>{HEADER_LABELS[key]}</span>
-          <textarea className="dv-field" rows={linesOf(draft.header[key])} value={draft.header[key]} onChange={e => setHeader(key, e.target.value)} />
-        </div>)}
-      </div>
+      <div className="dv-body">
+        <div className="dv-line-item"><span className="dv-label">Customer references :</span>{" "}
+          <textarea className="dv-plain" rows={linesOf(draft.header.reference)} value={draft.header.reference} onChange={e => setHeader("reference", e.target.value)} />
+        </div>
+        <div className="dv-line-item"><span className="dv-label">Work requested :</span>{" "}
+          <textarea className="dv-plain" rows={linesOf(draft.header.travaux)} value={draft.header.travaux} onChange={e => setHeader("travaux", e.target.value)} />
+        </div>
+        <div className="dv-label" style={{marginTop:"8px"}}>Work performed :</div>
 
-      <div style={{marginTop:"6px"}}>
         {printable.map(card => {
           const fields = draft.cards[card.id];
           if (!fields) return null;
           return <div className="dv-card" key={card.id}>
-            <p style={{margin:"2px 0"}}><strong>[Carte {cardRef(card)}; ATA {card.ata}]</strong> {fmtDate(card.completedDate) !== "—" ? `fermée le ${fmtDate(card.completedDate)}` : ""}</p>
-            <label><span>Constat :</span><textarea className="dv-edit" rows={linesOf(fields.subject)} value={fields.subject} onChange={e => setCard(card.id, "subject", e.target.value)} /></label>
-            <label><span>Rectification :</span><textarea className="dv-edit" rows={Math.max(2, linesOf(fields.rectification))} value={fields.rectification} onChange={e => setCard(card.id, "rectification", e.target.value)} /></label>
-            <label><span>Pièces :</span><textarea className="dv-edit" rows={Math.max(1, linesOf(fields.parts))} value={fields.parts} onChange={e => setCard(card.id, "parts", e.target.value)} /></label>
-            <label><span>Prochaine échéance :</span><input className="dv-edit" value={fields.nextDue} onChange={e => setCard(card.id, "nextDue", e.target.value)} /></label>
-            <label><span>Signataires :</span><input className="dv-edit" value={fields.signers} onChange={e => setCard(card.id, "signers", e.target.value)} /></label>
-            <label className="dv-editor-only"><span>Note (facultatif) :</span><textarea className="dv-edit" rows={1} value={fields.note} onChange={e => setCard(card.id, "note", e.target.value)} /></label>
-            {fields.note && <p style={{margin:"2px 0"}}><strong>Note :</strong> {fields.note}</p>}
+            <p className="dv-line-item"><b>[Task: {cardRef(card)}; ATA: {card.ata}]</b> <span className="dv-label">Discrepancy :</span>
+              <textarea className="dv-edit" rows={linesOf(fields.subject)} value={fields.subject} onChange={e => setCard(card.id, "subject", e.target.value)} />
+            </p>
+            <p className="dv-line-item"><span className="dv-label">Rectification :</span>
+              <textarea className="dv-edit" rows={Math.max(2, linesOf(fields.rectification))} value={fields.rectification} onChange={e => setCard(card.id, "rectification", e.target.value)} />
+            </p>
+            {fields.parts && <p className="dv-line-item"><span className="dv-label">Pièces :</span>
+              <textarea className="dv-edit" rows={linesOf(fields.parts)} value={fields.parts} onChange={e => setCard(card.id, "parts", e.target.value)} />
+            </p>}
+            <p className="dv-line-item"><span className="dv-label">Prochaine échéance :</span>
+              <input className="dv-edit" value={fields.nextDue} onChange={e => setCard(card.id, "nextDue", e.target.value)} />
+            </p>
+            <p className="dv-line-item"><span className="dv-label">Signé par :</span>
+              <input className="dv-edit" value={fields.signers} onChange={e => setCard(card.id, "signers", e.target.value)} />
+            </p>
+            <div className="dv-editor-only"><span className="dv-label">Note (facultatif) :</span>
+              <textarea className="dv-edit" rows={1} value={fields.note} onChange={e => setCard(card.id, "note", e.target.value)} />
+            </div>
+            {fields.note && <p className="dv-line-item"><span className="dv-label">Note :</span> {fields.note}</p>}
           </div>;
         })}
         {printable.length === 0 && <p className="muted">Aucune carte fermée à imprimer.</p>}
       </div>
 
-      <label style={{display:"block",marginTop:"8px"}} className="dv-editor-only"><span>Note finale (facultatif) :</span>
-        <textarea className="dv-edit" rows={2} value={draft.footerNote} onChange={e => setDraft(prev => ({ ...prev, footerNote: e.target.value }))} />
-      </label>
-      {draft.footerNote && <p style={{margin:"6px 0 0"}}>{draft.footerNote}</p>}
+      <div className="dv-cert">The maintenance described above has been performed in accordance with the applicable standard of airworthiness.</div>
 
-      <div className="dv-sign">
-        <div>
-          <div style={{height:"40px"}} />
-          <div className="dv-line">Signature du TEA</div>
-        </div>
-        <div>
-          <div style={{height:"40px"}} />
-          <div className="dv-line">AME/TEA identification (ACA)</div>
-        </div>
+      <div className="dv-signs">
+        <div><div style={{height:"36px"}} /><div className="dv-line">Signature</div></div>
+        <div><div style={{height:"36px"}} /><div className="dv-line">ACA / AME-TEA identification</div></div>
+        <div><div style={{height:"36px"}} /><div className="dv-line">Date</div></div>
       </div>
-      <div className="dv-line" style={{marginTop:"8px"}}>Date : ______________________</div>
+
+      <div className="dv-body dv-editor-only">
+        <label style={{display:"block"}}><span className="dv-label">Prochaine maintenance planifiée / notes (facultatif) :</span>
+          <textarea className="dv-edit" rows={2} value={draft.footerNote} onChange={e => setDraft(prev => ({ ...prev, footerNote: e.target.value }))} />
+        </label>
+      </div>
+      {draft.footerNote && <div className="dv-body"><span className="dv-label">Prochaine maintenance planifiée :</span> {draft.footerNote}</div>}
+
+      <div className="dv-footer">Orizon Maintenance Aviation inc. · AMO/OMA 22-20 · 820, 8e Avenue de l’Aéroport, Aéroport Intl Jean-Lesage, Québec (Québec) G2G 0M4</div>
     </div>
   </div>;
 }
