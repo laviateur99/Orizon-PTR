@@ -23,7 +23,7 @@ const fmtDate = (value?: string) => {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("fr-CA", { year: "numeric", month: "long", day: "numeric" });
 };
 const fmtHours = (value?: number) => typeof value === "number" ? value.toLocaleString("fr-CA", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "—";
-const cardRef = (card: WorkCard) => card.id.slice(-6).toUpperCase();
+const cardRef = (card: WorkCard) => card.cardNumber || card.id.slice(-6).toUpperCase();
 const linesOf = (text: string) => Math.max(1, text.split("\n").length);
 
 function nextDueText(card: WorkCard) {

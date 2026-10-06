@@ -196,6 +196,7 @@ export async function acceptWorkOrder(workOrder: WorkOrder, by: Actor) {
 }
 
 export type CardInput = {
+  cardNumber?: string;
   ata: string; subject: string; type: WorkCard["type"];
   assignedUserId: string; assignedUserName: string;
   requiredClass?: LicenseClass; taskSnapshot?: TaskSnapshot;
@@ -207,6 +208,7 @@ export async function addWorkCard(project: Project, input: CardInput, by: Actor)
   const batch = writeBatch(db);
   batch.set(cardRef, clean({
     orgId: project.orgId, workOrderOrgId: project.workOrderOrgId, projectId: project.id,
+    cardNumber: input.cardNumber || undefined,
     ata: input.ata, subject: input.subject, type: input.type,
     assignedUserId: input.assignedUserId, assignedUserName: input.assignedUserName,
     status: "ouvert", requiredClass: input.requiredClass, taskSnapshot: input.taskSnapshot,

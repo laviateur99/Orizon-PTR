@@ -47,6 +47,7 @@ export function mapCard(id: string, d: DocumentData): WorkCard {
   const nextDue = d.nextDue && typeof d.nextDue === "object" ? d.nextDue as Record<string, unknown> : undefined;
   return {
     id, orgId: text(d.orgId), workOrderOrgId: text(d.workOrderOrgId), projectId: text(d.projectId),
+    cardNumber: text(d.cardNumber) || undefined,
     ata: text(d.ata), subject: text(d.subject), type: text(d.type, "routine") as WorkCard["type"],
     assignedUserId: text(d.assignedUserId), assignedUserName: text(d.assignedUserName),
     status: text(d.status, "ouvert") as WorkCard["status"],

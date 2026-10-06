@@ -135,7 +135,7 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members, stock }:
   const [project, setProject] = useState<Project | null>(null);
   const [cards, setCards] = useState<WorkCard[]>([]);
   const [message, setMessage] = useState("");
-  const [form, setForm] = useState({ ata: "", subject: "", type: "routine" as WorkCard["type"], assignedUserId: "", requiredClass: "" as LicenseClass | "", taskId: "" });
+  const [form, setForm] = useState({ cardNumber: "", ata: "", subject: "", type: "routine" as WorkCard["type"], assignedUserId: "", requiredClass: "" as LicenseClass | "", taskId: "" });
   const [report, setReport] = useState({ reference: "", summary: "" });
   const technicians = members.filter(member => member.role === "technician" && member.active);
 
@@ -148,8 +148,8 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members, stock }:
     const tech = technicians.find(item => item.userId === form.assignedUserId);
     if (!tech) { setMessage("Sélectionnez un technicien."); return; }
     try {
-      await addWorkCard(project, { ata: form.ata.trim(), subject: form.subject.trim(), type: form.type, assignedUserId: tech.userId, assignedUserName: tech.displayName, requiredClass: form.requiredClass || undefined, taskSnapshot: workOrder.tasks.find(task => task.taskId === form.taskId) }, actor);
-      setForm({ ...form, ata: "", subject: "", taskId: "" }); setMessage("");
+      await addWorkCard(project, { cardNumber: form.cardNumber.trim(), ata: form.ata.trim(), subject: form.subject.trim(), type: form.type, assignedUserId: tech.userId, assignedUserName: tech.displayName, requiredClass: form.requiredClass || undefined, taskSnapshot: workOrder.tasks.find(task => task.taskId === form.taskId) }, actor);
+      setForm({ ...form, cardNumber: "", ata: "", subject: "", taskId: "" }); setMessage("");
     } catch (error) { setMessage(errorText(error, "Ajout de la carte impossible.")); }
   }
 
@@ -168,6 +168,7 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members, stock }:
     {project && project.openCardCount === 0 && progress.closed > 0 && <p><a className="button secondary" href={`/oma/dossier-vol/${project.id}`} target="_blank" rel="noreferrer">Ouvrir le dossier de vol (impression)</a></p>}
     {cards.map(card => <CardView key={card.id} card={card} project={project} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} stock={stock} />)}
     {isPrm && workOrder.status === "pris_en_charge" && project && <form className="form-grid oma-add-card" onSubmit={addCard}>
+      <label>N° de carte (imprimé)<input value={form.cardNumber} onChange={e => setForm({ ...form, cardNumber: e.target.value })} placeholder="ex. 8271" /></label>
       <label>ATA<input required value={form.ata} onChange={e => setForm({ ...form, ata: e.target.value })} /></label>
       <label>Sujet<input required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} /></label>
       <label>Type<select value={form.type} onChange={e => setForm({ ...form, type: e.target.value as WorkCard["type"] })}><option value="routine">Routine</option><option value="snag">SNAG</option></select></label>

@@ -16,7 +16,7 @@ export type DossierVolFixture = {
 };
 
 const card = (id: string, ata: string, subject: string, rectification: string, extra: Partial<WorkCard> = {}): WorkCard => ({
-  id, orgId: "exemple-ecole", workOrderOrgId: "exemple-ecole", projectId: "exemple-projet", ata, subject, type: "routine",
+  id, cardNumber: `EX-${id.slice(-3)}`, orgId: "exemple-ecole", workOrderOrgId: "exemple-ecole", projectId: "exemple-projet", ata, subject, type: "routine",
   assignedUserId: TEA.uid, assignedUserName: TEA.name, status: "ferme", rectification, parts: [],
   completedAirTime: 19442, completedDate: "2026-09-16", createdBy: ACTOR, createdAt: CREATED, updatedAt: SIGNED,
   ...extra,

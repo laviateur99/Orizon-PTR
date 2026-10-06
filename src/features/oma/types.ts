@@ -87,6 +87,7 @@ export type NextDue = {
 export type WorkCard = {
   id: string;
   orgId: string; workOrderOrgId: string; projectId: string;
+  cardNumber?: string;         // numéro imprimé sur la carte papier (ex. 8271), saisi à la création
   ata: string; subject: string; type: CardType;
   assignedUserId: string; assignedUserName: string;
   status: CardStatus;
