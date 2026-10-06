@@ -607,12 +607,12 @@ service cloud.firestore {
     }
     match /testFeedback/{feedbackId}/replies/{replyId} {
       allow read: if feedbackManager();
-      allow create: if admin()
+      allow create: if feedbackManager()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 5000;
-      allow update: if admin()
+      allow update: if feedbackManager()
         && resource.data.authorId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
         && request.resource.data.text is string
