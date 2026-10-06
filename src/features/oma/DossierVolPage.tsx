@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { subscribeCards, subscribeIssuedWorkOrders, subscribeProject, subscribeReceivedWorkOrders, subscribeSignatures } from "./firestore";
 import type { CardSignature, Project, WorkCard, WorkOrder } from "./types";
+import type { DossierVolFixture } from "./dossierVolFixture";
 
 // Collant « Dossier de vol » : le texte est généré à partir des cartes fermées, puis modifiable à l'écran
 // (responsable de maintenance, PRM ou TEA) avant impression. Les modifications restent dans cette page :
@@ -47,36 +48,37 @@ function originalCard(card: WorkCard, signatures: CardSignature[]): CardDraft {
   };
 }
 
-export function DossierVolPage({ workOrderId }: { workOrderId: string }) {
+// `fixture` : jeu de données fictif (démonstration). Dans ce mode, rien n'est lu ni écrit dans Firestore.
+export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; fixture?: DossierVolFixture }) {
   const { profile } = useAuth();
   const side: Side | "" = profile?.schoolOrgId ? "school" : profile?.mroOrgId ? "mro" : "";
   const orgId = side === "school" ? profile?.schoolOrgId || "" : profile?.mroOrgId || "";
-  const [order, setOrder] = useState<WorkOrder | null>(null);
-  const [project, setProject] = useState<Project | null>(null);
-  const [cards, setCards] = useState<WorkCard[]>([]);
-  const [signatures, setSignatures] = useState<Record<string, CardSignature[]>>({});
+  const [order, setOrder] = useState<WorkOrder | null>(fixture?.order ?? null);
+  const [project, setProject] = useState<Project | null>(fixture?.project ?? null);
+  const [cards, setCards] = useState<WorkCard[]>(fixture?.cards ?? []);
+  const [signatures, setSignatures] = useState<Record<string, CardSignature[]>>(fixture?.signatures ?? {});
   const [draft, setDraft] = useState<Draft>({ header: { projet: "", immatriculation: "", entre: "", tt: "", reference: "", travaux: "" }, cards: {}, footerNote: "" });
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!side) return;
+    if (fixture || !side) return;
     const onError = () => setError("Lecture du bon de travail impossible.");
     const onOrders = (items: WorkOrder[]) => setOrder(items.find(item => item.id === workOrderId) || null);
     return side === "school" ? subscribeIssuedWorkOrders(orgId, onOrders, onError) : subscribeReceivedWorkOrders(orgId, onOrders, onError);
-  }, [side, orgId, workOrderId]);
+  }, [fixture, side, orgId, workOrderId]);
 
-  useEffect(() => subscribeProject(workOrderId, setProject, () => setProject(null)), [workOrderId]);
+  useEffect(() => fixture ? undefined : subscribeProject(workOrderId, setProject, () => setProject(null)), [fixture, workOrderId]);
 
   useEffect(() => {
-    if (!side) return;
+    if (fixture || !side) return;
     return subscribeCards(side, orgId, workOrderId, setCards, () => setError("Lecture des cartes impossible."));
-  }, [side, orgId, workOrderId]);
+  }, [fixture, side, orgId, workOrderId]);
 
   useEffect(() => {
-    if (!side) return;
+    if (fixture || !side) return;
     const offs = cards.map(card => subscribeSignatures(side, orgId, card.id, items => setSignatures(prev => ({ ...prev, [card.id]: items })), () => undefined));
     return () => offs.forEach(off => off());
-  }, [cards, side, orgId]);
+  }, [fixture, cards, side, orgId]);
 
   const printable = useMemo(() => cards
     .filter(card => card.status === "ferme")
@@ -116,7 +118,7 @@ export function DossierVolPage({ workOrderId }: { workOrderId: string }) {
   }
 
   if (error) return <div className="notice error">{error}</div>;
-  if (!side) return <div className="notice warning">Ce compte n’est rattaché à aucune organisation.</div>;
+  if (!side && !fixture) return <div className="notice warning">Ce compte n’est rattaché à aucune organisation.</div>;
   if (!order) return <p className="muted">Chargement du dossier de vol…</p>;
 
   return <div className="dv-page">
@@ -124,6 +126,7 @@ export function DossierVolPage({ workOrderId }: { workOrderId: string }) {
       .dv-page{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;max-width:215mm;margin:0 auto;padding:12px;font-size:11px}
       .dv-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
       .dv-sheet{border:1.5px solid #111;padding:10px}
+      .dv-watermark{border:2px solid #b00000;color:#b00000;font-weight:bold;text-align:center;padding:6px;margin-bottom:8px}
       .dv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #111;padding-bottom:6px;margin-bottom:6px}
       .dv-head h1{font-size:16px;margin:0}
       .dv-fields{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #111}
@@ -164,6 +167,7 @@ export function DossierVolPage({ workOrderId }: { workOrderId: string }) {
       </div>
     </div>
 
+    {fixture && <div className="dv-watermark">EXEMPLE FICTIF — NON VALIDE — NE PAS UTILISER COMME DOSSIER DE VOL</div>}
     <div className="dv-sheet">
       <div className="dv-head">
         <div>
