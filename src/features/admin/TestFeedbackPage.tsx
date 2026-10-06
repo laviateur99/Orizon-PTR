@@ -15,6 +15,7 @@ type Reply = { id: string; text: string; authorId?: string; authorName: string; 
 
 function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback; canManage: boolean; onDelete: (item: Feedback) => void; deleting: boolean }) {
   const { profile } = useAuth();
+  const canReply = canViewTestFeedback(profile);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyText, setReplyText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,9 +67,9 @@ function FeedbackItem({ item, canManage, onDelete, deleting }: { item: Feedback;
       <b>{reply.authorName}</b><span>{reply.createdAt?.toDate().toLocaleString("fr-CA") || ""}{reply.editedAt ? " · modifiée" : ""}</span>
       {editingReplyId === reply.id
         ? <><textarea rows={2} value={editText} onChange={e => setEditText(e.target.value)} /><div className="feedback-reply-edit-actions"><button type="button" className="button secondary small" onClick={() => setEditingReplyId(null)} disabled={editBusy}>Annuler</button><button type="button" className="button small" onClick={() => saveEditReply(reply.id)} disabled={editBusy || !editText.trim()}>{editBusy ? "Enregistrement…" : "Enregistrer"}</button></div></>
-        : <><p>{reply.text}</p>{canManage && reply.authorId === profile?.uid && <button type="button" className="button secondary small" onClick={() => startEditReply(reply)}>Modifier</button>}</>}
+        : <><p>{reply.text}</p>{canReply && reply.authorId === profile?.uid && <button type="button" className="button secondary small" onClick={() => startEditReply(reply)}>Modifier</button>}</>}
     </div>)}</div>}
-    {canManage && <form className="feedback-reply-form" onSubmit={addReply}><textarea rows={2} placeholder="Ajouter une réponse…" value={replyText} onChange={e => setReplyText(e.target.value)} /><button className="button secondary small" disabled={busy || !replyText.trim()}>{busy ? "Envoi…" : "Répondre"}</button></form>}
+    {canReply && <form className="feedback-reply-form" onSubmit={addReply}><textarea rows={2} placeholder="Ajouter une réponse…" value={replyText} onChange={e => setReplyText(e.target.value)} /><button className="button secondary small" disabled={busy || !replyText.trim()}>{busy ? "Envoi…" : "Répondre"}</button></form>}
   </article>;
 }
 
