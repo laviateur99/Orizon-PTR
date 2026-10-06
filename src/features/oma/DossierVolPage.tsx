@@ -12,10 +12,10 @@ import type { DossierVolFixture } from "./dossierVolFixture";
 
 type Side = "school" | "mro";
 type CardDraft = { subject: string; rectification: string; parts: string; nextDue: string; signers: string; note: string };
-type HeaderKey = "projet" | "immatriculation" | "entre" | "tt" | "reference" | "travaux";
+type HeaderKey = "projet" | "immatriculation" | "entre" | "tt" | "rpm" | "reference" | "travaux";
 type Draft = { header: Record<HeaderKey, string>; cards: Record<string, CardDraft>; footerNote: string };
 
-const EMPTY_HEADER: Record<HeaderKey, string> = { projet: "", immatriculation: "", entre: "", tt: "", reference: "", travaux: "" };
+const EMPTY_HEADER: Record<HeaderKey, string> = { projet: "", immatriculation: "", entre: "", tt: "", rpm: "", reference: "", travaux: "" };
 
 const fmtDate = (value?: string) => {
   if (!value) return "—";
@@ -90,6 +90,7 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
     immatriculation: order?.aircraftRegistration || "",
     entre: project ? project.id.slice(-6).toUpperCase() : "",
     tt: airTime !== undefined ? `${fmtHours(airTime)} hrs` : "",
+    rpm: "",
     reference: order?.title || "",
     travaux: order?.description || "",
   }), [order, project, airTime]);
@@ -141,6 +142,9 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
       .dv-cert{border-top:1px solid #111;margin-top:10px;padding:8px 10px;font-size:11px;font-style:italic;text-align:center}
       .dv-signs{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;padding:14px 10px 8px;align-items:end}
       .dv-line{border-top:1px solid #111;padding-top:3px;font-size:10px;text-align:center}
+      .dv-rpm{border:1px solid #111;margin-top:6px;padding:4px 6px}
+      .dv-rpm-title{font-weight:bold;font-size:10px;border-bottom:1px solid #111;margin-bottom:3px}
+      .dv-rpm-sign{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #111;margin-top:6px;padding-top:2px;font-size:9px;text-align:center}
       .dv-footer{border-top:1px solid #111;padding:6px 10px;font-size:9px;text-align:center;color:#333}
       @media print{
         body{background:#fff!important}
@@ -181,6 +185,11 @@ export function DossierVolPage({ workOrderId, fixture }: { workOrderId: string; 
           <div className="dv-cell"><b>Entré ID :</b><input className="dv-plain" value={draft.header.entre} onChange={e => setHeader("entre", e.target.value)} /></div>
           <div className="dv-cell"><b>Imm. :</b><input className="dv-plain" value={draft.header.immatriculation} onChange={e => setHeader("immatriculation", e.target.value)} /></div>
           <div className="dv-cell"><b>Aéronef TT :</b><input className="dv-plain" value={draft.header.tt} onChange={e => setHeader("tt", e.target.value)} /></div>
+          <div className="dv-rpm">
+            <div className="dv-rpm-title">RPM READ</div>
+            <textarea className="dv-plain" rows={3} value={draft.header.rpm} onChange={e => setHeader("rpm", e.target.value)} placeholder="ex. 2030" />
+            <div className="dv-rpm-sign"><span>Signature</span><span>ACA</span><span>Date</span></div>
+          </div>
         </div>
       </div>
 
