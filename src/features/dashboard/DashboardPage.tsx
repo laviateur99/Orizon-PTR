@@ -59,15 +59,20 @@ const hasPrecipitation=(weather:WeatherSnapshot)=>{
   const tokens=` ${weather.weather||""} ${weather.raw||""} `.toUpperCase().split(/\s+/);
   return tokens.some(token=>/(^|[-+])(?:VC)?(?:SH|TS|FZ)?(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP)/.test(token));
 };
+// Déclinaison magnétique (positive = Est, négative = Ouest) : METAR en vrai, pistes en magnétique.
+// CYQB : WMM-2025 via NOAA NCEI, 14,8° O (2026,76).
+const AIRPORT_DECLINATION:Record<string,number>={CYQB:-14.8};
 type WindAssessment={crosswind:number;headwind:number;side:"gauche"|"droite"|"variable";limit:number;aircraft:string;variable:boolean};
 function calculateWind(weather:WeatherSnapshot,runway:string,aircraftId:string):WindAssessment|undefined{
   const windDirection=numeric(weather.windDirection),windSpeed=weather.windGustKt||weather.windSpeedKt;
   const runwayNumber=Number(runway),aircraft=AIRCRAFT_CROSSWIND_LIMITS.find(item=>item.id===aircraftId);
-  if(windSpeed===undefined||!Number.isFinite(runwayNumber)||runwayNumber<1||runwayNumber>36||!aircraft)return undefined;
+  const declination=AIRPORT_DECLINATION[weather.station];
+  if(windSpeed===undefined||!Number.isFinite(runwayNumber)||runwayNumber<1||runwayNumber>36||!aircraft||declination===undefined)return undefined;
   if(String(weather.windDirection).toUpperCase()==="VRB")return{crosswind:windSpeed,headwind:0,side:"variable",limit:aircraft.limit,aircraft:aircraft.label,variable:true};
   if(windDirection===undefined)return undefined;
+  const magneticWind=(windDirection-declination+360)%360;
   const runwayHeading=runwayNumber*10;
-  const signedAngle=((windDirection-runwayHeading+540)%360)-180;
+  const signedAngle=((magneticWind-runwayHeading+540)%360)-180;
   const radians=signedAngle*Math.PI/180;
   return{
     crosswind:Math.round(Math.abs(windSpeed*Math.sin(radians))*10)/10,
