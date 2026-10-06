@@ -165,6 +165,7 @@ function ProjectPanel({ workOrder, mroOrgId, viewerUid, isPrm, members, stock }:
     <div className="notice oma-step"><strong>Vous en êtes ici : {step.here}</strong><span>{step.next}</span></div>
     {message && <div className="notice error">{message}</div>}
     {project && <p className="muted">{progress.total} carte(s){progress.total ? ` — ${progress.closed} fermée(s)${progress.cancelled ? `, ${progress.cancelled} annulée(s)` : ""}` : ""}.</p>}
+    {project && project.openCardCount === 0 && progress.closed > 0 && <p><a className="button secondary" href={`/oma/dossier-vol/${project.id}`} target="_blank" rel="noreferrer">Ouvrir le dossier de vol (impression)</a></p>}
     {cards.map(card => <CardView key={card.id} card={card} project={project} mroOrgId={mroOrgId} viewerUid={viewerUid} isPrm={isPrm} members={members} stock={stock} />)}
     {isPrm && workOrder.status === "pris_en_charge" && project && <form className="form-grid oma-add-card" onSubmit={addCard}>
       <label>ATA<input required value={form.ata} onChange={e => setForm({ ...form, ata: e.target.value })} /></label>
