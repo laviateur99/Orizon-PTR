@@ -191,8 +191,14 @@ export function SnagDashboardPage() {
         </div>
         <footer><span/><button className="button secondary" onClick={()=>setDeleteTarget(null)}>Annuler</button><button className="button danger" onClick={async()=>{
           if(!adminName.trim()||!deleteReason.trim()){setMessage("Le nom de l’administrateur et la raison sont obligatoires.");return;}
-          await deleteSnagAsAdmin(deleteTarget,adminName.trim(),deleteReason.trim());
-          setDeleteTarget(null);setAdminName("");setDeleteReason("");setMessage("SNAG supprimé et archivé dans l’historique.");
+          try{
+            await deleteSnagAsAdmin(deleteTarget,adminName.trim(),deleteReason.trim());
+            setMessage("SNAG supprimé et archivé dans l’historique.");
+          }catch(error){
+            setMessage(error instanceof Error?`Suppression terminée avec une erreur : ${error.message}`:"Suppression terminée avec une erreur. Vérifiez l’historique.");
+          }finally{
+            setDeleteTarget(null);setAdminName("");setDeleteReason("");
+          }
         }}>Confirmer la suppression</button></footer>
       </section></div>}
     </>
