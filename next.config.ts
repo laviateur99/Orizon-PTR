@@ -10,6 +10,10 @@ const gitShortSha = () => {
   }
 };
 const appVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || gitShortSha();
+// Date et heure du build (heure de Montréal), pour pouvoir comparer ce qui est affiché à ce qui vient d'être publié.
+const buildStamp = new Date().toLocaleString("fr-CA", {
+  timeZone: "America/Montreal", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
+}).replace(",", "");
 
 // Les routes de génération de PDF fiscaux lisent les gabarits officiels dans public/forms/ via
 // fs au moment de l'exécution (Node.js runtime) — ces fichiers ne sont jamais importés/require()és
@@ -17,7 +21,7 @@ const appVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || gitShortSha
 // bundle de la fonction serverless sans cette déclaration explicite.
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_APP_VERSION: `${appVersion} · ${new Date().toISOString().slice(0, 10)}`
+    NEXT_PUBLIC_APP_VERSION: `${appVersion} · ${buildStamp}`
   },
   outputFileTracingIncludes: {
     "/api/tuition-tax-forms/pdf/**": ["./public/forms/**"]
