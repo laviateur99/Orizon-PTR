@@ -145,7 +145,14 @@ export function OmaProjectPrintPage({ workOrderId, fixture }: { workOrderId: str
     {/* Bon de commande (tâches demandées par le PRM) */}
     <section className="pr-sheet">
       <div className="pr-band"><span>Bon de commande</span><span>Travail demandé</span></div>
-      <table className="pr-table">
+      <div className="pr-grid">
+        <div><span>Immatriculation</span><b>{order.aircraftRegistration}</b></div>
+        <div><span>Réquisition remise par</span><b>{order.createdBy.name}</b></div>
+        <div><span>Remise le</span><b>{fmtDateTime(order.createdAt)}</b></div>
+        <div><span>Objet</span><b>{order.title || "—"}</b></div>
+        <div className="pr-wide"><span>Travail demandé</span><b style={{fontWeight:"normal"}}>{order.description || "Aucune description fournie."}</b></div>
+      </div>
+      {order.tasks.length > 0 && <table className="pr-table" style={{marginTop:"8px"}}>
         <thead><tr><th>Échéance</th><th>Description de la tâche</th><th>Intervalle</th><th>Carte</th></tr></thead>
         <tbody>
           {order.tasks.map(task => {
@@ -157,10 +164,9 @@ export function OmaProjectPrintPage({ workOrderId, fixture }: { workOrderId: str
               <td>{card ? cardRef(card) : "à déterminer"}</td>
             </tr>;
           })}
-          {order.tasks.length === 0 && <tr><td colSpan={4}>Aucune tâche associée au bon de travail.</td></tr>}
         </tbody>
-      </table>
-      <p className="muted" style={{marginTop:"8px"}}>Personne ressource : {order.createdBy.name} · Bon de travail émis par l’école.</p>
+      </table>}
+      {order.tasks.length === 0 && <p className="muted" style={{marginTop:"8px"}}>Travail demandé décrit en texte libre ci-dessus : aucune échéance de la flotte n’a été cochée à la création du bon.</p>}
     </section>
 
     {/* Rapport de tâche sommaire */}
