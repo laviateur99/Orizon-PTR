@@ -93,8 +93,10 @@ export function OmaProjectPrintPage({ workOrderId, fixture }: { workOrderId: str
       .pr-cert{border-top:1px solid #111;margin-top:10px;padding:8px 10px;font-size:11px;font-style:italic;text-align:center}
       .pr-signs{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;padding:14px 4px 4px;align-items:end}
       .pr-line{border-top:1px solid #111;padding-top:3px;font-size:10px;text-align:center}
-      .pr-check-list{list-style:none;margin:6px 0;padding:0;column-count:2;column-gap:20px}
-      .pr-check-list li{break-inside:avoid;display:flex;align-items:center;gap:6px;margin:3px 0}
+      .pr-check-list{list-style:none;margin:6px 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:5px 20px}
+      .pr-check-list li{break-inside:avoid;display:flex;align-items:center;gap:8px;margin:0}
+      .pr-check-list li input{flex:0 0 auto;width:14px;height:14px}
+      .pr-check-list li span{text-align:left}
       .pr-edit{border:1px dashed #bbb;background:#fafafa;font:inherit;padding:2px 4px}
       @media print{
         .sidebar,.pr-toolbar,.pr-editor-only,.app-shell .topbar{display:none!important}
