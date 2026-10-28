@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { DeleteSnagButton } from "./DeleteSnagButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
   createSnag,
@@ -264,6 +265,7 @@ export function FleetPage() {
                     {snag.workOrderId ? "Ouvrir le travail" : "Créer le travail"}
                   </a>
                 )}
+                <DeleteSnagButton snag={snag} onDeleted={() => setMessage("SNAG créé par erreur supprimé et conservé dans l’historique.")} />
               </div>
             </article>
           ))}

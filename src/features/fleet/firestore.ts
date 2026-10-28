@@ -1345,58 +1345,49 @@ export async function deleteSnagAsAdmin(
   adminName: string,
   reason: string,
 ) {
+  if (!adminName.trim() || !reason.trim()) throw new Error("Le nom et la raison sont obligatoires.");
+  const snagRef = doc(db, "snags", snag.id);
+  const current = await getDoc(snagRef);
+  if (!current.exists()) throw new Error("Ce SNAG a déjà été supprimé.");
+  const data = current.data();
+  if (data.workOrderId || data.resolvedByWorkOrderId || data.status === "Fermé") {
+    throw new Error("Ce SNAG est lié à un travail ou a déjà été fermé. Traitez-le depuis le dossier de maintenance.");
+  }
   const now = new Date().toISOString();
-
-  // Le snapshot est nettoyé récursivement. Aucun champ undefined ne peut atteindre Firestore.
-  const cleanedSnapshot = cleanFirestoreValue(snag);
-
-  await addDoc(
-    collection(db, "snagHistory"),
-    cleanFirestoreValue({
-      action: "Suppression administrative",
-      snagId: snag.id,
-      snagNumber: snag.snagNumber || "",
-      aircraftId: snag.aircraftId,
-      aircraftRegistration: snag.aircraftRegistration,
-      defectTitle: snag.defectTitle,
-      snagSnapshot: cleanedSnapshot,
-      actor: adminName,
-      deletedBy: adminName,
-      details: reason,
-      reason,
-      deletedAt: now,
-      eventAt: now,
-      createdAt: serverTimestamp(),
-    }),
-  );
-
-  const notifications = await getDocs(
-    query(collection(db, "notifications"), where("snagId", "==", snag.id), ...schoolScope()),
-  );
-
+  const aircraftId = String(data.aircraftId);
+  const [notifications, remaining, aircraft, omaOrders, maintenanceOrders] = await Promise.all([
+    getDocs(query(collection(db, "notifications"), where("snagId", "==", snag.id), ...schoolScope())),
+    getDocs(query(collection(db, "snags"), where("aircraftId", "==", aircraftId), ...schoolScope())),
+    getDoc(doc(db, "aircraft", aircraftId)),
+    getDocs(query(collection(db, "workOrders"), where("aircraftId", "==", aircraftId), ...schoolScope())),
+    getDocs(query(collection(db, "maintenanceWorkOrders"), where("aircraftId", "==", aircraftId), ...schoolScope())),
+  ]);
+  if (omaOrders.docs.some(item => item.data().snagId === snag.id)
+    || maintenanceOrders.docs.some(item => item.data().snagId === snag.id)) {
+    throw new Error("Un travail PRM ou OMA référence ce SNAG. Il ne peut pas être supprimé depuis la flotte.");
+  }
   const batch = writeBatch(db);
-  notifications.docs.forEach((item) => batch.delete(item.ref));
-  batch.delete(doc(db, "snags", snag.id));
-  await batch.commit();
-
-  const remaining = await getDocs(
-    query(collection(db, "snags"), where("aircraftId", "==", snag.aircraftId), ...schoolScope()),
-  );
-
-  const hasOpen = remaining.docs.some(
-    (item) => String(item.data().status) !== "Fermé",
-  );
-
-  if (!hasOpen) {
-    await updateDoc(doc(db, "aircraft", snag.aircraftId), {
-      status: "Disponible",
-      statusReason: "",
-      maintenanceStart: "",
-      maintenanceEnd: "",
-      blockedForScheduling: false,
-      updatedAt: now,
+  batch.set(doc(collection(db, "snagHistory")), cleanFirestoreValue({
+    action: "Suppression administrative", snagId: snag.id,
+    snagNumber: data.snagNumber || "", aircraftId,
+    aircraftRegistration: data.aircraftRegistration || "", defectTitle: data.defectTitle || "",
+    snagSnapshot: { ...data, id: snag.id }, actor: adminName.trim(), deletedBy: adminName.trim(),
+    details: reason.trim(), reason: reason.trim(), deletedAt: now, eventAt: now, createdAt: serverTimestamp(),
+  }));
+  notifications.docs.forEach(item => batch.delete(item.ref));
+  batch.delete(snagRef);
+  const hasOpenSnag = remaining.docs.some(item => item.id !== snag.id && item.data().status !== "Fermé");
+  const hasOpenWork = omaOrders.docs.some(item => !["cloture", "annule"].includes(String(item.data().status)))
+    || maintenanceOrders.docs.some(item => !["Fermée", "Annulée"].includes(String(item.data().workStatus)));
+  const aircraftData = aircraft.data();
+  const ownsBlock = aircraftData?.status === "SNAG" && String(aircraftData.statusReason || "").startsWith(`${data.snagNumber || "SNAG"} · ${data.defectTitle}`);
+  if (!hasOpenSnag && !hasOpenWork && ownsBlock) {
+    batch.update(aircraft.ref, {
+      status: "Disponible", statusReason: "", maintenanceStart: "", maintenanceEnd: "",
+      blockedForScheduling: false, updatedAt: now,
     });
   }
+  await batch.commit();
 }
 
 export type SnagHistoryItem = {
