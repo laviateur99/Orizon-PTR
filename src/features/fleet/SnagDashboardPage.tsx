@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import{MaintenanceSectionNav}from"@/features/maintenance/MaintenanceSectionNav";
 import {
-  deleteSnagAsAdmin,
   saveSnagDashboardAccess,
   subscribeSnagDashboardAccess,
   subscribeSnagHistory,
   subscribeSnags,
   updateSnag
 } from "./firestore";
+import { DeleteSnagButton } from "./DeleteSnagButton";
 import type { NotificationRole, Snag, SnagSeverity, SnagStatus } from "./types";
 
 const ROLES: NotificationRole[] = [
@@ -50,9 +50,6 @@ export function SnagDashboardPage() {
   const [status, setStatus] = useState<SnagStatus | "Actifs" | "Tous">("Actifs");
   const [severity, setSeverity] = useState<SnagSeverity | "Toutes">("Toutes");
   const [message, setMessage] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Snag | null>(null);
-  const [adminName, setAdminName] = useState("");
-  const [deleteReason, setDeleteReason] = useState("");
   const [history, setHistory] = useState<Array<{id:string;snagNumber:string;aircraftRegistration:string;defectTitle:string;action:string;actor:string;details:string;eventAt:string;deletedBy:string;reason:string;deletedAt:string}>>([]);
   const [error, setError] = useState("");
 
@@ -163,7 +160,7 @@ export function SnagDashboardPage() {
               <a className="button small" href={item.workOrderId ? `/maintenance?workOrderId=${encodeURIComponent(item.workOrderId)}` : `/maintenance?snagId=${encodeURIComponent(item.id)}`}>
                 {item.workOrderId ? "Ouvrir le travail" : "Créer un travail"}
               </a>
-              {!item.workOrderId && <button className="button danger small" onClick={()=>setDeleteTarget(item)}>Supprimer</button>}
+              <DeleteSnagButton snag={item} onDeleted={() => setMessage("SNAG supprimé et archivé dans l’historique.")} />
             </div>
           </article>
         ))}
@@ -182,25 +179,7 @@ export function SnagDashboardPage() {
         {!history.length&&<p>Aucune action enregistrée.</p>}
       </section>
 
-      {deleteTarget&&<div className="modal-backdrop"><section className="modal compact">
-        <header><div><h2>Supprimer définitivement le SNAG</h2><p>{deleteTarget.aircraftRegistration} — {deleteTarget.defectTitle}</p></div><button className="icon-button" onClick={()=>setDeleteTarget(null)}>×</button></header>
-        <div className="modal-body">
-          <label>Nom de l’administrateur<input value={adminName} onChange={event=>setAdminName(event.target.value)} /></label>
-          <label>Raison de la suppression<textarea value={deleteReason} onChange={event=>setDeleteReason(event.target.value)} /></label>
-          <div className="notice error">Le SNAG sera retiré du tableau et de l’horaire. Une copie complète sera conservée dans l’historique administratif.</div>
-        </div>
-        <footer><span/><button className="button secondary" onClick={()=>setDeleteTarget(null)}>Annuler</button><button className="button danger" onClick={async()=>{
-          if(!adminName.trim()||!deleteReason.trim()){setMessage("Le nom de l’administrateur et la raison sont obligatoires.");return;}
-          try{
-            await deleteSnagAsAdmin(deleteTarget,adminName.trim(),deleteReason.trim());
-            setMessage("SNAG supprimé et archivé dans l’historique.");
-          }catch(error){
-            setMessage(error instanceof Error?`Suppression terminée avec une erreur : ${error.message}`:"Suppression terminée avec une erreur. Vérifiez l’historique.");
-          }finally{
-            setDeleteTarget(null);setAdminName("");setDeleteReason("");
-          }
-        }}>Confirmer la suppression</button></footer>
-      </section></div>}
+
     </>
   );
 }

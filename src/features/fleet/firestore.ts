@@ -1380,7 +1380,7 @@ export async function deleteSnagAsAdmin(
   const hasOpenWork = omaOrders.docs.some(item => !["cloture", "annule"].includes(String(item.data().status)))
     || maintenanceOrders.docs.some(item => !["Fermée", "Annulée"].includes(String(item.data().workStatus)));
   const aircraftData = aircraft.data();
-  const ownsBlock = aircraftData?.status === "SNAG" && String(aircraftData.statusReason || "").startsWith(`${data.snagNumber || "SNAG"} · ${data.defectTitle}`);
+  const ownsBlock = aircraftData?.status === "SNAG";
   if (!hasOpenSnag && !hasOpenWork && ownsBlock) {
     batch.update(aircraft.ref, {
       status: "Disponible", statusReason: "", maintenanceStart: "", maintenanceEnd: "",

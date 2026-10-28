@@ -448,7 +448,7 @@ service cloud.firestore {
       allow read: if any(['dashboard','schedule','fleet','snags']) || maintenanceAccess();
       allow create: if any(['fleet','snags']);
       allow update: if orgStamp() || (any(['fleet','snags'])
-          && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+          && !(resource.data.get('workOrderId', '') is string && resource.data.get('workOrderId', '').size() > 0)
           && request.resource.data.status != 'Fermé')
         || (maintenanceAccess()
           && (request.resource.data.status != 'Fermé'
@@ -456,7 +456,7 @@ service cloud.firestore {
               && request.resource.data.returnedToServiceBy is string
               && request.resource.data.returnedToServiceAt is timestamp)));
       allow delete: if any(['fleet','snags'])
-        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0);
+        && !(resource.data.get('workOrderId', '') is string && resource.data.get('workOrderId', '').size() > 0);
     }
     match /snagHistory/{id} {
       allow read: if any(['fleet','snags']) || maintenanceAccess();

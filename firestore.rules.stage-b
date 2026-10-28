@@ -456,7 +456,7 @@ service cloud.firestore {
       allow read: if !studentRole() && (any(['dashboard','schedule','fleet','snags']) || maintenanceAccess()) && orgMember(resource.data.orgId);
       allow create: if any(['fleet','snags']) && orgMember(request.resource.data.orgId);
       allow update: if ((any(['fleet','snags'])
-          && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+          && !(resource.data.get('workOrderId', '') is string && resource.data.get('workOrderId', '').size() > 0)
           && request.resource.data.status != 'Fermé')
         || (maintenanceAccess()
           && (request.resource.data.status != 'Fermé'
@@ -465,7 +465,7 @@ service cloud.firestore {
               && request.resource.data.returnedToServiceAt is timestamp))))
         && orgMember(resource.data.orgId) && request.resource.data.orgId == resource.data.orgId;
       allow delete: if any(['fleet','snags'])
-        && !(resource.data.workOrderId is string && resource.data.workOrderId.size() > 0)
+        && !(resource.data.get('workOrderId', '') is string && resource.data.get('workOrderId', '').size() > 0)
         && orgMember(resource.data.orgId);
     }
     match /snagHistory/{id} {
