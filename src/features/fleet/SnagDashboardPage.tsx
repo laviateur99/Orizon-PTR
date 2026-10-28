@@ -160,7 +160,7 @@ export function SnagDashboardPage() {
               <a className="button small" href={item.workOrderId ? `/maintenance?workOrderId=${encodeURIComponent(item.workOrderId)}` : `/maintenance?snagId=${encodeURIComponent(item.id)}`}>
                 {item.workOrderId ? "Ouvrir le travail" : "Créer un travail"}
               </a>
-              <DeleteSnagButton snag={item} onDeleted={() => setMessage("SNAG supprimé et archivé dans l’historique.")} />
+              <DeleteSnagButton snag={item} onError={setError} onDeleted={() => setMessage("SNAG supprimé et archivé dans l’historique.")} />
             </div>
           </article>
         ))}

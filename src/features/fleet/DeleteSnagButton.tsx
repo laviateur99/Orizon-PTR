@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { deleteSnagAsAdmin } from "./firestore";
 import type { Snag } from "./types";
 
-export function DeleteSnagButton({ snag, onDeleted }: { snag: Snag; onDeleted: () => void }) {
+export function DeleteSnagButton({ snag, onDeleted, onError }: { snag: Snag; onDeleted: () => void; onError: (message: string) => void }) {
   const { profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -18,12 +18,13 @@ export function DeleteSnagButton({ snag, onDeleted }: { snag: Snag; onDeleted: (
     {open && <div className="modal-backdrop"><form className="modal compact" onSubmit={async event => {
       event.preventDefault();
       if (busy || !reason.trim()) return;
-      setBusy(true); setError("");
+      setBusy(true); setError(""); onError("");
       try {
         await deleteSnagAsAdmin(snag, profile.name || profile.email, reason.trim());
         setOpen(false); setReason(""); onDeleted();
       } catch (value) {
-        setError(value instanceof Error ? value.message : "Impossible de supprimer le SNAG.");
+        const message = value instanceof Error ? value.message : "Impossible de supprimer le SNAG.";
+        setError(message); onError(message);
       } finally { setBusy(false); }
     }}>
       <header><div><h2>Supprimer un SNAG créé par erreur</h2><p>{snag.aircraftRegistration} — {snag.defectTitle}</p></div></header>

@@ -265,7 +265,7 @@ export function FleetPage() {
                     {snag.workOrderId ? "Ouvrir le travail" : "Créer le travail"}
                   </a>
                 )}
-                <DeleteSnagButton snag={snag} onDeleted={() => setMessage("SNAG créé par erreur supprimé et conservé dans l’historique.")} />
+                <DeleteSnagButton snag={snag} onError={setError} onDeleted={() => setMessage("SNAG créé par erreur supprimé et conservé dans l’historique.")} />
               </div>
             </article>
           ))}
