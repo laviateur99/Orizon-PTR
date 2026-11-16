@@ -14,44 +14,52 @@ import { ATPA_PROGRAM } from "@/features/programs/data";
 import { OFFICIAL_PROGRAMS } from "@/features/programs/modularPrograms";
 
 const BLUE="#315f8f";
-const exerciseNames=[
-  "Familiarisation","Préparation au vol","Commandes auxiliaires","Circulation au sol","Assiettes et mouvements",
-  "Vol rectiligne en palier","Montée","Descente","Virage","Autonomie maximale","Vol lent","Décrochage","Vrille","Spirale","Glissade",
-  "Décollage — court · mou · obstacle · travers","Circuit","Atterrissage — court · mou · obstacle · travers · précision","Premier solo","Illusions créées par la dérive","Atterrissage de précaution",
-  "Atterrissage forcé","Procédure de départ","Procédure en route","Déroutement","Panneau complet","Panneau partiel",
-  "Assiettes inhabituelles","Radionavigation","Procédures d’urgence / radio"
+const exerciseColumns:Array<{number:number;label:string;patterns:RegExp[]}>= [
+  {number:1,label:"Familiarisation",patterns:[/familiar/]},
+  {number:2,label:"Préparation au vol",patterns:[/avant vol/,/prevol/,/verification avant decollage/,/preparation.*vol/]},
+  {number:3,label:"Commandes auxiliaires",patterns:[/commandes auxiliaires/,/commandes de vol/]},
+  {number:4,label:"Circulation au sol",patterns:[/circulation au sol/]},
+  {number:5,label:"Assiettes et mouvements",patterns:[/assiettes et mouvement/]},
+  {number:6,label:"Vol rectiligne en palier",patterns:[/vol rectiligne/,/vol en palier/]},
+  {number:7,label:"Montée",patterns:[/\bmontee/]},
+  {number:8,label:"Descente",patterns:[/\bdescente/]},
+  {number:9,label:"Virages / virages serrés",patterns:[/\bvirage/]},
+  {number:10,label:"Distance franchissable et autonomie max.",patterns:[/autonomie maximale/,/distance franchissable/]},
+  {number:11,label:"Vol lent",patterns:[/vol lent/]},
+  {number:12,label:"Décrochage",patterns:[/decroch/]},
+  {number:13,label:"Vrille",patterns:[/\bvrille/]},
+  {number:14,label:"Spirale",patterns:[/\bspirale/]},
+  {number:15,label:"Glissade",patterns:[/\bglissade/]},
+  {number:16,label:"Normal",patterns:[/^decollages?$/, /decollages?, circuits? et atterrissages/,/decollage normal/]},
+  {number:16,label:"Court / course minimale",patterns:[/decollage.*(?:court|course minimale)/]},
+  {number:16,label:"Mou / accidenté",patterns:[/decollage.*(?:mou|accidente)/]},
+  {number:16,label:"Obstacle",patterns:[/decollage.*(?:obstacle|franchissement)/]},
+  {number:16,label:"Vent de travers",patterns:[/decollage.*vent de travers/,/^vents? de travers/]},
+  {number:17,label:"Circuit",patterns:[/\bcircuit/]},
+  {number:18,label:"Normal",patterns:[/^atterrissages?$/, /decollages?, circuits? et atterrissages/,/atterrissage normal/,/^approche et atterrissage$/]},
+  {number:18,label:"Court",patterns:[/atterrissage.*court/,/approches?.*terrain court/]},
+  {number:18,label:"Mou / accidenté",patterns:[/atterrissage.*(?:mou|accidente)/]},
+  {number:18,label:"Obstacle",patterns:[/atterrissage.*(?:obstacle|franchissement)/,/approches?.*franchissement/]},
+  {number:18,label:"Vent de travers",patterns:[/atterrissage.*vent de travers/,/^vents? de travers/]},
+  {number:18,label:"Précision 180°",patterns:[/atterrissage de precision/,/precision 180/]},
+  {number:19,label:"Premier solo",patterns:[/premier vol en solo/,/premier solo/]},
+  {number:20,label:"Illusions créées par la dérive",patterns:[/illusion.*derive/]},
+  {number:21,label:"Atterrissage de précaution",patterns:[/atterrissage de precaution/]},
+  {number:22,label:"Atterrissage forcé",patterns:[/atterrissage force/]},
+  {number:23,label:"Procédure de départ",patterns:[/procedure de depart/,/depart de navigation/,/mise en cap/]},
+  {number:23,label:"Procédure en route",patterns:[/procedure en route/,/communications? en route/,/progression du vol/,/navigation en vfr/]},
+  {number:23,label:"Déroutement",patterns:[/\bderoutement/]},
+  {number:24,label:"Panneau complet",patterns:[/panneau complet/,/instruments de vol/,/vol aux instruments/]},
+  {number:24,label:"Panneau partiel",patterns:[/panneau partiel/]},
+  {number:24,label:"Assiettes inhabituelles",patterns:[/assiette inhabituelle/]},
+  {number:24,label:"Radionavigation",patterns:[/radionavigation/,/aides? a la navigation/]},
+  {number:29,label:"Procédures d’urgence",patterns:[/procedure.*urgence/,/urgences? en vol/]},
+  {number:30,label:"Communications radio",patterns:[/communications? radio/,/procedures? radio/]}
 ];
-const exercisePatterns:RegExp[][]=[
-  [/familiar/],
-  [/avant vol/,/prevol/,/verification avant decollage/,/preparation.*vol/],
-  [/commandes auxiliaires/,/commandes de vol/],
-  [/circulation au sol/],
-  [/assiettes et mouvement/],
-  [/vol rectiligne/,/vol en palier/],
-  [/\bmontee/],
-  [/\bdescente/],
-  [/\bvirage/],
-  [/autonomie maximale/,/distance franchissable/],
-  [/vol lent/],
-  [/decroch/],
-  [/\bvrille/],
-  [/\bspirale/],
-  [/\bglissade/],
-  [/\bdecollage/,/vents? de travers/],
-  [/\bcircuit/],
-  [/\bapproche/,/\batterrissage/,/vents? de travers/],
-  [/premier vol en solo/,/premier solo/],
-  [/illusion.*derive/],
-  [/atterrissage de precaution/],
-  [/atterrissage force/],
-  [/procedure de depart/,/depart de navigation/,/mise en cap/],
-  [/procedure en route/,/communications? en route/,/progression du vol/,/navigation en vfr/],
-  [/\bderoutement/],
-  [/panneau complet/,/instruments de vol/,/vol aux instruments/],
-  [/panneau partiel/],
-  [/assiette inhabituelle/],
-  [/radionavigation/,/aides? a la navigation/],
-  [/procedure.*urgence/,/urgences? en vol/,/communications? radio/,/procedures? radio/]
+const exerciseGroups=[
+  {label:"",span:15},{label:"Décollage",span:5},{label:"",span:1},
+  {label:"Approche et atterrissage",span:6},{label:"",span:4},
+  {label:"Navigation du pilote",span:3},{label:"Vol aux instruments",span:4},{label:"",span:2}
 ];
 const minutes=(value:string)=>{const match=value.match(/^(\d{1,2}):(\d{2})$/);return match?Number(match[1])*60+Number(match[2]):0;};
 const duration=(start:string,end:string)=>Math.max(0,Math.round((minutes(end)-minutes(start))/6)/10);
@@ -87,7 +95,7 @@ const coversAllExercises=(lesson:PTRLesson|undefined,covered:string[])=>{
   const description=normalized([lesson?.title,...covered].filter(Boolean).join(" "));
   return /revision finale|elements du test en vol|test en vol de pilote prive|tous les exercices/.test(description);
 };
-const exerciseCovered=(index:number,covered:string[],all:boolean)=>all||covered.some(value=>exercisePatterns[index].some(pattern=>pattern.test(value)));
+const exerciseCovered=(index:number,covered:string[],all:boolean)=>all||covered.some(value=>exerciseColumns[index].patterns.some(pattern=>pattern.test(value)));
 const officialLessonDefinition=(lesson:PTRLesson,student:Student|null)=>{
   const studentProgram=OFFICIAL_PROGRAMS.find(item=>item.id===student?.trainingProgramId)||
     OFFICIAL_PROGRAMS.find(item=>item.name===student?.trainingProgramName)||
@@ -274,16 +282,20 @@ export function PTRPrintPage({studentId}:{studentId:string}){
     </PrintSheet>
 
     <PrintSheet number="5" title="Sommaire des exercices en vol" subtitle="Air Exercises Summary">
-      <table className="print-table exercise-summary"><thead><tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseNames.map((name,index)=><th className={index===15||index===17?"exercise-specialized":""} key={name}><span>{name}</span></th>)}</tr><tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseNames.map((_,index)=><th key={index}>{index+1}</th>)}</tr></thead><tbody>
+      <table className="print-table exercise-summary"><thead>
+        <tr className="exercise-group-row"><th colSpan={3}></th>{exerciseGroups.map((group,index)=><th className={group.label?"named":"blank"} colSpan={group.span} key={`${group.label}-${index}`}>{group.label}</th>)}</tr>
+        <tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseColumns.map((column,index)=><th key={`${column.number}-${column.label}-${index}`}><span>{column.label}</span></th>)}</tr>
+        <tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseColumns.map((column,index)=><th key={`${column.number}-${index}`}>{column.number}</th>)}</tr>
+      </thead><tbody>
         {sortedEvaluations.map(item=>{
           const lesson=lessonMap.get(item.lessonId),reservation=reservations.find(value=>value.id===item.reservationId);
           const code=trainingCode(item,lesson,reservation),covered=relatedExercises(item,lesson),all=coversAllExercises(lesson,covered);
-          return <tr key={item.id}><td>{item.date}</td><td>{officialLessonNumber(lesson,reservation)}</td><td className={`training-code code-${code.toLowerCase()}`}>{code}</td>{exerciseNames.map((name,index)=>{
+          return <tr key={item.id}><td>{item.date}</td><td>{officialLessonNumber(lesson,reservation)}</td><td className={`training-code code-${code.toLowerCase()}`}>{code}</td>{exerciseColumns.map((column,index)=>{
             const matched=exerciseCovered(index,covered,all);
-            return <td key={index}>{matched?code:""}</td>;
+            return <td key={`${column.number}-${index}`}>{matched?code:""}</td>;
           })}</tr>;
         })}
-        {Array.from({length:Math.max(0,8-sortedEvaluations.length)},(_,row)=><tr className="exercise-empty-row" key={`empty-${row}`}><td></td><td></td><td></td>{exerciseNames.map((_,index)=><td key={index}></td>)}</tr>)}
+        {Array.from({length:Math.max(0,8-sortedEvaluations.length)},(_,row)=><tr className="exercise-empty-row" key={`empty-${row}`}><td></td><td></td><td></td>{exerciseColumns.map((column,index)=><td key={`${column.number}-${index}`}></td>)}</tr>)}
       </tbody></table>
       <div className="summary-code-legend"><strong>Légende</strong><span><b>F</b> Familiarisation / démonstration</span><span><b>P</b> Instruction préparatoire au sol</span><span><b>D</b> Démonstration et pratique</span><span><b>S</b> Exercice en solo</span><span><b>R</b> Révision</span></div>
       <div className="exercise-summary-certifications">
