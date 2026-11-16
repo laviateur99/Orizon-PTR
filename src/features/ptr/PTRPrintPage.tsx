@@ -274,6 +274,11 @@ export function PTRPrintPage({studentId}:{studentId:string}){
     </PrintSheet>
 
     <PrintSheet number="5" title="Sommaire des exercices en vol" subtitle="Air Exercises Summary">
+      <div className="exercise-variant-note">
+        <strong>Variantes incluses dans les numéros officiels TC</strong>
+        <span><b>16 · Décollage</b> normal, court, mou, avec ou sans obstacle et par vent de travers.</span>
+        <span><b>18 · Approche et atterrissage</b> normal, court, mou, avec ou sans obstacle, par vent de travers et de précision.</span>
+      </div>
       <table className="print-table exercise-summary"><thead><tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseNames.map(name=><th key={name}><span>{name}</span></th>)}</tr><tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseNames.map((_,index)=><th key={index}>{index+1}</th>)}</tr></thead><tbody>
         {sortedEvaluations.map(item=>{
           const lesson=lessonMap.get(item.lessonId),reservation=reservations.find(value=>value.id===item.reservationId);
@@ -285,11 +290,6 @@ export function PTRPrintPage({studentId}:{studentId:string}){
         })}
         {Array.from({length:Math.max(0,8-sortedEvaluations.length)},(_,row)=><tr className="exercise-empty-row" key={`empty-${row}`}><td></td><td></td><td></td>{exerciseNames.map((_,index)=><td key={index}></td>)}</tr>)}
       </tbody></table>
-      <div className="exercise-variant-note">
-        <strong>Variantes incluses dans les numéros officiels TC</strong>
-        <span><b>16 · Décollage</b> normal, court, mou, avec ou sans obstacle et par vent de travers.</span>
-        <span><b>18 · Approche et atterrissage</b> normal, court, mou, avec ou sans obstacle, par vent de travers et de précision.</span>
-      </div>
       <div className="summary-code-legend"><strong>Légende</strong><span><b>F</b> Familiarisation / démonstration</span><span><b>P</b> Instruction préparatoire au sol</span><span><b>D</b> Démonstration et pratique</span><span><b>S</b> Exercice en solo</span><span><b>R</b> Révision</span></div>
       <div className="exercise-summary-certifications">
         <SummaryCertification title="Les inscriptions sur cette page sont certifiées exactes - Chef-instructeur ou représentant" name={summaryCertification?.instructorName||""} date={summaryCertification?.date||summaryCertification?.signedAt?.slice(0,10)||""} signatureSrc={summaryCertification?.instructorSignature||""}/>
