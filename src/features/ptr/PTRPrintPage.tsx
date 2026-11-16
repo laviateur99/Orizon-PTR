@@ -282,7 +282,9 @@ export function PTRPrintPage({studentId}:{studentId:string}){
     </PrintSheet>
 
     <PrintSheet number="5" title="Sommaire des exercices en vol" subtitle="Air Exercises Summary">
-      <table className="print-table exercise-summary"><thead>
+      <table className="print-table exercise-summary">
+        <colgroup><col className="exercise-date-column"/><col className="exercise-lesson-column"/><col className="exercise-type-column"/>{exerciseColumns.map((column,index)=><col className="exercise-data-column" key={`${column.number}-${index}`}/>)}</colgroup>
+        <thead>
         <tr className="exercise-group-row"><th colSpan={3}></th>{exerciseGroups.map((group,index)=><th className={group.label?"named":"blank"} colSpan={group.span} key={`${group.label}-${index}`}>{group.label}</th>)}</tr>
         <tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseColumns.map((column,index)=><th key={`${column.number}-${column.label}-${index}`}><span>{column.label}</span></th>)}</tr>
         <tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseColumns.map((column,index)=><th key={`${column.number}-${index}`}>{column.number}</th>)}</tr>
