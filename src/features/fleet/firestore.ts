@@ -463,11 +463,15 @@ async function writeMaintenanceWorkOrder(
     updatedBy: { uid: actor.id, name: actor.name, role: actor.role },
     updatedAt: now,
   };
+  const completesReturnToService = [
+    "Autorisée pour retour en service",
+    "Fermée",
+  ].includes(next.workStatus);
   let remainingOpenSnag:
     | { snagNumber: string; defectTitle: string }
     | undefined;
   if (
-    next.workStatus === "Autorisée pour retour en service" &&
+    completesReturnToService &&
     previous?.workStatus !== next.workStatus
   ) {
     const aircraftSnags = await getDocs(
@@ -542,7 +546,7 @@ async function writeMaintenanceWorkOrder(
     );
   }
   if (
-    next.workStatus === "Autorisée pour retour en service" &&
+    completesReturnToService &&
     previous?.workStatus !== next.workStatus
   ) {
     batch.set(

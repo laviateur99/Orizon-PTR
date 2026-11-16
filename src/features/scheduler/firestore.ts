@@ -100,7 +100,7 @@ export async function assertAircraftMaintenanceCompliance(
   excludeReservationId = "",
 ) {
   if (!aircraftId) return;
-  const [aircraftSnapshot, taskSnapshot, reservationSnapshot] =
+  const [aircraftSnapshot, taskSnapshot, reservationSnapshot, snagSnapshot] =
     await Promise.all([
       getDoc(doc(db, "aircraft", aircraftId)),
       getDocs(
@@ -116,13 +116,28 @@ export async function assertAircraftMaintenanceCompliance(
           ...schoolScope(),
         ),
       ),
+      getDocs(
+        query(
+          collection(db, "snags"),
+          where("aircraftId", "==", aircraftId),
+          ...schoolScope(),
+        ),
+      ).catch(() => undefined),
     ]);
   if (!aircraftSnapshot.exists())
     throw new Error("Vol bloqué : avion introuvable.");
   const aircraft = aircraftSnapshot.data(),
     registration = text(aircraft.registration, aircraftId),
-    currentAirTime = num(aircraft.airTimeTotal) || 0;
-  if (aircraft.blockedForScheduling === true)
+    currentAirTime = num(aircraft.airTimeTotal) || 0,
+    hasOpenSnag = snagSnapshot
+      ? snagSnapshot.docs.some((item) => text(item.data().status) !== "Fermé")
+      : text(aircraft.status) === "SNAG",
+    staleClosedSnagBlock =
+      aircraft.blockedForScheduling === true &&
+      text(aircraft.status) === "SNAG" &&
+      Boolean(snagSnapshot) &&
+      !hasOpenSnag;
+  if (aircraft.blockedForScheduling === true && !staleClosedSnagBlock)
     throw new Error(
       `Vol bloqué pour ${registration} : avion indisponible en maintenance ou en raison d’un SNAG.`,
     );

@@ -553,8 +553,35 @@ export function SchedulerPage() {
   );
   const HOURS = Array.from({ length: END - START + 1 }, (_, i) => START + i);
   const baseList = resources.length ? resources : DEFAULT_RESOURCES;
+  const closedSnagAircraftIds = useMemo(
+    () =>
+      new Set(
+        snagBlocks
+          .filter((item) => item.status === "Complété")
+          .map((item) => item.aircraftId)
+          .filter(Boolean),
+      ),
+    [snagBlocks],
+  );
+  const openSnagAircraftIds = useMemo(
+    () =>
+      new Set(
+        snagBlocks
+          .filter((item) => item.status !== "Complété")
+          .map((item) => item.aircraftId)
+          .filter(Boolean),
+      ),
+    [snagBlocks],
+  );
   const list = useMemo(() => {
-    const merged = [...baseList];
+    const merged = baseList.map((resource) =>
+      resource.kind === "aircraft" &&
+      resource.status === "SNAG" &&
+      closedSnagAircraftIds.has(resource.id) &&
+      !openSnagAircraftIds.has(resource.id)
+        ? { ...resource, status: "Disponible", statusReason: "", blocked: false }
+        : resource,
+    );
     simulatorResources.forEach((item) => {
       if (!merged.some((existing) => existing.id === item.id))
         merged.push(item);
@@ -591,7 +618,7 @@ export function SchedulerPage() {
         resourceIndex(a) - resourceIndex(b) ||
         a.name.localeCompare(b.name),
     );
-  }, [baseList, orderSettings]);
+  }, [baseList, orderSettings, closedSnagAircraftIds, openSnagAircraftIds]);
   const studentRowSuggestions = students.filter(s => studentRowSearch && normalizeSearch(s.name).includes(normalizeSearch(studentRowSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr")).slice(0, 8);
   const filteredList = list.filter(r => (!resourceFilters.length || resourceFilters.includes(resourceGroupKey(r))) && normalizeSearch(`${r.name} ${r.detail}`).includes(normalizeSearch(resourceSearch)) && (!studentRowSearch || visible.some(e => e.resourceId === r.id && normalizeSearch(e.studentName || "").includes(normalizeSearch(studentRowSearch)))));
   const filteredStudents = students.filter(s => s.id === draft?.studentId || normalizeSearch(s.name).includes(normalizeSearch(studentSearch))).sort((a,b) => a.name.localeCompare(b.name, "fr"));
