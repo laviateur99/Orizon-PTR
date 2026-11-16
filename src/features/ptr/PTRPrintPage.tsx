@@ -17,7 +17,7 @@ const BLUE="#315f8f";
 const exerciseNames=[
   "Familiarisation","Préparation au vol","Commandes auxiliaires","Circulation au sol","Assiettes et mouvements",
   "Vol rectiligne en palier","Montée","Descente","Virage","Autonomie maximale","Vol lent","Décrochage","Vrille","Spirale","Glissade",
-  "Décollage","Circuit","Approche et atterrissage","Premier solo","Illusions créées par la dérive","Atterrissage de précaution",
+  "Décollage — court · mou · obstacle · travers","Circuit","Atterrissage — court · mou · obstacle · travers · précision","Premier solo","Illusions créées par la dérive","Atterrissage de précaution",
   "Atterrissage forcé","Procédure de départ","Procédure en route","Déroutement","Panneau complet","Panneau partiel",
   "Assiettes inhabituelles","Radionavigation","Procédures d’urgence / radio"
 ];
@@ -274,12 +274,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
     </PrintSheet>
 
     <PrintSheet number="5" title="Sommaire des exercices en vol" subtitle="Air Exercises Summary">
-      <div className="exercise-variant-note">
-        <strong>Variantes incluses dans les numéros officiels TC</strong>
-        <span><b>16 · Décollage</b> normal, court, mou, avec ou sans obstacle et par vent de travers.</span>
-        <span><b>18 · Approche et atterrissage</b> normal, court, mou, avec ou sans obstacle, par vent de travers et de précision.</span>
-      </div>
-      <table className="print-table exercise-summary"><thead><tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseNames.map(name=><th key={name}><span>{name}</span></th>)}</tr><tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseNames.map((_,index)=><th key={index}>{index+1}</th>)}</tr></thead><tbody>
+      <table className="print-table exercise-summary"><thead><tr className="exercise-label-row"><th><span>Date</span></th><th><span>Leçon</span></th><th><span>Type</span></th>{exerciseNames.map((name,index)=><th className={index===15||index===17?"exercise-specialized":""} key={name}><span>{name}</span></th>)}</tr><tr className="exercise-number-row"><th></th><th></th><th></th>{exerciseNames.map((_,index)=><th key={index}>{index+1}</th>)}</tr></thead><tbody>
         {sortedEvaluations.map(item=>{
           const lesson=lessonMap.get(item.lessonId),reservation=reservations.find(value=>value.id===item.reservationId);
           const code=trainingCode(item,lesson,reservation),covered=relatedExercises(item,lesson),all=coversAllExercises(lesson,covered);
