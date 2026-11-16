@@ -10,12 +10,15 @@ import { subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscrib
 import type { AircraftOption, InstructorOption, PTREvaluation, PTRLesson, ReservationOption } from "./types";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { canAccessPtr } from "@/features/auth/ptrAccess";
+import { ATPA_PROGRAM } from "@/features/programs/data";
+import { OFFICIAL_PROGRAMS } from "@/features/programs/modularPrograms";
 
 const BLUE="#315f8f";
 const exerciseNames=[
   "Familiarisation","Préparation au vol","Commandes auxiliaires","Circulation au sol","Assiettes et mouvements",
   "Vol rectiligne en palier","Montée","Descente","Virage","Autonomie maximale","Vol lent","Décrochage","Vrille","Spirale","Glissade",
-  "Décollage","Circuit","Approche et atterrissage","Premier solo","Illusions créées par la dérive","Atterrissage de précaution",
+  "Décollage","Décollage court","Décollage mou","Décollage avec obstacle","Décollage vent de travers",
+  "Circuit","Approche et atterrissage","Atterrissage court","Atterrissage mou","Atterrissage avec obstacle","Atterrissage vent de travers","Atterrissage de précision","Premier solo","Illusions créées par la dérive","Atterrissage de précaution",
   "Atterrissage forcé","Procédure de départ","Procédure en route","Déroutement","Panneau complet","Panneau partiel",
   "Assiettes inhabituelles","Radionavigation","Procédures d’urgence / radio"
 ];
@@ -36,8 +39,17 @@ const exercisePatterns:RegExp[][]=[
   [/\bspirale/],
   [/\bglissade/],
   [/\bdecollage/],
+  [/decollage.*(?:terrain )?court/,/decollage et atterrissage court/],
+  [/decollage.*(?:terrain )?mou/,/decollages?.*terrain mou/,/decollage et atterrissage.*mou/],
+  [/decollage.*(?:obstacle|franchissement)/],
+  [/decollage.*vent de travers/,/decollage et atterrissage.*vent de travers/,/vents? de travers/],
   [/\bcircuit/],
   [/\bapproche/,/\batterrissage/],
+  [/atterrissage.*(?:terrain )?court/,/decollage et atterrissage court/],
+  [/atterrissage.*(?:terrain )?mou/,/atterrissages?.*terrain mou/,/decollage et atterrissage.*mou/],
+  [/atterrissage.*(?:obstacle|franchissement)/],
+  [/atterrissage.*vent de travers/,/decollage et atterrissage.*vent de travers/,/vents? de travers/],
+  [/atterrissage de precision/],
   [/premier vol en solo/,/premier solo/],
   [/illusion.*derive/],
   [/atterrissage de precaution/],
@@ -86,6 +98,27 @@ const coversAllExercises=(lesson:PTRLesson|undefined,covered:string[])=>{
   return /revision finale|elements du test en vol|test en vol de pilote prive|tous les exercices/.test(description);
 };
 const exerciseCovered=(index:number,covered:string[],all:boolean)=>all||covered.some(value=>exercisePatterns[index].some(pattern=>pattern.test(value)));
+const officialLessonDefinition=(lesson:PTRLesson,student:Student|null)=>{
+  const studentProgram=OFFICIAL_PROGRAMS.find(item=>item.id===student?.trainingProgramId)||
+    OFFICIAL_PROGRAMS.find(item=>item.name===student?.trainingProgramName)||
+    (student?.program==="ATP(A) intégré"?ATPA_PROGRAM:undefined)||
+    OFFICIAL_PROGRAMS.find(item=>item.name===student?.program);
+  const program=OFFICIAL_PROGRAMS.find(item=>item.id===lesson.programId)||studentProgram||
+    (lesson.id.startsWith("atpa-")||/Manuel de formation\s*[–-]\s*ATP\(A\)/i.test(lesson.sourceManual||"")?ATPA_PROGRAM:undefined);
+  const template=program?.lessons.find(item=>String(item.number)===String(lesson.lessonNumber));
+  if(!template)return lesson;
+  return{
+    ...lesson,
+    title:template.title,
+    exercises:template.exercises,
+    components:template.components.map(component=>({
+      modality:component.modality,category:component.category,title:component.title,
+      objective:component.objective,hours:component.hours,exercises:component.exercises,
+      nextLesson:component.nextLesson,successCriteria:component.successCriteria,
+      manualPage:component.manualPage
+    }))
+  };
+};
 
 export function PTRPrintPage({studentId}:{studentId:string}){
   const{profile}=useAuth(),allowed=canAccessPtr(profile,studentId);
@@ -114,7 +147,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
   },[studentId,allowed]);
   const completed=useMemo(()=>reservations.filter(item=>item.status==="Complété").sort((a,b)=>a.date.localeCompare(b.date)),[reservations]);
   const theoryRows=useMemo(()=>theory.filter(item=>item.status==="Complétée").sort((a,b)=>a.date.localeCompare(b.date)),[theory]);
-  const lessonMap=useMemo(()=>new Map(lessons.map(item=>[item.id,item])),[lessons]);
+  const lessonMap=useMemo(()=>new Map(lessons.map(item=>[item.id,officialLessonDefinition(item,student)])),[lessons,student]);
   const totals=useMemo(()=>completed.reduce((sum,item)=>{
     const elapsed=item.hobbsStart!==undefined&&item.hobbsEnd!==undefined?Math.max(0,item.hobbsEnd-item.hobbsStart):(item.airtimeMinutes||0)/60;
     const role=item.flightCrewRole||(item.type==="Solo"?"PIC":"Double");
