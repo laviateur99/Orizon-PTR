@@ -91,8 +91,15 @@ function assessMinimum(weather:WeatherSnapshot,minimum:WeatherMinimum,wind:WindA
   const visibility=numeric(weather.visibilitySm),reportedCeiling=ceiling(weather);
   const failures:string[]=[];
   const unknown:string[]=[];
+  let specialVfr=false;
   if(minimum.vfr){
-    unknown.push("minimum VFR réglementaire à valider selon l’espace aérien, les conditions et le vol considéré");
+    if(visibility===undefined)unknown.push("visibilité VFR");
+    else if(visibility<3)specialVfr=true;
+    if(reportedCeiling===undefined){
+      const layers=weather.clouds||[];
+      if(!layers.length&&!/\b(?:SKC|CLR|CAVOK|NSC|NCD)\b/.test(weather.raw))unknown.push("plafond VFR");
+    }else if(reportedCeiling<1000)specialVfr=true;
+    if(specialVfr)unknown.push("conditions sous 3 SM ou 1 000 pi : autorisation VFR spécial requise du Chef instructeur");
   }else{
     if(visibility===undefined)unknown.push("visibilité");
     else if(visibility<(minimum.visibility||0))failures.push(`visibilité ${visibility} SM < ${minimum.visibility} SM`);
@@ -107,7 +114,7 @@ function assessMinimum(weather:WeatherSnapshot,minimum:WeatherMinimum,wind:WindA
     if(wind.headwind< -5)failures.push(`vent arrière ${Math.abs(wind.headwind).toFixed(1)} kt > limite 5 kt`);
     else if(wind.headwind<0)unknown.push(`vent arrière ${Math.abs(wind.headwind).toFixed(1)} kt — toléré, mais hors de l’arc avant`);
   }
-  return{status:failures.length?"no":unknown.length?"caution":"yes",failures,unknown,visibility,reportedCeiling};
+  return{status:failures.length?"no":unknown.length||specialVfr?"caution":"yes",failures,unknown,visibility,reportedCeiling,specialVfr};
 }
 
 export function DashboardPage(){
@@ -215,7 +222,7 @@ export function DashboardPage(){
         <div className="weather-dispatch-assessment">
           <div className="weather-assessment-head"><div><span className="weather-label">Aide à la décision du dispatch</span><h3>Minimums météorologiques Orizon</h3></div><span>Basé sur le METAR observé seulement</span></div>
           <div className="weather-wind-controls"><label>Piste en usage<div className="runway-input"><span>RWY</span><input inputMode="numeric" maxLength={2} placeholder="Ex. 24" value={runway} onChange={e=>{const value=e.target.value.replace(/\D/g,"").slice(0,2);setRunway(value);window.localStorage.setItem("orizon-active-runway",value)}}/></div></label><label>Type d’avion<select value={aircraftType} onChange={e=>{setAircraftType(e.target.value);window.localStorage.setItem("orizon-weather-aircraft",e.target.value)}}><option value="">Sélectionner</option>{AIRCRAFT_CROSSWIND_LIMITS.map(item=><option value={item.id} key={item.id}>{item.label} — limite {item.limit} kt</option>)}</select></label>{windAssessment&&<div className={`wind-result ${windResultStatus}`}><span>{windAssessment.variable?"Vent variable — calcul conservateur":windResultStatus==="yes"?"Vent dans l’arc avant":windResultStatus==="no"?"Limite de vent dépassée":"Attention — marge réduite"}</span><strong>{windAssessment.crosswind.toFixed(1)} kt traversier {windAssessment.variable?"maximum possible":`de la ${windAssessment.side}`}</strong><small>Limite traversière {windAssessment.limit} kt · {windAssessment.variable?"direction variable, composante maximale retenue":windAssessment.headwind>=0?`vent de face ${windAssessment.headwind.toFixed(1)} kt`:`vent arrière ${Math.abs(windAssessment.headwind).toFixed(1)} kt / limite 5 kt`} · calcul avec {weather.windGustKt?"rafale":"vent moyen"}</small></div>}</div>
-          <div className="weather-minimum-grid">{WEATHER_MINIMUMS.map(minimum=>{const assessment=assessMinimum(weather,minimum,windAssessment);return <article className={`weather-minimum ${assessment.status}`} key={minimum.id}><header><strong>{minimum.label}</strong><b>{assessment.status==="no"?"NON CONFORME":assessment.status==="yes"?"CONFORME":"À CONFIRMER"}</b></header><p>{minimum.vfr?"Minimum VFR réglementaire":`${minimum.visibility} SM · plafond ${minimum.ceiling.toLocaleString("fr-CA")} pi AGL`}</p>{windAssessment&&assessment.status!=="no"&&<span className="weather-success">✓ vent traversier {windAssessment.crosswind.toFixed(1)} kt ≤ {windAssessment.limit} kt</span>}{assessment.failures.map(item=><span className="weather-failure" key={item}>✕ {item}</span>)}{assessment.unknown.map(item=><span className="weather-unknown" key={item}>! {item}</span>)}</article>})}</div>
+          <div className="weather-minimum-grid">{WEATHER_MINIMUMS.map(minimum=>{const assessment=assessMinimum(weather,minimum,windAssessment);return <article className={`weather-minimum ${assessment.status}`} key={minimum.id}><header><strong>{minimum.label}</strong><b>{assessment.status==="no"?"NON CONFORME":assessment.specialVfr?"VFR SPÉCIAL REQUIS":assessment.status==="yes"?"CONFORME":"À CONFIRMER"}</b></header><p>{minimum.vfr?"CYQB classe C : 3 SM · plafond 1 000 pi":`${minimum.visibility} SM · plafond ${minimum.ceiling.toLocaleString("fr-CA")} pi AGL`}</p>{windAssessment&&assessment.status!=="no"&&<span className="weather-success">✓ vent traversier {windAssessment.crosswind.toFixed(1)} kt ≤ {windAssessment.limit} kt</span>}{assessment.failures.map(item=><span className="weather-failure" key={item}>✕ {item}</span>)}{assessment.unknown.map(item=><span className="weather-unknown" key={item}>! {item}</span>)}</article>})}</div>
           <div className="weather-ifr-rule"><strong>Vol IFR en IMC</strong><span>Le plafond doit être supérieur de 400 pieds à la MDA de la piste utilisable pour permettre un retour sécuritaire à la base. Les conditions de givrage doivent respecter les capacités de l’aéronef.</span><small>Vérification manuelle requise : la MDA, la piste utilisable et les capacités de givrage ne sont pas contenues dans le METAR.</small></div>
           <p className="weather-assessment-disclaimer">Les minimums sont évalués pour la totalité du vol, de la route et de la période prévue, et non seulement à l’aéroport de départ. Aide visuelle seulement : le dispatch et le pilote doivent vérifier le METAR complet, le TAF, les NOTAM, l’espace aérien, la piste en service, la composante de vent de travers, les limites du POH et toute condition plus restrictive avant d’autoriser le vol.</p>
         </div>
