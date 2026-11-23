@@ -16,9 +16,12 @@ export type SchedulerEvent = {
   checkInMetar?:string; checkOutMetar?:string; metarStation?:string;
   studentBreakConfirmations?: StudentBreakConfirmation[];
   complianceOverrideReason?:string;
+  ptrCorrectionReason?:string;
+  ptrCorrectedAt?:string;
+  ptrCorrectedBy?:{uid:string;name:string;role:string};
 };
 export type Cancellation = {id:string;eventId:string;eventTitle:string;reason:string;comment?:string;cancelledAt:string};
-export type FlightOperationUpdate = Partial<Pick<SchedulerEvent,"status"|"checkedInAt"|"checkedInBy"|"checkedOutAt"|"checkedOutBy"|"hobbsStart"|"hobbsEnd"|"takeoffTime"|"landingTime"|"airtimeMinutes"|"groundTimeHours"|"overdueAlertMinutes"|"checkInMetar"|"checkOutMetar"|"metarStation"|"flightCrewRole"|"dayHours"|"nightHours"|"instrumentAircraftHours"|"ftdHours"|"crossCountryDayHours"|"crossCountryNightHours"|"routeFrom"|"routeTo">>;
+export type FlightOperationUpdate = Partial<Pick<SchedulerEvent,"status"|"checkedInAt"|"checkedInBy"|"checkedOutAt"|"checkedOutBy"|"hobbsStart"|"hobbsEnd"|"takeoffTime"|"landingTime"|"airtimeMinutes"|"groundTimeHours"|"overdueAlertMinutes"|"checkInMetar"|"checkOutMetar"|"metarStation"|"flightCrewRole"|"dayHours"|"nightHours"|"instrumentAircraftHours"|"ftdHours"|"crossCountryDayHours"|"crossCountryNightHours"|"routeFrom"|"routeTo"|"ptrCorrectionReason"|"ptrCorrectedAt"|"ptrCorrectedBy">>;
 
 export function canDeleteReservation(event: SchedulerEvent): boolean {
   return !event.checkedInAt && !event.checkedOutAt && !["Check-in", "En vol", "Complété"].includes(event.status || "");

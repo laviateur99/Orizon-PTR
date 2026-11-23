@@ -377,6 +377,16 @@ function mapEvent(id: string, d: DocumentData): SchedulerEvent {
     routeTo: optional(d.routeTo),
     studentBreakConfirmations: readStudentBreakConfirmations(d.studentBreakConfirmations),
     complianceOverrideReason: optional(d.complianceOverrideReason),
+    ptrCorrectionReason: optional(d.ptrCorrectionReason),
+    ptrCorrectedAt: optional(d.ptrCorrectedAt),
+    ptrCorrectedBy:
+      d.ptrCorrectedBy && typeof d.ptrCorrectedBy === "object"
+        ? {
+            uid: text((d.ptrCorrectedBy as Record<string, unknown>).uid),
+            name: text((d.ptrCorrectedBy as Record<string, unknown>).name),
+            role: text((d.ptrCorrectedBy as Record<string, unknown>).role),
+          }
+        : undefined,
     lessonPlanId: optional(d.lessonPlanId),
     lessonTitle: optional(d.lessonTitle),
     lessonPdfPath: optional(d.lessonPdfPath),
@@ -606,6 +616,9 @@ export function schedulerEventPayload(e: SchedulerEvent) {
     simulatorTcId: e.simulatorTcId ?? "",
     studentBreakConfirmations: e.studentBreakConfirmations ?? [],
     complianceOverrideReason: e.complianceOverrideReason ?? "",
+    ptrCorrectionReason: e.ptrCorrectionReason ?? "",
+    ptrCorrectedAt: e.ptrCorrectedAt ?? "",
+    ptrCorrectedBy: e.ptrCorrectedBy ?? null,
     reservationType: e.reservationType ?? "",
     source: e.source ?? "reservation",
     maintenanceWorkOrderId: e.maintenanceWorkOrderId ?? "",
@@ -724,6 +737,39 @@ export async function updateFlightOperation(
     updatedAt: serverTimestamp(),
   });
   await updateDoc(doc(db, "reservations", id), payload);
+}
+
+const ptrTimeSnapshot = (event: SchedulerEvent) => ({
+  hobbsStart: event.hobbsStart ?? null,
+  hobbsEnd: event.hobbsEnd ?? null,
+  dayHours: event.dayHours ?? 0,
+  nightHours: event.nightHours ?? 0,
+  instrumentAircraftHours: event.instrumentAircraftHours ?? 0,
+  ftdHours: event.ftdHours ?? 0,
+  crossCountryDayHours: event.crossCountryDayHours ?? 0,
+  crossCountryNightHours: event.crossCountryNightHours ?? 0,
+  groundTimeHours: event.groundTimeHours ?? 0,
+});
+
+export async function recordPTRTimeCorrection(
+  previous: SchedulerEvent,
+  next: SchedulerEvent,
+  actor: { uid: string; name: string; role: string },
+  reason: string,
+) {
+  if (!reason.trim()) throw new Error("Le motif de correction est obligatoire.");
+  await addDoc(collection(db, "ptrActivityHistory"), {
+    studentId: previous.studentId || "",
+    reservationId: previous.id,
+    lessonPlanId: previous.lessonPlanId || "",
+    action: "Correction administrative des heures PTR",
+    previousValues: ptrTimeSnapshot(previous),
+    newValues: ptrTimeSnapshot(next),
+    reason: reason.trim(),
+    correctedBy: actor,
+    eventAt: new Date().toISOString(),
+    createdAt: serverTimestamp(),
+  });
 }
 
 /** Met à jour le vol et le compteur de maintenance sans toucher aux heures du PTR. */

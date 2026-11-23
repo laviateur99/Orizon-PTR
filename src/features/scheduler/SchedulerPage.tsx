@@ -8,6 +8,7 @@ import {
   assignLessonToStudentPTR,
   completeFlightAndApplyAirTime,
   markLinkedPTRLessonAfterCheckout,
+  recordPTRTimeCorrection,
   resourceGroupKey,
   removeReservation,
   saveReservation,
@@ -273,6 +274,7 @@ type Ops = {
   crossCountryNightHours: string;
   routeFrom: string;
   routeTo: string;
+  correctionReason: string;
 };
 type PointerDrag = {
   event: SchedulerEvent;
@@ -293,6 +295,9 @@ export function SchedulerPage() {
       ["Administrateur", "Directeur de maintenance", "Maintenance", "Instructeur", "Dispatch", "Chef instructeur"].includes(
         profile.role,
       ),
+  );
+  const canCorrectCompletedPtr = Boolean(
+    profile && ["Administrateur", "Chef instructeur"].includes(profile.role),
   );
   // Étudiant : pas d'accès à aircraft/snags, réservations limitées aux siennes (règles Firestore).
   const studentScope = profile?.role === "Étudiant" ? profile.linkedStudentId ?? "" : undefined;
@@ -777,12 +782,17 @@ export function SchedulerPage() {
   function openEdit(e: SchedulerEvent) {
     setStudentSearch("");
     setMessage("");
-    if (
-      e.source === "maintenanceWorkOrder" &&
-      e.status === "Complété"
-    ) {
+    if (e.source === "maintenanceWorkOrder" && e.status === "Complété") {
       setMessage(
         "Ce créneau de maintenance est conservé comme historique et ne peut plus être déplacé.",
+      );
+      return;
+    }
+    if (e.status === "Complété") {
+      setMessage(
+        canCorrectCompletedPtr
+          ? "Cette activité PTR est verrouillée. Utilisez « Corriger les heures PTR » pour une correction administrative traçable."
+          : "Cette activité PTR est complétée et ne peut plus être modifiée.",
       );
       return;
     }
@@ -1001,6 +1011,16 @@ export function SchedulerPage() {
   }
   async function openOps(e: SchedulerEvent, mode: "checkin" | "checkout") {
     setOpsError("");
+    if (e.status === "Complété" && !canCorrectCompletedPtr) {
+      setMessage(
+        "Les heures d’une activité PTR complétée sont verrouillées. Seuls un Administrateur ou le Chef instructeur peuvent effectuer une correction traçable.",
+      );
+      return;
+    }
+    if (e.status === "Complété" && mode === "checkin") {
+      setMessage("Une activité complétée ne peut pas être remise en check-out.");
+      return;
+    }
     if (mode === "checkin") {
       if (e.type === "Solo") {
         const student = students.find((item) => item.id === e.studentId);
@@ -1062,6 +1082,7 @@ export function SchedulerPage() {
       crossCountryNightHours: e.crossCountryNightHours?.toString() || "",
       routeFrom: e.routeFrom || (mode === "checkout" && !["Sol", "Simulateur", "Administration", "Cours théorique", "Supervision solo", "Maintenance", "Hors service"].includes(e.type) ? "CYQB" : ""),
       routeTo: e.routeTo || (mode === "checkout" && !["Sol", "Simulateur", "Administration", "Cours théorique", "Supervision solo", "Maintenance", "Hors service"].includes(e.type) ? "CYQB" : ""),
+      correctionReason: "",
     });
     if (!usesWeather(e.type)) {
       setMetarLoading(false);
@@ -1091,6 +1112,15 @@ export function SchedulerPage() {
 
     const isNonFlight =
       ops.event.type === "Sol" || ops.event.type === "Simulateur";
+    const correctingCompleted = ops.event.status === "Complété";
+    if (correctingCompleted && !canCorrectCompletedPtr) {
+      setOpsError("Cette activité PTR complétée est verrouillée pour votre rôle.");
+      return;
+    }
+    if (correctingCompleted && !ops.correctionReason.trim()) {
+      setOpsError("Le motif de la correction administrative est obligatoire.");
+      return;
+    }
     let timeEntryWarning = "";
     if (ops.mode === "checkin") {
       if (!isNonFlight && !ops.hobbsStart) {
@@ -1242,6 +1272,17 @@ export function SchedulerPage() {
         crossCountryNightHours: completedEvent.crossCountryNightHours,
         routeFrom: completedEvent.routeFrom,
         routeTo: completedEvent.routeTo,
+        ...(correctingCompleted
+          ? {
+              ptrCorrectionReason: ops.correctionReason.trim(),
+              ptrCorrectedAt: new Date().toISOString(),
+              ptrCorrectedBy: {
+                uid: user?.uid || "",
+                name: profile?.name || profile?.email || "Utilisateur",
+                role: profile?.role || "",
+              },
+            }
+          : {}),
       };
       if (
         !isNonFlight &&
@@ -1259,6 +1300,18 @@ export function SchedulerPage() {
       }
 
       await markLinkedPTRLessonAfterCheckout(completedEvent);
+      if (correctingCompleted) {
+        await recordPTRTimeCorrection(
+          ops.event,
+          completedEvent,
+          {
+            uid: user?.uid || "",
+            name: profile?.name || profile?.email || "Utilisateur",
+            role: profile?.role || "",
+          },
+          ops.correctionReason,
+        );
+      }
       if (
         ["Double commande", "Solo", "Sol", "Simulateur"].includes(
           completedEvent.type,
@@ -1294,8 +1347,7 @@ export function SchedulerPage() {
   ) {
     if (
       item.source === "snag" ||
-      (item.source === "maintenanceWorkOrder" &&
-        item.status === "Complété") ||
+      item.status === "Complété" ||
       (item.primaryResourceId && item.resourceId !== item.primaryResourceId)
     )
       return;
@@ -1763,13 +1815,14 @@ export function SchedulerPage() {
                             aria-label="Changer la fin"
                           />
                           {e.source !== "snag" &&
-                            e.source !== "maintenanceWorkOrder" && (
+                            e.source !== "maintenanceWorkOrder" &&
+                            (e.status !== "Complété" || canCorrectCompletedPtr) && (
                             <div
                               className="event-ops"
                               onClick={(x) => x.stopPropagation()}
                               onPointerDown={(x) => x.stopPropagation()}
                             >
-                              <button
+                              {e.status !== "Complété" && <button
                                 type="button"
                                 onPointerDown={(x) => x.stopPropagation()}
                                 onClick={(x) => {
@@ -1779,7 +1832,7 @@ export function SchedulerPage() {
                                 title="Check-out"
                               >
                                 OUT
-                              </button>
+                              </button>}
                               <button
                                 type="button"
                                 onPointerDown={(x) => x.stopPropagation()}
@@ -1787,9 +1840,9 @@ export function SchedulerPage() {
                                   x.stopPropagation();
                                   openOps(e, "checkout");
                                 }}
-                                title="Check-in"
+                                title={e.status === "Complété" ? "Corriger les heures PTR" : "Check-in"}
                               >
-                                IN
+                                {e.status === "Complété" ? "CORRIGER" : "IN"}
                               </button>
                             </div>
                           )}
@@ -2434,6 +2487,18 @@ export function SchedulerPage() {
                     )}
                   </>
                 )}
+              {ops.event.status === "Complété" && (
+                <label>
+                  Motif obligatoire de la correction administrative
+                  <textarea
+                    value={ops.correctionReason}
+                    onChange={(e) =>
+                      setOps({ ...ops, correctionReason: e.target.value })
+                    }
+                    placeholder="Expliquez l’erreur corrigée; cette raison sera conservée dans l’historique."
+                  />
+                </label>
+              )}
             </div>
             <footer>
               <span />
