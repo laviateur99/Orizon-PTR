@@ -39,14 +39,22 @@ function value(value:number|string|undefined,suffix=""){
   return value===undefined||value===""?"—":`${value}${suffix}`;
 }
 
-type WeatherMinimum={id:string;label:string;visibility?:number;ceiling?:number;vfr?:boolean;temperature:number;noPrecipitation:boolean};
+type WeatherMinimum=
+  | {id:string;label:string;vfr:true;visibility?:never;ceiling?:never}
+  | {id:string;label:string;vfr?:false;visibility:number;ceiling:number};
 const WEATHER_MINIMUMS:WeatherMinimum[]=[
-  {id:"manoeuvres-solo",label:"Manœuvres solo",visibility:10,ceiling:2000,temperature:-15,noPrecipitation:true},
-  {id:"manoeuvres-instructeur",label:"Manœuvres avec instructeur",vfr:true,temperature:-15,noPrecipitation:false},
-  {id:"circuits-solo",label:"Posés-décollés solo",visibility:6,ceiling:1500,temperature:-15,noPrecipitation:true},
-  {id:"circuits-instructeur",label:"Posés-décollés avec instructeur",vfr:true,temperature:-15,noPrecipitation:false},
-  {id:"navigation-solo",label:"Navigation — jour solo",visibility:10,ceiling:2500,temperature:-20,noPrecipitation:true},
-  {id:"navigation-instructeur",label:"Navigation / vol aux instruments avec instructeur",vfr:true,temperature:-20,noPrecipitation:false}
+  {id:"jour-manoeuvres-solo",label:"JOUR — Manœuvres solo",visibility:10,ceiling:2000},
+  {id:"jour-manoeuvres-instructeur",label:"JOUR — Manœuvres avec instructeur",vfr:true},
+  {id:"jour-circuits-solo",label:"JOUR — Circuits solo",visibility:6,ceiling:1500},
+  {id:"jour-circuits-instructeur",label:"JOUR — Circuits avec instructeur",vfr:true},
+  {id:"jour-navigation-solo",label:"JOUR — Navigation solo",visibility:10,ceiling:2000},
+  {id:"jour-navigation-instructeur",label:"JOUR — Navigation avec instructeur",vfr:true},
+  {id:"nuit-circuits-solo",label:"NUIT — Circuits solo",visibility:10,ceiling:2500},
+  {id:"nuit-circuits-instructeur",label:"NUIT — Circuits avec instructeur",vfr:true},
+  {id:"nuit-local-solo",label:"NUIT — Vol local solo hors circuit",visibility:15,ceiling:3000},
+  {id:"nuit-local-instructeur",label:"NUIT — Vol local avec instructeur",vfr:true},
+  {id:"nuit-navigation-solo",label:"NUIT — Navigation solo",visibility:15,ceiling:3500},
+  {id:"nuit-navigation-instructeur",label:"NUIT — Navigation avec instructeur",vfr:true}
 ];
 const AIRCRAFT_CROSSWIND_LIMITS=[
   {id:"c152",label:"Cessna 152",limit:12},
@@ -55,10 +63,6 @@ const AIRCRAFT_CROSSWIND_LIMITS=[
 ] as const;
 const numeric=(value:number|string|undefined)=>{const result=Number(value);return Number.isFinite(result)?result:undefined};
 const ceiling=(weather:WeatherSnapshot)=>(weather.clouds||[]).filter(layer=>["BKN","OVC","VV"].includes(layer.cover||"")&&typeof layer.base==="number").map(layer=>layer.base as number).sort((a,b)=>a-b)[0];
-const hasPrecipitation=(weather:WeatherSnapshot)=>{
-  const tokens=` ${weather.weather||""} ${weather.raw||""} `.toUpperCase().split(/\s+/);
-  return tokens.some(token=>/(^|[-+])(?:VC)?(?:SH|TS|FZ)?(?:DZ|RA|SN|SG|IC|PL|GR|GS|UP)/.test(token));
-};
 // Déclinaison magnétique (positive = Est, négative = Ouest) : METAR en vrai, pistes en magnétique.
 // CYQB : WMM-2025 via NOAA NCEI, 14,8° O (2026,76).
 const AIRPORT_DECLINATION:Record<string,number>={CYQB:-14.8};
@@ -84,16 +88,11 @@ function calculateWind(weather:WeatherSnapshot,runway:string,aircraftId:string):
   };
 }
 function assessMinimum(weather:WeatherSnapshot,minimum:WeatherMinimum,wind:WindAssessment|undefined){
-  const visibility=numeric(weather.visibilitySm),reportedCeiling=ceiling(weather),temperature=weather.temperatureC;
+  const visibility=numeric(weather.visibilitySm),reportedCeiling=ceiling(weather);
   const failures:string[]=[];
   const unknown:string[]=[];
   if(minimum.vfr){
-    if(visibility===undefined)unknown.push("visibilité VFR");
-    else if(visibility<3)failures.push(`visibilité ${visibility} SM < minimum VFR de 3 SM`);
-    if(reportedCeiling===undefined){
-      const layers=weather.clouds||[];
-      if(!layers.length&&!/\b(?:SKC|CLR|CAVOK|NSC|NCD)\b/.test(weather.raw))unknown.push("plafond VFR");
-    }else if(reportedCeiling<1000)failures.push(`plafond ${reportedCeiling} pi < minimum VFR de 1 000 pi`);
+    unknown.push("minimum VFR réglementaire à valider selon l’espace aérien, les conditions et le vol considéré");
   }else{
     if(visibility===undefined)unknown.push("visibilité");
     else if(visibility<(minimum.visibility||0))failures.push(`visibilité ${visibility} SM < ${minimum.visibility} SM`);
@@ -102,9 +101,6 @@ function assessMinimum(weather:WeatherSnapshot,minimum:WeatherMinimum,wind:WindA
       if(!layers.length&&!/\b(?:SKC|CLR|CAVOK|NSC|NCD)\b/.test(weather.raw))unknown.push("plafond");
     }else if(reportedCeiling<(minimum.ceiling||0))failures.push(`plafond ${reportedCeiling} pi < ${minimum.ceiling} pi`);
   }
-  if(temperature===undefined)unknown.push("température");
-  else if(temperature<minimum.temperature)failures.push(`température ${temperature} °C < ${minimum.temperature} °C`);
-  if(minimum.noPrecipitation&&hasPrecipitation(weather))failures.push("précipitations observées");
   if(!wind)unknown.push("vent de travers (sélectionner la piste et le type d’avion)");
   else{
     if(wind.crosswind>wind.limit)failures.push(`vent de travers ${wind.crosswind} kt > limite ${wind.limit} kt (${wind.aircraft})`);
@@ -219,9 +215,9 @@ export function DashboardPage(){
         <div className="weather-dispatch-assessment">
           <div className="weather-assessment-head"><div><span className="weather-label">Aide à la décision du dispatch</span><h3>Minimums météorologiques Orizon</h3></div><span>Basé sur le METAR observé seulement</span></div>
           <div className="weather-wind-controls"><label>Piste en usage<div className="runway-input"><span>RWY</span><input inputMode="numeric" maxLength={2} placeholder="Ex. 24" value={runway} onChange={e=>{const value=e.target.value.replace(/\D/g,"").slice(0,2);setRunway(value);window.localStorage.setItem("orizon-active-runway",value)}}/></div></label><label>Type d’avion<select value={aircraftType} onChange={e=>{setAircraftType(e.target.value);window.localStorage.setItem("orizon-weather-aircraft",e.target.value)}}><option value="">Sélectionner</option>{AIRCRAFT_CROSSWIND_LIMITS.map(item=><option value={item.id} key={item.id}>{item.label} — limite {item.limit} kt</option>)}</select></label>{windAssessment&&<div className={`wind-result ${windResultStatus}`}><span>{windAssessment.variable?"Vent variable — calcul conservateur":windResultStatus==="yes"?"Vent dans l’arc avant":windResultStatus==="no"?"Limite de vent dépassée":"Attention — marge réduite"}</span><strong>{windAssessment.crosswind.toFixed(1)} kt traversier {windAssessment.variable?"maximum possible":`de la ${windAssessment.side}`}</strong><small>Limite traversière {windAssessment.limit} kt · {windAssessment.variable?"direction variable, composante maximale retenue":windAssessment.headwind>=0?`vent de face ${windAssessment.headwind.toFixed(1)} kt`:`vent arrière ${Math.abs(windAssessment.headwind).toFixed(1)} kt / limite 5 kt`} · calcul avec {weather.windGustKt?"rafale":"vent moyen"}</small></div>}</div>
-          <div className="weather-minimum-grid">{WEATHER_MINIMUMS.map(minimum=>{const assessment=assessMinimum(weather,minimum,windAssessment);return <article className={`weather-minimum ${assessment.status}`} key={minimum.id}><header><strong>{minimum.label}</strong><b>{assessment.status==="no"?"NON CONFORME":assessment.status==="yes"?"CONFORME":"À CONFIRMER"}</b></header><p>{minimum.vfr?"Minimum VFR":`${minimum.visibility} SM · plafond ${minimum.ceiling} pi AGL`} · température ≥ {minimum.temperature} °C{minimum.noPrecipitation?" · aucune précipitation":" · précipitations sans objet"}</p>{windAssessment&&assessment.status!=="no"&&<span className="weather-success">✓ vent traversier {windAssessment.crosswind.toFixed(1)} kt ≤ {windAssessment.limit} kt</span>}{assessment.failures.map(item=><span className="weather-failure" key={item}>✕ {item}</span>)}{assessment.unknown.map(item=><span className="weather-unknown" key={item}>! {item}</span>)}</article>})}</div>
+          <div className="weather-minimum-grid">{WEATHER_MINIMUMS.map(minimum=>{const assessment=assessMinimum(weather,minimum,windAssessment);return <article className={`weather-minimum ${assessment.status}`} key={minimum.id}><header><strong>{minimum.label}</strong><b>{assessment.status==="no"?"NON CONFORME":assessment.status==="yes"?"CONFORME":"À CONFIRMER"}</b></header><p>{minimum.vfr?"Minimum VFR réglementaire":`${minimum.visibility} SM · plafond ${minimum.ceiling.toLocaleString("fr-CA")} pi AGL`}</p>{windAssessment&&assessment.status!=="no"&&<span className="weather-success">✓ vent traversier {windAssessment.crosswind.toFixed(1)} kt ≤ {windAssessment.limit} kt</span>}{assessment.failures.map(item=><span className="weather-failure" key={item}>✕ {item}</span>)}{assessment.unknown.map(item=><span className="weather-unknown" key={item}>! {item}</span>)}</article>})}</div>
           <div className="weather-ifr-rule"><strong>Vol IFR en IMC</strong><span>Le plafond doit être supérieur de 400 pieds à la MDA de la piste utilisable pour permettre un retour sécuritaire à la base. Les conditions de givrage doivent respecter les capacités de l’aéronef.</span><small>Vérification manuelle requise : la MDA, la piste utilisable et les capacités de givrage ne sont pas contenues dans le METAR.</small></div>
-          <p className="weather-assessment-disclaimer">Aide visuelle seulement : le dispatch et le pilote doivent vérifier le METAR complet, le TAF, les NOTAM, la piste en service, la composante de vent de travers et les limites du POH avant d’autoriser le vol.</p>
+          <p className="weather-assessment-disclaimer">Les minimums sont évalués pour la totalité du vol, de la route et de la période prévue, et non seulement à l’aéroport de départ. Aide visuelle seulement : le dispatch et le pilote doivent vérifier le METAR complet, le TAF, les NOTAM, l’espace aérien, la piste en service, la composante de vent de travers, les limites du POH et toute condition plus restrictive avant d’autoriser le vol.</p>
         </div>
       </>}
     </section>
