@@ -789,11 +789,11 @@ export function SchedulerPage() {
       return;
     }
     if (e.status === "Complété") {
-      setMessage(
-        canCorrectCompletedPtr
-          ? "Cette activité PTR est verrouillée. Utilisez « Corriger les heures PTR » pour une correction administrative traçable."
-          : "Cette activité PTR est complétée et ne peut plus être modifiée.",
-      );
+      if (canCorrectCompletedPtr) {
+        void openOps(e, "checkout");
+      } else {
+        setMessage("Cette activité PTR est complétée et ne peut plus être modifiée.");
+      }
       return;
     }
     if (
