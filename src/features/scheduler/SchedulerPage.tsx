@@ -276,6 +276,32 @@ type Ops = {
   routeTo: string;
   correctionReason: string;
 };
+function syncPtrHoursWithHobbs(
+  current: Ops,
+  field: "hobbsStart" | "hobbsEnd",
+  value: string,
+): Ops {
+  const next = { ...current, [field]: value };
+  const start = Number(next.hobbsStart);
+  const end = Number(next.hobbsEnd);
+  if (!next.hobbsStart || !next.hobbsEnd || !Number.isFinite(start) || !Number.isFinite(end) || end < start) {
+    return next;
+  }
+  const elapsed = Math.round((end - start) * 10) / 10;
+  const day = Math.max(0, Number(current.dayHours || 0));
+  const night = Math.max(0, Number(current.nightHours || 0));
+  if (night > 0 && day <= 0) return { ...next, nightHours: elapsed.toFixed(1) };
+  if (day > 0 && night > 0) {
+    const dayShare = day / (day + night);
+    const adjustedDay = Math.round(elapsed * dayShare * 10) / 10;
+    return {
+      ...next,
+      dayHours: adjustedDay.toFixed(1),
+      nightHours: Math.max(0, Math.round((elapsed - adjustedDay) * 10) / 10).toFixed(1),
+    };
+  }
+  return { ...next, dayHours: elapsed.toFixed(1), nightHours: "0.0" };
+}
 type PointerDrag = {
   event: SchedulerEvent;
   mode: "move" | "start" | "end";
@@ -2262,7 +2288,7 @@ export function SchedulerPage() {
                       step="0.1"
                       value={ops.hobbsStart}
                       onChange={(e) =>
-                        setOps({ ...ops, hobbsStart: e.target.value })
+                        setOps(syncPtrHoursWithHobbs(ops, "hobbsStart", e.target.value))
                       }
                     />
                   </label>
@@ -2275,7 +2301,7 @@ export function SchedulerPage() {
                           step="0.1"
                           value={ops.hobbsEnd}
                           onChange={(e) =>
-                            setOps({ ...ops, hobbsEnd: e.target.value })
+                            setOps(syncPtrHoursWithHobbs(ops, "hobbsEnd", e.target.value))
                           }
                         />
                       </label>
