@@ -164,6 +164,18 @@ export async function addEvaluation(value: Omit<PTREvaluation, "id">) {
   return reference.id;
 }
 
+export async function saveEvaluationSignature(
+  evaluationId: string,
+  field: "instructorSignature" | "studentSignature",
+  value: string,
+) {
+  await updateDoc(doc(db, "ptrEvaluations", evaluationId), {
+    [field]: value,
+    signedAt: new Date().toISOString(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export function subscribeLessonHistory(studentId:string,handlers:LiveHandlers<PTRLessonHistory>){
   return scoped("ptrLessonHistory",studentId,(id,data)=>({
     id,studentId,lessonId:text(data.lessonId),lessonTitle:text(data.lessonTitle),

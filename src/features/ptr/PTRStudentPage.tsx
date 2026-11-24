@@ -9,7 +9,7 @@ import type { Student } from "@/features/students/types";
 import { PreSoloChecklistPanel } from "@/features/students/PreSoloChecklistPanel";
 import { StudentTheoryRecordPanel } from "@/features/theory/StudentTheoryRecordPanel";
 import { FlightTestRecommendationPanel } from "@/features/students/FlightTestRecommendationPanel";
-import { addEvaluation, resetLessonAfterActivityRemoval, saveLesson, subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessonHistory, subscribeLessons, subscribeReservations } from "./firestore";
+import { addEvaluation, resetLessonAfterActivityRemoval, saveEvaluationSignature, saveLesson, subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessonHistory, subscribeLessons, subscribeReservations } from "./firestore";
 import { finalScore, TC_CRITERIA, TC_SCALE } from "./evaluation";
 import { initializeTrainingProgramForStudent } from "@/features/programs/firestore";
 import { ATPA_PROGRAM } from "@/features/programs/data";
@@ -342,6 +342,18 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 	    });
 	    setLoadedEvaluationId(latest.id);
 	  },[evaluationForReservation,loadedEvaluationId]);
+
+  async function keepSignature(field:"instructorSignature"|"studentSignature",value:string){
+    setForm(current=>({...current,[field]:value}));
+    if(!value||!evaluationForReservation)return;
+    try{
+      await saveEvaluationSignature(evaluationForReservation.id,field,value);
+      setMessage(`${field==="instructorSignature"?"Signature de l’instructeur":"Signature de l’élève"} enregistrée dans le PTR.`);
+      setError("");
+    }catch(caught){
+      setError(caught instanceof Error?caught.message:"Impossible d’enregistrer la signature électronique.");
+    }
+  }
 
   async function installAtpaProgram() {
     if (lessons.length > 0 && !window.confirm("Le PTR contient déjà des leçons. Voulez-vous importer ou mettre à jour le programme associé au dossier?")) return;
@@ -768,17 +780,18 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 	                {cumulativeTargetHours>0&&!cumulativeReady&&<div className="notice">La réservation peut être évaluée, mais le plan demeurera « En cours » jusqu’à l’atteinte de {cumulativeTargetHours.toFixed(1)} h.</div>}
                 <div className="form-grid">
                   {form.instructorId
-                    ? <PinSignaturePad label="Signature de l’instructeur" kind="instructor" personId={form.instructorId} signerName={instructors.find(item => item.id === form.instructorId)?.name || "l’instructeur"} value={form.instructorSignature} onChange={value => setForm({...form, instructorSignature:value})}/>
+                    ? <PinSignaturePad label="Signature de l’instructeur" kind="instructor" personId={form.instructorId} signerName={instructors.find(item => item.id === form.instructorId)?.name || "l’instructeur"} value={form.instructorSignature} onChange={value => void keepSignature("instructorSignature",value)}/>
                     : <div className="notice">Sélectionne l’instructeur responsable ci-dessus avant de signer.</div>}
-                  <PinSignaturePad label="Signature de l’élève" kind="student" personId={studentId} signerName={`${student.firstName} ${student.lastName}`.trim()} value={form.studentSignature} onChange={value => setForm({...form, studentSignature:value})}/>
+                  <PinSignaturePad label="Signature de l’élève" kind="student" personId={studentId} signerName={`${student.firstName} ${student.lastName}`.trim()} value={form.studentSignature} onChange={value => void keepSignature("studentSignature",value)}/>
                 </div>
+                {evaluationForReservation&&<p className="muted">Les signatures validées par NIP sont enregistrées immédiatement dans cette évaluation.</p>}
                 <button className="button">Enregistrer l’évaluation</button>
               </form>
             </section>
 
             <section className="card">
               <h3>Historique de la leçon</h3>
-	              <div className="ptr-history">{history.map(item => <div key={item.id}><strong>{item.date} · {item.evaluationType==="ground"?`Sol : ${item.groundResult||recordedStatus(item)}`:`Moyenne ${item.finalScore??"—"}`}</strong><span>{item.instructorName || "Instructeur"} · Évaluation terminée · {recordedStatus(item)}</span>{item.comments && <p>{item.comments}</p>}</div>)}{!history.length && <p>Aucune évaluation.</p>}</div>
+	              <div className="ptr-history">{history.map(item => <div key={item.id}><strong>{item.date} · {item.evaluationType==="ground"?`Sol : ${item.groundResult||recordedStatus(item)}`:`Moyenne ${item.finalScore??"—"}`}</strong><span>{item.instructorName || "Instructeur"} · Évaluation terminée · {recordedStatus(item)}</span><span>Signatures : {item.instructorSignature?"✓ instructeur":"— instructeur"} · {item.studentSignature?"✓ élève":"— élève"}{item.signedAt?` · ${new Date(item.signedAt).toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"})}`:""}</span>{item.comments && <p>{item.comments}</p>}</div>)}{!history.length && <p>Aucune évaluation.</p>}</div>
               {canManagePtrHistory&&<><h3>Historique des modifications</h3>
               <div className="ptr-history">{modificationHistory.map(item=><div key={item.id}>
                 <strong>{item.createdAt?new Date(item.createdAt).toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"}):"Date non disponible"} · {item.action}</strong>
