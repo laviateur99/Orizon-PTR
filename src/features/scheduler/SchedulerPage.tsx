@@ -290,17 +290,30 @@ function syncPtrHoursWithHobbs(
   const elapsed = Math.round((end - start) * 10) / 10;
   const day = Math.max(0, Number(current.dayHours || 0));
   const night = Math.max(0, Number(current.nightHours || 0));
-  if (night > 0 && day <= 0) return { ...next, nightHours: elapsed.toFixed(1) };
+  let adjustedDay = elapsed;
+  let adjustedNight = 0;
+  if (night > 0 && day <= 0) {
+    adjustedDay = 0;
+    adjustedNight = elapsed;
+  }
   if (day > 0 && night > 0) {
     const dayShare = day / (day + night);
-    const adjustedDay = Math.round(elapsed * dayShare * 10) / 10;
-    return {
-      ...next,
-      dayHours: adjustedDay.toFixed(1),
-      nightHours: Math.max(0, Math.round((elapsed - adjustedDay) * 10) / 10).toFixed(1),
-    };
+    adjustedDay = Math.round(elapsed * dayShare * 10) / 10;
+    adjustedNight = Math.max(0, Math.round((elapsed - adjustedDay) * 10) / 10);
   }
-  return { ...next, dayHours: elapsed.toFixed(1), nightHours: "0.0" };
+  const syncNavigation = (raw: string, previousTotal: number, adjustedTotal: number) => {
+    if (!raw || previousTotal <= 0) return raw;
+    const previousNavigation = Math.max(0, Number(raw));
+    const share = Math.min(1, previousNavigation / previousTotal);
+    return (Math.round(adjustedTotal * share * 10) / 10).toFixed(1);
+  };
+  return {
+    ...next,
+    dayHours: adjustedDay.toFixed(1),
+    nightHours: adjustedNight.toFixed(1),
+    crossCountryDayHours: syncNavigation(current.crossCountryDayHours, day, adjustedDay),
+    crossCountryNightHours: syncNavigation(current.crossCountryNightHours, night, adjustedNight),
+  };
 }
 type PointerDrag = {
   event: SchedulerEvent;
