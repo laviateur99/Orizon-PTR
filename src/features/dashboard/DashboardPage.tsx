@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { subscribeDashboard, type DashboardSnapshot } from "./firestore";
 import {useAuth} from "@/features/auth/AuthProvider";
-import {createCamilleExampleLeave,subscribeEmployeeLeaves,subscribeEmployeeTraining} from "@/features/employees/firestore";
+import {subscribeEmployeeLeaves,subscribeEmployeeTraining} from "@/features/employees/firestore";
 import type{EmployeeTrainingRecord}from"@/features/employees/types";
 import{EMPLOYEE_TRAINING_SUBJECTS}from"@/features/employees/EmployeeTrainingPanel";
 import{subscribeInstructors}from"@/features/instructors/firestore";
@@ -128,8 +128,6 @@ export function DashboardPage(){
   const [aircraftType,setAircraftType]=useState("");
   const[pendingLeaves,setPendingLeaves]=useState(0);
   const[trainingRecords,setTrainingRecords]=useState<EmployeeTrainingRecord[]>([]),[trainingInstructors,setTrainingInstructors]=useState<Instructor[]>([]);
-  const[creatingLeave,setCreatingLeave]=useState(false);
-  const[leaveMessage,setLeaveMessage]=useState("");
   useEffect(()=>restrictedStudent?undefined:subscribeDashboard(setData,value=>setError(value.message)),[restrictedStudent]);
   useEffect(()=>leaveManager?subscribeEmployeeLeaves(undefined,true,items=>setPendingLeaves(items.filter(item=>item.status==="En attente").length),value=>setError(value.message)):undefined,[leaveManager]);
   useEffect(()=>leaveManager?subscribeEmployeeTraining(undefined,setTrainingRecords,value=>setError(value.message)):undefined,[leaveManager]);
@@ -168,23 +166,10 @@ export function DashboardPage(){
   },[]);
   const windAssessment=weather?calculateWind(weather,runway,aircraftType):undefined;
   const windResultStatus=!windAssessment?"caution":windAssessment.crosswind>windAssessment.limit||windAssessment.headwind< -5?"no":windAssessment.headwind<0||windAssessment.crosswind>=windAssessment.limit*.8?"caution":"yes";
-  async function createCamilleExample(){
-    if(!user||creatingLeave)return;
-    setCreatingLeave(true);setLeaveMessage("");setError("");
-    try{
-      await createCamilleExampleLeave(user.uid);
-      setLeaveMessage("La demande fictive de Camille a été créée. Elle apparaît maintenant dans les congés à approuver.");
-    }catch(value){
-      setError(`Impossible de créer l’exemple de Camille : ${value instanceof Error?value.message:"erreur inconnue"}`);
-    }finally{setCreatingLeave(false)}
-  }
-
   return <>
     <PageHeader title="Tableau de bord" subtitle="Vue opérationnelle en temps réel" />
     <p className="muted" style={{fontSize:"0.8rem",marginTop:"-0.5rem"}}>Version {process.env.NEXT_PUBLIC_APP_VERSION}</p>
     {error&&<div className="notice error">{error}</div>}
-    {leaveMessage&&<div className="notice">{leaveMessage}</div>}
-    {leaveManager&&pendingLeaves===0&&<section className="card dashboard-leave-example"><div><h2>Exemple de demande de congé</h2><p>Créez une demande fictive de vacances pour Camille Bérubé afin de vérifier le processus d’approbation.</p></div><button className="button" type="button" disabled={creatingLeave} onClick={createCamilleExample}>{creatingLeave?"Création…":"Créer l’exemple de Camille"}</button></section>}
     {leaveManager&&pendingLeaves>0&&<a className="card dashboard-leave-alert" href="/employees?tab=leave"><div><span className="badge warn">Action requise</span><h2>{pendingLeaves} demande{pendingLeaves>1?"s":""} de congé en attente</h2><p>Ouvrez la gestion des congés pour approuver ou refuser les demandes.</p></div><strong>Examiner →</strong></a>}
     {leaveManager&&trainingAlerts>0&&<a className="card dashboard-training-alert" href="/employees?tab=training"><div><span className="badge danger">Formation</span><h2>{trainingAlerts} formation{trainingAlerts>1?"s":""} expirée{trainingAlerts>1?"s":""} ou à renouveler</h2><p>Échéance dépassée ou prévue dans les 60 prochains jours.</p></div><strong>Examiner →</strong></a>}
     <section className="card dashboard-weather">
