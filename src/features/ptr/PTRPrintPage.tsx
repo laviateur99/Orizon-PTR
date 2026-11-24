@@ -326,7 +326,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
 }
 
 function PrintSheet({number,title,subtitle,referenceDetail,children}:{number:string;title:string;subtitle:string;referenceDetail?:string;children:React.ReactNode}){
-  return <section className="ptr-print-sheet"><header><div><h1>{title}</h1><p>{subtitle}</p></div><div className="print-sheet-reference"><strong>TC 26-0313 · {number}/6</strong>{referenceDetail&&<span>{referenceDetail}</span>}</div></header>{children}</section>;
+  return <section className={`ptr-print-sheet ptr-print-sheet-${number}`}><header><div><h1>{title}</h1><p>{subtitle}</p></div><div className="print-sheet-reference"><strong>TC 26-0313 · {number}/6</strong>{referenceDetail&&<span>{referenceDetail}</span>}</div></header>{children}</section>;
 }
 function PrintField({label,value,wide=false}:{label:string;value:string;wide?:boolean}){return <div className={wide?"wide":""}><span>{label}</span><b>{value||"—"}</b></div>;}
 function Signer({title,name,licence,date,signature:src}:{title:string;name:string;licence:string;date:string;signature:string}){return <section className="print-signer"><h3>{title}</h3><div><PrintField label="Nom / Name" value={name}/><PrintField label="No de licence - classe" value={licence}/><PrintField label="Date" value={date}/></div>{signature({src,alt:title})}</section>;}
