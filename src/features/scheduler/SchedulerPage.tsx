@@ -369,6 +369,7 @@ export function SchedulerPage() {
   const setDraftError = setMessage;
   const [ops, setOps] = useState<Ops | null>(null);
   const [opsError, setOpsError] = useState("");
+  const [opsSaving, setOpsSaving] = useState(false);
   const [metarLoading, setMetarLoading] = useState(false);
   const [deleteEvent, setDeleteEvent] = useState<SchedulerEvent | null>(null);
   const [deleteReason, setDeleteReason] = useState(REASONS[0]);
@@ -2547,6 +2548,7 @@ export function SchedulerPage() {
                   />
                 </label>
               )}
+              {opsError && <div className="notice error" role="alert">{opsError}</div>}
             </div>
             <footer>
               <span />
@@ -2555,17 +2557,23 @@ export function SchedulerPage() {
               </button>
               <button
                 className="button"
+                disabled={opsSaving}
                 onClick={() => {
-                  void saveOps().catch((value) =>
-                    setOpsError(
-                      value instanceof Error
-                        ? value.message
-                        : "La correction n’a pas pu être enregistrée.",
-                    ),
-                  );
+                  setOpsSaving(true);
+                  void saveOps()
+                    .catch((value) =>
+                      setOpsError(
+                        value instanceof Error
+                          ? value.message
+                          : "La correction n’a pas pu être enregistrée.",
+                      ),
+                    )
+                    .finally(() => setOpsSaving(false));
                 }}
               >
-                {ops.event.status === "Complété"
+                {opsSaving
+                  ? "Enregistrement…"
+                  : ops.event.status === "Complété"
                   ? "Enregistrer la correction"
                   : "Enregistrer"}
               </button>
