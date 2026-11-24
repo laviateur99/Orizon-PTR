@@ -163,7 +163,17 @@ export function PTRPrintPage({studentId}:{studentId:string}){
   const sortedEvaluations=useMemo(()=>evaluations.slice().sort((a,b)=>(a.date||a.signedAt).localeCompare(b.date||b.signedAt)),[evaluations]);
   const summaryCertification=[...sortedEvaluations].reverse().find(item=>item.instructorSignature||item.studentSignature);
   const datePrinted=new Intl.DateTimeFormat("fr-CA",{dateStyle:"long"}).format(new Date());
-  const candidateLicense=useMemo(()=>documents.filter(item=>item.type==="Certificat médical").sort((a,b)=>(b.issueDate||b.expiryDate).localeCompare(a.issueDate||a.expiryDate)).map(item=>item.number.replace(/\D/g,"")).find(value=>/^\d{5,6}$/.test(value))||"",[documents]);
+  const candidateLicense=useMemo(()=>{
+    const latestNumber=(type:"Licence"|"Permis d’élève-pilote"|"Certificat médical")=>documents
+      .filter(item=>item.type===type&&item.number.trim())
+      .sort((a,b)=>(b.issueDate||b.expiryDate).localeCompare(a.issueDate||a.expiryDate))[0]?.number.trim()||"";
+    const licence=latestNumber("Licence");
+    if(licence)return licence;
+    const studentPermit=latestNumber("Permis d’élève-pilote");
+    if(studentPermit)return studentPermit;
+    const medicalNumber=latestNumber("Certificat médical").replace(/\D/g,"");
+    return /^\d{5,6}$/.test(medicalNumber)?medicalNumber:"";
+  },[documents]);
   useEffect(()=>{
     const done=()=>setPrinting(false);
     window.addEventListener("afterprint",done);
