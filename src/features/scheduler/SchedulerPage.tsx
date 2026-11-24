@@ -1064,7 +1064,10 @@ export function SchedulerPage() {
     setOps({
       event: e,
       mode,
-      dispatch: "",
+      dispatch:
+        e.status === "Complété"
+          ? e.checkedOutBy || profile?.name || profile?.email || ""
+          : "",
       hobbsStart: e.hobbsStart?.toString() || "",
       hobbsEnd: e.hobbsEnd?.toString() || "",
       takeoffTime: e.takeoffTime || "",
@@ -1224,8 +1227,14 @@ export function SchedulerPage() {
       const completedEvent: SchedulerEvent = {
         ...ops.event,
         status: "Complété",
-        checkedOutAt: new Date().toISOString(),
-        checkedOutBy: ops.dispatch.trim(),
+        checkedOutAt:
+          correctingCompleted && ops.event.checkedOutAt
+            ? ops.event.checkedOutAt
+            : new Date().toISOString(),
+        checkedOutBy:
+          correctingCompleted && ops.event.checkedOutBy
+            ? ops.event.checkedOutBy
+            : ops.dispatch.trim(),
         ...(isNonFlight
           ? {
               groundTimeHours: Number(ops.groundTimeHours),
@@ -2505,8 +2514,21 @@ export function SchedulerPage() {
               <button className="button secondary" onClick={() => setOps(null)}>
                 Annuler
               </button>
-              <button className="button" onClick={saveOps}>
-                Enregistrer
+              <button
+                className="button"
+                onClick={() => {
+                  void saveOps().catch((value) =>
+                    setOpsError(
+                      value instanceof Error
+                        ? value.message
+                        : "La correction n’a pas pu être enregistrée.",
+                    ),
+                  );
+                }}
+              >
+                {ops.event.status === "Complété"
+                  ? "Enregistrer la correction"
+                  : "Enregistrer"}
               </button>
             </footer>
           </section>
