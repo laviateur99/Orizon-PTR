@@ -49,6 +49,9 @@ export type PTRFlightRecord = {
   checkedInBy:string;
   checkedOutAt:string;
   checkedOutBy:string;
+  ptrCorrectionReason?:string;
+  ptrCorrectedAt?:string;
+  ptrCorrectedBy?:{uid:string;name:string;role:string};
   recordedAt:string;
 };
 
@@ -149,10 +152,37 @@ export type ReservationOption = {
   checkedInBy:string;
   checkedOutAt:string;
   checkedOutBy:string;
+  ptrCorrectionReason?:string;
+  ptrCorrectedAt?:string;
+  ptrCorrectedBy?:{uid:string;name:string;role:string};
 };
 
 export type InstructorOption = { id: string; name: string };
 export type AircraftOption = {id:string;registration:string;type:string};
+
+export type PTRTimeSnapshot = {
+  hobbsStart:number|null;
+  hobbsEnd:number|null;
+  dayHours:number;
+  nightHours:number;
+  instrumentAircraftHours:number;
+  ftdHours:number;
+  crossCountryDayHours:number;
+  crossCountryNightHours:number;
+  groundTimeHours:number;
+};
+export type PTRActivityCorrection = {
+  id:string;
+  studentId:string;
+  reservationId:string;
+  lessonPlanId:string;
+  action:string;
+  previousValues:PTRTimeSnapshot;
+  newValues:PTRTimeSnapshot;
+  reason:string;
+  correctedBy:{uid:string;name:string;role:string};
+  eventAt:string;
+};
 
 
 export type PTRItemEvaluation = {

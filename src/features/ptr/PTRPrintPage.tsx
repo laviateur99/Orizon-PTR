@@ -6,8 +6,8 @@ import type { FlightTestRecommendation, PreSoloChecklist, Student, StudentDocume
 import { PRE_SOLO_EXERCISES } from "@/features/students/preSoloExercises";
 import { subscribeTheorySessions } from "@/features/theory/firestore";
 import type { TheorySession } from "@/features/theory/types";
-import { subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessons, subscribeReservations } from "./firestore";
-import type { AircraftOption, InstructorOption, PTREvaluation, PTRLesson, ReservationOption } from "./types";
+import { subscribeActivityCorrections, subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessons, subscribeReservations } from "./firestore";
+import type { AircraftOption, InstructorOption, PTRActivityCorrection, PTREvaluation, PTRLesson, PTRTimeSnapshot, ReservationOption } from "./types";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { canAccessPtr } from "@/features/auth/ptrAccess";
 import { ATPA_PROGRAM } from "@/features/programs/data";
@@ -122,6 +122,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
   const{profile}=useAuth(),allowed=canAccessPtr(profile,studentId);
   const[student,setStudent]=useState<Student|null>(null),[lessons,setLessons]=useState<PTRLesson[]>([]),[evaluations,setEvaluations]=useState<PTREvaluation[]>([]);
   const[reservations,setReservations]=useState<ReservationOption[]>([]),[instructors,setInstructors]=useState<InstructorOption[]>([]),[aircraft,setAircraft]=useState<AircraftOption[]>([]);
+  const[activityCorrections,setActivityCorrections]=useState<PTRActivityCorrection[]>([]);
   const[theory,setTheory]=useState<TheorySession[]>([]),[preSolo,setPreSolo]=useState<PreSoloChecklist|null>(null),[recommendation,setRecommendation]=useState<FlightTestRecommendation|null>(null);
   const[documents,setDocuments]=useState<StudentDocument[]>([]);
   const[error,setError]=useState(""),[printing,setPrinting]=useState(false);
@@ -135,6 +136,7 @@ export function PTRPrintPage({studentId}:{studentId:string}){
       subscribeLessons(studentId,{next:setLessons,error:fail}),
       subscribeEvaluations(studentId,{next:setEvaluations,error:fail}),
       subscribeReservations(studentId,{next:setReservations,error:fail}),
+      subscribeActivityCorrections(studentId,{next:setActivityCorrections,error:fail}),
       subscribeInstructors({next:setInstructors,error:fail}),
       subscribeAircraft({next:setAircraft,error:fail},profile?.role==="Étudiant"),
       subscribeTheorySessions(values=>setTheory(values.filter(item=>item.studentIds.includes(studentId))),fail),
@@ -174,6 +176,16 @@ export function PTRPrintPage({studentId}:{studentId:string}){
     const medicalNumber=latestNumber("Certificat médical").replace(/\D/g,"");
     return /^\d{5,6}$/.test(medicalNumber)?medicalNumber:"";
   },[documents]);
+  const flightTableRow=(item:ReservationOption,values:PTRTimeSnapshot|undefined,key:string,className?:string)=>{
+    const plane=aircraft.find(value=>value.id===item.aircraftId),instructor=instructors.find(value=>value.id===item.instructorId);
+    const elapsed=values?.hobbsStart!==null&&values?.hobbsStart!==undefined&&values?.hobbsEnd!==null&&values?.hobbsEnd!==undefined?Math.max(0,values.hobbsEnd-values.hobbsStart):item.hobbsStart!==undefined&&item.hobbsEnd!==undefined?Math.max(0,item.hobbsEnd-item.hobbsStart):(item.airtimeMinutes||0)/60;
+    const sim=item.type==="Simulateur"?(values?.groundTimeHours??item.groundTimeHours??duration(item.startTime,item.endTime)):undefined;
+    const role=item.flightCrewRole||(item.type==="Solo"?"PIC":"Double"),day=values?values.dayHours:item.dayHours??(item.nightHours===undefined?elapsed:0),night=values?values.nightHours:item.nightHours??0;
+    const instrument=values?values.instrumentAircraftHours:item.instrumentAircraftHours,ftd=values?values.ftdHours:item.ftdHours??sim;
+    const xcDay=values?values.crossCountryDayHours:item.crossCountryDayHours,xcNight=values?values.crossCountryNightHours:item.crossCountryNightHours;
+    const pic=role==="PIC"?fullName(student):(instructor?.name||"");
+    return <tr className={className} key={key}><td>{item.date}</td><td>{plane?.type||item.simulatorTcId||""}</td><td>{plane?.registration||""}</td><td>{pic}</td><td>{role==="Double"?hours(day):""}</td><td>{role==="PIC"?hours(day):""}</td><td>{role==="Double"?hours(night):""}</td><td>{role==="PIC"?hours(night):""}</td><td>{hours(instrument)}</td><td>{hours(ftd)}</td><td>{role==="Double"?hours(xcDay):""}</td><td>{role==="PIC"?hours(xcDay):""}</td><td>{role==="Double"?hours(xcNight):""}</td><td>{role==="PIC"?hours(xcNight):""}</td><td>{item.routeFrom||""}</td><td>{item.routeTo||""}</td></tr>;
+  };
   useEffect(()=>{
     const done=()=>setPrinting(false);
     window.addEventListener("afterprint",done);
@@ -279,13 +291,9 @@ export function PTRPrintPage({studentId}:{studentId:string}){
 
     <PrintSheet number="4" title="Registre de l’entraînement en vol" subtitle="Flight Training Record">
       <table className="print-table print-flight-detail"><thead><tr><th rowSpan={2}>Date</th><th colSpan={2}>Avion</th><th rowSpan={2}>Commandant de bord</th><th colSpan={4}>Heures d’entraînement</th><th colSpan={2}>Instruments</th><th colSpan={4}>Vol-voyage</th><th colSpan={2}>Route du vol</th></tr><tr><th>Type</th><th>Immat.</th><th>Jour<br/>Double</th><th>Jour<br/>PIC</th><th>Nuit<br/>Double</th><th>Nuit<br/>PIC</th><th>Avion</th><th>FTD/DEV</th><th>Jour<br/>Double</th><th>Jour<br/>PIC</th><th>Nuit<br/>Double</th><th>Nuit<br/>PIC</th><th>De</th><th>À</th></tr></thead><tbody>
-        {completed.filter(item=>["Double commande","Solo","Simulateur"].includes(item.type)).map(item=>{
-          const plane=aircraft.find(value=>value.id===item.aircraftId),instructor=instructors.find(value=>value.id===item.instructorId);
-          const elapsed=item.hobbsStart!==undefined&&item.hobbsEnd!==undefined?Math.max(0,item.hobbsEnd-item.hobbsStart):(item.airtimeMinutes||0)/60;
-          const sim=item.type==="Simulateur"?(item.groundTimeHours??duration(item.startTime,item.endTime)):undefined;
-          const role=item.flightCrewRole||(item.type==="Solo"?"PIC":"Double"),day=item.dayHours??(item.nightHours===undefined?elapsed:0),night=item.nightHours??0;
-          const pic=role==="PIC"?fullName(student):(instructor?.name||"");
-          return <tr key={item.id}><td>{item.date}</td><td>{plane?.type||item.simulatorTcId||""}</td><td>{plane?.registration||""}</td><td>{pic}</td><td>{role==="Double"?hours(day):""}</td><td>{role==="PIC"?hours(day):""}</td><td>{role==="Double"?hours(night):""}</td><td>{role==="PIC"?hours(night):""}</td><td>{hours(item.instrumentAircraftHours)}</td><td>{hours(item.ftdHours??sim)}</td><td>{role==="Double"?hours(item.crossCountryDayHours):""}</td><td>{role==="PIC"?hours(item.crossCountryDayHours):""}</td><td>{role==="Double"?hours(item.crossCountryNightHours):""}</td><td>{role==="PIC"?hours(item.crossCountryNightHours):""}</td><td>{item.routeFrom||""}</td><td>{item.routeTo||""}</td></tr>;
+        {completed.filter(item=>["Double commande","Solo","Simulateur"].includes(item.type)).flatMap(item=>{
+          const corrections=activityCorrections.filter(value=>value.reservationId===item.id).sort((a,b)=>a.eventAt.localeCompare(b.eventAt));
+          return [...corrections.flatMap(correction=>[flightTableRow(item,correction.previousValues,`${item.id}-${correction.id}-old`,"ptr-corrected-row"),<tr className="ptr-corrected-reason" key={`${item.id}-${correction.id}-reason`}><td colSpan={16}>Correction du {correction.eventAt?new Date(correction.eventAt).toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"}):"—"} par {correction.correctedBy.name||"Administration"} · Motif : {correction.reason||"Non précisé"}</td></tr>]),flightTableRow(item,undefined,`${item.id}-current`)];
         })}
       </tbody><tfoot><tr><th colSpan={4}><span className="training-total-summary"><span>Totaux à ce jour</span><b>{(totals.dayDual+totals.dayPic+totals.nightDual+totals.nightPic).toFixed(1)}</b></span></th><th>{totals.dayDual.toFixed(1)}</th><th>{totals.dayPic.toFixed(1)}</th><th>{totals.nightDual.toFixed(1)}</th><th>{totals.nightPic.toFixed(1)}</th><th>{totals.instrumentAircraft.toFixed(1)}</th><th>{totals.ftd.toFixed(1)}</th><th>{totals.xcDayDual.toFixed(1)}</th><th>{totals.xcDayPic.toFixed(1)}</th><th>{totals.xcNightDual.toFixed(1)}</th><th>{totals.xcNightPic.toFixed(1)}</th><th colSpan={2}></th></tr></tfoot></table>
       <Certification name={fullName(student)} text="Les inscriptions sur cette page proviennent des réservations ayant un check-in complété."/>

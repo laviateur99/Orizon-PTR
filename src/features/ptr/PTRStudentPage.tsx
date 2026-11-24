@@ -9,12 +9,12 @@ import type { Student } from "@/features/students/types";
 import { PreSoloChecklistPanel } from "@/features/students/PreSoloChecklistPanel";
 import { StudentTheoryRecordPanel } from "@/features/theory/StudentTheoryRecordPanel";
 import { FlightTestRecommendationPanel } from "@/features/students/FlightTestRecommendationPanel";
-import { addEvaluation, resetLessonAfterActivityRemoval, saveEvaluationSignature, saveLesson, subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessonHistory, subscribeLessons, subscribeReservations } from "./firestore";
+import { addEvaluation, resetLessonAfterActivityRemoval, saveEvaluationSignature, saveLesson, subscribeActivityCorrections, subscribeAircraft, subscribeEvaluations, subscribeInstructors, subscribeLessonHistory, subscribeLessons, subscribeReservations } from "./firestore";
 import { finalScore, TC_CRITERIA, TC_SCALE } from "./evaluation";
 import { initializeTrainingProgramForStudent } from "@/features/programs/firestore";
 import { ATPA_PROGRAM } from "@/features/programs/data";
 import { OFFICIAL_PROGRAMS } from "@/features/programs/modularPrograms";
-import type { AircraftOption, InstructorOption, PTREvaluation, PTRFlightRecord, PTRLesson, PTRLessonHistory, PTRLessonStatus, ReservationOption, TCScore } from "./types";
+import type { AircraftOption, InstructorOption, PTRActivityCorrection, PTREvaluation, PTRFlightRecord, PTRLesson, PTRLessonHistory, PTRLessonStatus, ReservationOption, TCScore } from "./types";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { canAccessPtr } from "@/features/auth/ptrAccess";
 import { StudentAgreementPanel } from "@/features/students/StudentAgreementPanel";
@@ -121,6 +121,7 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
   const [evaluations, setEvaluations] = useState<PTREvaluation[]>([]);
   const [lessonHistory,setLessonHistory]=useState<PTRLessonHistory[]>([]);
   const [reservations, setReservations] = useState<ReservationOption[]>([]);
+  const [activityCorrections,setActivityCorrections]=useState<PTRActivityCorrection[]>([]);
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
   const [aircraft,setAircraft]=useState<AircraftOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -200,9 +201,10 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
       ?subscribeLessonHistory(studentId,{next:setLessonHistory,error:value=>setError(value.message)})
       :()=>undefined;
     const offReservations = subscribeReservations(studentId, { next: value=>{setReservations(value);setReservationsLoaded(true)}, error: value => setError(value.message) });
+    const offCorrections=subscribeActivityCorrections(studentId,{next:setActivityCorrections,error:value=>setError(value.message)});
     const offInstructors = subscribeInstructors({ next: setInstructors, error: value => setError(value.message) });
     const offAircraft=subscribeAircraft({next:setAircraft,error:value=>setError(value.message)},restrictedStudent);
-    return () => { offEvaluations(); offHistory(); offReservations(); offInstructors(); offAircraft(); };
+    return () => { offEvaluations(); offHistory(); offReservations(); offCorrections(); offInstructors(); offAircraft(); };
   }, [studentId,allowed,canManagePtrHistory,restrictedStudent,lessonsLoaded,lessons.length]);
 
   useEffect(()=>{
@@ -635,8 +637,9 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 	              {selectedFlightRecords.length>0&&(
 	                <div className="ptr-flight-records">
 	                  <h3>Données opérationnelles liées au plan de leçon</h3>
-	                  {selectedFlightRecords.map(record=>{const airplane=aircraft.find(item=>item.id===record.aircraftId);const instructor=instructors.find(item=>item.id===record.instructorId);return(
-	                    <article className="ptr-flight-record" key={`${record.reservationId}-${record.recordedAt}`}>
+	                  {selectedFlightRecords.map(record=>{const airplane=aircraft.find(item=>item.id===record.aircraftId);const instructor=instructors.find(item=>item.id===record.instructorId);const corrections=activityCorrections.filter(item=>item.reservationId===record.reservationId).sort((a,b)=>a.eventAt.localeCompare(b.eventAt));const latestCorrection=corrections.at(-1);return(<div className="ptr-correction-pair" key={`${record.reservationId}-${record.recordedAt}`}>
+	                    {corrections.map(correction=><article className="ptr-flight-record ptr-flight-record-corrected" key={correction.id}><header><strong>{record.date} · {record.type} · Ligne corrigée</strong><span>{correction.correctedBy.name||"Administration"}</span></header><div className="ptr-flight-metrics"><span>Hobbs départ <b>{correction.previousValues.hobbsStart??"—"}</b></span><span>Hobbs fin <b>{correction.previousValues.hobbsEnd??"—"}</b></span><span>Jour / nuit <b>{correction.previousValues.dayHours} / {correction.previousValues.nightHours} h</b></span><span>Instruments <b>{correction.previousValues.instrumentAircraftHours} h</b></span><span>Vol-voyage jour / nuit <b>{correction.previousValues.crossCountryDayHours} / {correction.previousValues.crossCountryNightHours} h</b></span></div><small>Corrigée le {correction.eventAt?new Date(correction.eventAt).toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"}):"—"} · Motif : {correction.reason||"Non précisé"}</small></article>)}
+	                    <article className="ptr-flight-record ptr-flight-record-current">
 	                      <header>
 	                        <strong>{record.date} · {record.type}</strong>
 	                        <span className="badge ok">Check-in complété</span>
@@ -669,8 +672,9 @@ export function PTRStudentPage({ studentId }: { studentId: string }) {
 	                        <span>METAR au check-in</span><code>{record.checkOutMetar||"Non disponible"}</code>
 	                      </div>}
 	                      <small>Dispatch : {record.checkedInBy||"—"} / {record.checkedOutBy||"—"}{(record.type==="Double commande"||record.type==="Solo")?` · Station ${record.metarStation||"—"}`:""}</small>
+	                      {(record.ptrCorrectedAt||latestCorrection)&&<div className="ptr-correction-notice"><strong>Nouvelle ligne — heures PTR corrigées</strong><span>{new Date(record.ptrCorrectedAt||latestCorrection?.eventAt||"").toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"})} · {record.ptrCorrectedBy?.name||latestCorrection?.correctedBy.name||"Administrateur"} ({record.ptrCorrectedBy?.role||latestCorrection?.correctedBy.role||"Rôle non précisé"})</span><p>Motif : {record.ptrCorrectionReason||latestCorrection?.reason||"Non précisé"}</p></div>}
 	                    </article>
-	                  )})}
+	                  </div>)})}
 	                </div>
 	              )}
 

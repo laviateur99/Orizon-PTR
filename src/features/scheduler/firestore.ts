@@ -880,6 +880,9 @@ export async function markLinkedPTRLessonAfterCheckout(event: SchedulerEvent) {
     checkedInBy: event.checkedInBy || "",
     checkedOutAt: event.checkedOutAt || "",
     checkedOutBy: event.checkedOutBy || "",
+    ptrCorrectionReason: event.ptrCorrectionReason || "",
+    ptrCorrectedAt: event.ptrCorrectedAt || "",
+    ptrCorrectedBy: event.ptrCorrectedBy,
     recordedAt: new Date().toISOString(),
   });
 

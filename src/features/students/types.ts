@@ -115,6 +115,9 @@ export type StudentReservation = {
   attendanceStatus?:"Présent"|"Absent";
   resourceId?:string;
   simulatorTcId?:string;
+  ptrCorrectionReason?:string;
+  ptrCorrectedAt?:string;
+  ptrCorrectedBy?:{uid:string;name:string;role:string};
 };
 
 export type InstructorOption = { id: string; name: string; licenseNumber: string; classLevel: string };

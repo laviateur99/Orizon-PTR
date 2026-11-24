@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { schoolScope } from "@/features/organizations/scope";
-import type { AircraftOption, InstructorOption, PTREvaluation, PTRFlightRecord, PTRLesson, PTRLessonHistory, ReservationOption, TCScore } from "./types";
+import type { AircraftOption, InstructorOption, PTRActivityCorrection, PTREvaluation, PTRFlightRecord, PTRLesson, PTRLessonHistory, PTRTimeSnapshot, ReservationOption, TCScore } from "./types";
 
 export type LiveHandlers<T> = { next: (items: T[]) => void; error: (error: FirestoreError) => void };
 const text = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -52,7 +52,9 @@ const flightRecords=(value:unknown):PTRFlightRecord[]=>objects(value).map(record
   checkInMetar:text(record.checkInMetar),checkOutMetar:text(record.checkOutMetar),
   metarStation:text(record.metarStation),checkedInAt:text(record.checkedInAt),
   checkedInBy:text(record.checkedInBy),checkedOutAt:text(record.checkedOutAt),
-  checkedOutBy:text(record.checkedOutBy),recordedAt:text(record.recordedAt)
+  checkedOutBy:text(record.checkedOutBy),ptrCorrectionReason:text(record.ptrCorrectionReason),ptrCorrectedAt:text(record.ptrCorrectedAt),
+  ptrCorrectedBy:record.ptrCorrectedBy&&typeof record.ptrCorrectedBy==="object"?{uid:text((record.ptrCorrectedBy as Record<string,unknown>).uid),name:text((record.ptrCorrectedBy as Record<string,unknown>).name),role:text((record.ptrCorrectedBy as Record<string,unknown>).role)}:undefined,
+  recordedAt:text(record.recordedAt)
 }));
 
 function scoped<T>(name: string, studentId: string, map: (id: string, data: DocumentData) => T, handlers: LiveHandlers<T>): Unsubscribe {
@@ -245,8 +247,28 @@ export function subscribeReservations(studentId: string, handlers: LiveHandlers<
     checkInMetar:text(data.checkInMetar),checkOutMetar:text(data.checkOutMetar),
     metarStation:text(data.metarStation),checkedInAt:text(data.checkedInAt),
     checkedInBy:text(data.checkedInBy),checkedOutAt:text(data.checkedOutAt),
-    checkedOutBy:text(data.checkedOutBy)
+    checkedOutBy:text(data.checkedOutBy),ptrCorrectionReason:text(data.ptrCorrectionReason),ptrCorrectedAt:text(data.ptrCorrectedAt),
+    ptrCorrectedBy:data.ptrCorrectedBy&&typeof data.ptrCorrectedBy==="object"?{uid:text(data.ptrCorrectedBy.uid),name:text(data.ptrCorrectedBy.name),role:text(data.ptrCorrectedBy.role)}:undefined
   }), handlers);
+}
+
+const timeSnapshot=(value:unknown):PTRTimeSnapshot=>{
+  const data=value&&typeof value==="object"?value as Record<string,unknown>:{};
+  const time=(key:string)=>typeof data[key]==="number"?data[key] as number:0;
+  return{
+    hobbsStart:typeof data.hobbsStart==="number"?data.hobbsStart:null,
+    hobbsEnd:typeof data.hobbsEnd==="number"?data.hobbsEnd:null,
+    dayHours:time("dayHours"),nightHours:time("nightHours"),instrumentAircraftHours:time("instrumentAircraftHours"),
+    ftdHours:time("ftdHours"),crossCountryDayHours:time("crossCountryDayHours"),crossCountryNightHours:time("crossCountryNightHours"),groundTimeHours:time("groundTimeHours")
+  };
+};
+export function subscribeActivityCorrections(studentId:string,handlers:LiveHandlers<PTRActivityCorrection>){
+  return scoped("ptrActivityHistory",studentId,(id,data)=>({
+    id,studentId,reservationId:text(data.reservationId),lessonPlanId:text(data.lessonPlanId),action:text(data.action),
+    previousValues:timeSnapshot(data.previousValues),newValues:timeSnapshot(data.newValues),reason:text(data.reason),
+    correctedBy:data.correctedBy&&typeof data.correctedBy==="object"?{uid:text(data.correctedBy.uid),name:text(data.correctedBy.name),role:text(data.correctedBy.role)}:{uid:"",name:"",role:""},
+    eventAt:text(data.eventAt)
+  }),handlers);
 }
 
 export function subscribeInstructors(handlers: LiveHandlers<InstructorOption>): Unsubscribe {

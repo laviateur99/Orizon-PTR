@@ -245,7 +245,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /ptrActivityHistory/{id} {
-      allow read: if ptrStaff() && ownPtr(resource.data.studentId);
+      allow read: if (ptrStaff() || studentRole()) && ownPtr(resource.data.studentId);
       allow create: if ptrCorrectionManager()
         && request.resource.data.studentId is string
         && request.resource.data.reservationId is string
