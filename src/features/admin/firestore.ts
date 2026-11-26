@@ -1,11 +1,12 @@
 import {
-  collection, doc, getDocs, query, serverTimestamp, setDoc, writeBatch,
+  collection, doc, getDocs, query, serverTimestamp, setDoc, where, writeBatch,
   type DocumentReference,
 } from "firebase/firestore";
 import { db } from "@/services/firebase/client";
 import { inviteUser } from "@/features/auth/inviteUser";
 import { hashPin, randomPinSalt } from "@/features/auth/pin";
 import { schoolScope, withSchoolOrg } from "@/features/organizations/scope";
+import { ATPA_PROGRAM } from "@/features/programs/data";
 
 const BATCH_LIMIT = 450;
 
@@ -91,6 +92,168 @@ export async function createTestData() {
   })));
   await batch.commit();
   return { students: students.length, reservations: reservations.length };
+}
+
+const DEMO_COMPLETE_STUDENT_ID = "demo-atpa-complete";
+
+const isoDateBetween = (position: number, total: number) => {
+  const start = new Date("2025-03-03T12:00:00-05:00");
+  const end = new Date("2026-11-24T12:00:00-05:00");
+  const value = new Date(start.getTime() + ((end.getTime() - start.getTime()) * position) / Math.max(1, total - 1));
+  if (value.getDay() === 0) value.setDate(value.getDate() + 1);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+};
+
+const clock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+
+/**
+ * Complète le dossier réglementaire fictif utilisé pendant les démonstrations.
+ * L'opération est idempotente : les identifiants des activités et évaluations sont
+ * déterministes et les composantes déjà appuyées par une évaluation signée sont conservées.
+ */
+export async function completeFinishedTrainingDemo(instructor: { id: string; name: string; uid: string }) {
+  if (!instructor.id) throw new Error("Votre compte doit être lié à votre fiche instructeur avant de compléter la démonstration.");
+
+  const [aircraftSnapshot, lessonSnapshot, reservationSnapshot, evaluationSnapshot] = await Promise.all([
+    getDocs(query(collection(db, "aircraft"), ...schoolScope())),
+    getDocs(query(collection(db, "ptrLessons"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID))),
+    getDocs(query(collection(db, "reservations"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID), ...schoolScope())),
+    getDocs(query(collection(db, "ptrEvaluations"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID))),
+  ]);
+
+  const aircraft = aircraftSnapshot.docs
+    .map(item => ({ id: item.id, ...item.data() } as { id: string; registration?: string; status?: string; active?: boolean }))
+    .filter(item => item.active !== false && item.status !== "Retiré")
+    .sort((a, b) => (a.registration === "C-FFMQ" ? -1 : b.registration === "C-FFMQ" ? 1 : String(a.registration).localeCompare(String(b.registration))))[0];
+  if (!aircraft) throw new Error("Aucun avion actif n'est disponible pour les réservations de démonstration.");
+
+  const lessonsByNumber = new Map(lessonSnapshot.docs.map(item => [String(item.data().lessonNumber || ""), item]));
+  const activeReservationIds = new Set(reservationSnapshot.docs.filter(item => item.data().status !== "Annulé").map(item => item.id));
+  const completedComponents = new Set(evaluationSnapshot.docs.flatMap(item => {
+    const data = item.data();
+    return data.lessonStatus === "Réussi" && data.instructorSignature && data.studentSignature && activeReservationIds.has(String(data.reservationId || ""))
+      ? [String(data.componentKey || `${data.lessonId}::0`)] : [];
+  }));
+  const componentTotal = ATPA_PROGRAM.lessons.reduce((sum, lesson) => sum + Math.max(1, lesson.components.length), 0);
+  const writes: Array<(batch: ReturnType<typeof writeBatch>) => void> = [];
+  let componentPosition = 0;
+  let reservationsCreated = 0;
+  let evaluationsCreated = 0;
+  let lessonsCompleted = 0;
+
+  for (const template of ATPA_PROGRAM.lessons) {
+    const lessonId = `atpa-${DEMO_COMPLETE_STUDENT_ID}-${template.number}`;
+    const lessonDoc = lessonsByNumber.get(String(template.number));
+    const components = template.components.length ? template.components : [{
+      modality: "Double commande", category: "Formation", title: template.title,
+      objective: template.objectives.join("\n\n"), hours: { sol: 0, dev: 0, doubleCommande: 1, solo: 0 },
+      exercises: template.exercises, nextLesson: "", successCriteria: template.successCriteria.join(" "), manualPage: 0,
+    }];
+    const componentStatuses: Record<string, "Réussi"> = {};
+    const createdReservationIds: string[] = [];
+    let lastEvaluationId = "";
+
+    components.forEach((component, index) => {
+      const componentKey = `${lessonId}::${index}`;
+      componentStatuses[String(index)] = "Réussi";
+      const reservationId = `demo-complete-${String(template.number).padStart(3, "0")}-${index}`;
+      const evaluationId = `demo-complete-eval-${String(template.number).padStart(3, "0")}-${index}`;
+      createdReservationIds.push(reservationId);
+      lastEvaluationId = evaluationId;
+      const date = isoDateBetween(componentPosition++, componentTotal);
+      const modality = String(component.modality || "Double commande");
+      const isGround = /sol|théorie/i.test(modality);
+      const isSimulator = /simulateur|dev|ftd/i.test(modality) || Number(component.hours.dev || 0) > 0;
+      const isSolo = /solo/i.test(modality);
+      const duration = Math.max(0.5, Number(component.hours.sol || component.hours.dev || component.hours.doubleCommande || component.hours.solo || 1));
+      const startMinutes = isGround ? 480 : isSimulator ? 600 : 780;
+      const endMinutes = startMinutes + Math.round(duration * 60);
+      const night = /nuit/i.test(`${template.title} ${component.title} ${component.category}`);
+      const instrument = /instrument/i.test(`${component.title} ${component.category}`);
+      const navigation = /navigation|vol-voyage/i.test(`${component.title} ${component.category}`);
+      const flightHours = isGround || isSimulator ? 0 : duration;
+
+      if (!completedComponents.has(componentKey)) {
+        writes.push(batch => batch.set(doc(db, "reservations", reservationId), withSchoolOrg({
+          date, studentId: DEMO_COMPLETE_STUDENT_ID, studentName: "Élève démonstration Formation terminée",
+          instructorId: instructor.id, aircraftId: aircraft.id,
+          resourceId: isGround ? instructor.id : aircraft.id, primaryResourceId: isGround ? instructor.id : aircraft.id,
+          type: isGround ? "Sol" : isSimulator ? "Simulateur" : isSolo ? "Solo" : "Double commande",
+          reservationType: isGround ? "Ground" : isSimulator ? "Simulator" : "Flight",
+          startMinutes, endMinutes, startTime: clock(startMinutes), endTime: clock(endMinutes),
+          title: `Leçon ${template.number} — ${component.title || template.title}`,
+          lesson: template.title, lessonPlanId: lessonId, lessonComponentId: componentKey,
+          status: "Complété", flightCrewRole: isSolo ? "PIC" : "Double",
+          hobbsStart: flightHours ? 3000 + componentPosition * 3 : null,
+          hobbsEnd: flightHours ? 3000 + componentPosition * 3 + flightHours : null,
+          hobbsElapsed: flightHours || 0, actualDurationHours: duration,
+          takeoffTime: isGround || isSimulator ? "" : clock(startMinutes + 10),
+          landingTime: isGround || isSimulator ? "" : clock(endMinutes - 5),
+          airtimeMinutes: Math.round(flightHours * 60), groundTimeHours: isGround ? duration : 0,
+          dayHours: flightHours && !night ? flightHours : 0, nightHours: flightHours && night ? flightHours : 0,
+          instrumentAircraftHours: flightHours && instrument ? Math.min(flightHours, 1) : 0,
+          ftdHours: isSimulator ? duration : 0,
+          crossCountryDayHours: flightHours && navigation && !night ? flightHours : 0,
+          crossCountryNightHours: flightHours && navigation && night ? flightHours : 0,
+          routeFrom: flightHours ? "CYQB" : "", routeTo: flightHours && navigation ? "CYSG / CYQB" : flightHours ? "CYQB" : "",
+          checkedInAt: `${date}T${clock(startMinutes)}:00`, checkedOutAt: `${date}T${clock(endMinutes)}:00`,
+          checkedInBy: instructor.name, checkedOutBy: instructor.name,
+          notes: "Activité fictive complétée pour la démonstration réglementaire du PTR.",
+          isTestData: true, demoCompleteTraining: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+        }), { merge: true }));
+        reservationsCreated += 1;
+
+        writes.push(batch => batch.set(doc(db, "ptrEvaluations", evaluationId), {
+          studentId: DEMO_COMPLETE_STUDENT_ID, lessonId, reservationId,
+          instructorId: instructor.id, instructorName: instructor.name, date,
+          pilotage: 3, technical: 3, situationalAwareness: 3, flightManagement: 3, safetyMargins: 3, finalScore: 3,
+          strengths: "Objectifs du plan de leçon atteints.", improvements: "Maintenir les standards démontrés.",
+          comments: `Plan de leçon ${template.number} complété dans le cadre de la démonstration.`,
+          actions: ["Poursuivre la progression conformément au programme"], lessonStatus: "Réussi",
+          instructorSignature: `Signé électroniquement par ${instructor.name} — démonstration`,
+          studentSignature: "Signé électroniquement par Élève démonstration Formation terminée — démonstration",
+          signedAt: `${date}T${clock(endMinutes)}:00`,
+          evaluationType: isGround ? "ground" : "flight", groundResult: isGround ? "Réussi" : null,
+          componentKey, componentModality: modality, isTestData: true, createdAt: serverTimestamp(),
+        }, { merge: true }));
+        evaluationsCreated += 1;
+      }
+    });
+
+    const componentSummary = components.map(component => ({
+      modality: component.modality, category: component.category, title: component.title,
+      objective: component.objective, hours: component.hours, exercises: component.exercises,
+      nextLesson: component.nextLesson, successCriteria: component.successCriteria, manualPage: component.manualPage,
+    }));
+    writes.push(batch => batch.set(doc(db, "ptrLessons", lessonDoc?.id || lessonId), {
+      studentId: DEMO_COMPLETE_STUDENT_ID, programId: ATPA_PROGRAM.id,
+      programName: ATPA_PROGRAM.name, programRevision: ATPA_PROGRAM.revision,
+      programEffectiveDate: ATPA_PROGRAM.effectiveDate, sourceManual: ATPA_PROGRAM.source,
+      phase: `Phase ${template.phase} — ${template.phaseName}`, phaseNumber: template.phase,
+      lessonNumber: String(template.number), title: template.title,
+      objective: template.objectives.join("\n\n"), exercises: template.exercises,
+      successCriteria: template.successCriteria, components: componentSummary,
+      status: "Réussi", componentStatuses,
+      linkedReservationId: createdReservationIds[0] || String(lessonDoc?.data().linkedReservationId || ""),
+      lastEvaluationId: lastEvaluationId || String(lessonDoc?.data().lastEvaluationId || ""),
+      lastFinalScore: 3, updatedAt: new Date().toISOString(),
+      ...(!lessonDoc ? { createdAt: serverTimestamp() } : {}),
+    }, { merge: true }));
+    lessonsCompleted += 1;
+  }
+
+  writes.push(batch => batch.set(doc(db, "students", DEMO_COMPLETE_STUDENT_ID), {
+    primaryInstructorId: instructor.id, startDate: "2025-03-03", completionDate: "2026-11-24",
+    status: "Diplômé", updatedAt: serverTimestamp(),
+  }, { merge: true }));
+
+  for (let start = 0; start < writes.length; start += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    writes.slice(start, start + BATCH_LIMIT).forEach(write => write(batch));
+    await batch.commit();
+  }
+
+  return { lessonsCompleted, reservationsCreated, evaluationsCreated, aircraft: aircraft.registration || aircraft.id };
 }
 
 const localDateDaysAgo=(days:number)=>{

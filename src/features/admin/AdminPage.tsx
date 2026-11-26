@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { createPayrollTestData, createStudentAccountsAndPins, createTestData, resetStudentHours, resetStudentTrainingRecords, resetTestEnvironment } from "./firestore";
+import { completeFinishedTrainingDemo, createPayrollTestData, createStudentAccountsAndPins, createTestData, resetStudentHours, resetStudentTrainingRecords, resetTestEnvironment } from "./firestore";
 import { UserManagementPanel } from "@/features/auth/UserManagementPanel";
 import { ResourceManagement } from "@/features/fleet/ResourceManagement";
 import { subscribeAircraft } from "@/features/fleet/firestore";
@@ -11,7 +11,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { canManageAdministration } from "@/features/auth/types";
 import { OrganizationsAdminPanel } from "@/features/organizations/OrganizationsAdminPanel";
 
-type ActionName = "hours" | "records" | "test" | "create" | "payroll" | "studentAccounts";
+type ActionName = "hours" | "records" | "test" | "create" | "payroll" | "studentAccounts" | "completeDemo";
 const ACTIONS: Record<ActionName, {title:string;description:string;confirmation:string;button:string;danger?:boolean;adminOnly?:boolean}> = {
   hours: { title:"Remettre les heures à zéro", description:"Remet à 0 les heures de vol, de sol, de simulateur, double commande et solo de tous les étudiants.", confirmation:"HEURES", button:"Réinitialiser les heures", danger:true },
   records: { title:"Réinitialiser les dossiers étudiants", description:"Efface la progression PTR, les évaluations, l’historique, les notes et les documents. Les fiches d’identité des étudiants sont conservées.", confirmation:"DOSSIERS", button:"Réinitialiser les dossiers", danger:true },
@@ -19,6 +19,7 @@ const ACTIONS: Record<ActionName, {title:string;description:string;confirmation:
   create: { title:"Créer des données de démonstration", description:"Ajoute trois étudiants et trois réservations identifiés comme données de test pour vérifier rapidement l’application.", confirmation:"DEMO", button:"Créer les données de démonstration" },
   payroll: { title:"Créer les essais de feuilles de temps", description:"Ajoute deux instructeurs, quatre étudiants fictifs et treize activités complétées réparties sur les deux dernières semaines.", confirmation:"PAIE TEST", button:"Créer les essais de paie" },
   studentAccounts: { title:"Comptes élèves et NIP 0000", description:"Pour chaque étudiant : crée un compte de connexion (rôle Étudiant) s’il n’en a pas déjà un — un courriel de réinitialisation de mot de passe est envoyé — et définit (ou réinitialise) son NIP de signature à 0000, même s’il en avait déjà un.", confirmation:"NIP 0000", button:"Créer comptes et NIP", adminOnly:true },
+  completeDemo: { title:"Compléter le PTR de démonstration", description:"Complète les 102 plans de leçon du dossier Formation terminée, ajoute les activités manquantes à l’horaire de mars 2025 à novembre 2026 et les associe à votre fiche instructeur.", confirmation:"PTR COMPLET", button:"Compléter la démonstration", adminOnly:true },
 };
 
 export function AdminPage() {
@@ -48,7 +49,8 @@ export function AdminPage() {
       else if(selected==="test"){const result=await resetTestEnvironment();setMessage(`${result.deleted} donnée(s) supprimée(s); ${result.students} étudiant(s) remis à zéro.`);}
       else if(selected==="create"){const result=await createTestData();setMessage(`${result.students} étudiant(s) et ${result.reservations} réservation(s) de démonstration créés.`);}
       else if(selected==="payroll"){const result=await createPayrollTestData();setMessage(`${result.instructors} instructeurs, ${result.students} étudiants et ${result.reservations} activités de paie créés.`);}
-      else{const result=await createStudentAccountsAndPins();setMessage(`${result.accountsCreated} compte(s) créé(s) sur ${result.totalStudents} étudiant(s) (${result.accountsSkippedNoEmail} ignoré(s) — aucun courriel au dossier); NIP 0000 défini pour ${result.pinsSet} étudiant(s).`);}
+      else if(selected==="studentAccounts"){const result=await createStudentAccountsAndPins();setMessage(`${result.accountsCreated} compte(s) créé(s) sur ${result.totalStudents} étudiant(s) (${result.accountsSkippedNoEmail} ignoré(s) — aucun courriel au dossier); NIP 0000 défini pour ${result.pinsSet} étudiant(s).`);}
+      else{const result=await completeFinishedTrainingDemo({id:profile?.linkedInstructorId||"",name:profile?.name||"R Samson",uid:profile?.uid||""});setMessage(`${result.lessonsCompleted} plans de leçon complétés; ${result.reservationsCreated} réservation(s) et ${result.evaluationsCreated} évaluation(s) ajoutées avec l’avion ${result.aircraft}.`);}
       setSelected(null);setConfirmation("");
     }catch(caught){setError(caught instanceof Error?caught.message:"L’opération administrative a échoué.");}
     finally{setBusy(false);}
