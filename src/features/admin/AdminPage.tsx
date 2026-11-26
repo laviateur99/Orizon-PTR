@@ -50,7 +50,7 @@ export function AdminPage() {
       else if(selected==="create"){const result=await createTestData();setMessage(`${result.students} étudiant(s) et ${result.reservations} réservation(s) de démonstration créés.`);}
       else if(selected==="payroll"){const result=await createPayrollTestData();setMessage(`${result.instructors} instructeurs, ${result.students} étudiants et ${result.reservations} activités de paie créés.`);}
       else if(selected==="studentAccounts"){const result=await createStudentAccountsAndPins();setMessage(`${result.accountsCreated} compte(s) créé(s) sur ${result.totalStudents} étudiant(s) (${result.accountsSkippedNoEmail} ignoré(s) — aucun courriel au dossier); NIP 0000 défini pour ${result.pinsSet} étudiant(s).`);}
-      else{const result=await completeFinishedTrainingDemo({id:profile?.linkedInstructorId||"",name:profile?.name||"R Samson",uid:profile?.uid||""});setMessage(`${result.lessonsCompleted} plans de leçon complétés; ${result.reservationsCreated} réservation(s) et ${result.evaluationsCreated} évaluation(s) ajoutées avec l’avion ${result.aircraft}.`);}
+      else{const result=await completeFinishedTrainingDemo({id:profile?.linkedInstructorId||"",name:profile?.name||"R Samson",uid:profile?.uid||""});setMessage(`${result.lessonsCompleted} plans de leçon complétés; ${result.reservationsCreated} réservation(s) et ${result.evaluationsCreated} évaluation(s) ajoutées avec l’avion ${result.aircraft}; contrat de location, programme d’entraînement, pré-solo et recommandation de test complétés.`);}
       setSelected(null);setConfirmation("");
     }catch(caught){setError(caught instanceof Error?caught.message:"L’opération administrative a échoué.");}
     finally{setBusy(false);}

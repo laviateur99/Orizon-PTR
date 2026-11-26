@@ -7,6 +7,10 @@ import { inviteUser } from "@/features/auth/inviteUser";
 import { hashPin, randomPinSalt } from "@/features/auth/pin";
 import { schoolScope, withSchoolOrg } from "@/features/organizations/scope";
 import { ATPA_PROGRAM } from "@/features/programs/data";
+import { RENTAL_AGREEMENT } from "@/features/students/agreements";
+import { programAgreementFor } from "@/features/students/programAgreements";
+import { PRE_SOLO_EXERCISES } from "@/features/students/preSoloExercises";
+import type { Student } from "@/features/students/types";
 
 const BATCH_LIMIT = 450;
 
@@ -114,12 +118,28 @@ const clock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(
 export async function completeFinishedTrainingDemo(instructor: { id: string; name: string; uid: string }) {
   if (!instructor.id) throw new Error("Votre compte doit être lié à votre fiche instructeur avant de compléter la démonstration.");
 
-  const [aircraftSnapshot, lessonSnapshot, reservationSnapshot, evaluationSnapshot] = await Promise.all([
+  const [aircraftSnapshot, instructorSnapshot, studentSnapshot, lessonSnapshot, reservationSnapshot, evaluationSnapshot] = await Promise.all([
     getDocs(query(collection(db, "aircraft"), ...schoolScope())),
+    getDocs(collection(db, "instructors")),
+    getDocs(query(collection(db, "students"), where("name", "==", "Élève démonstration Formation terminée"))),
     getDocs(query(collection(db, "ptrLessons"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID))),
     getDocs(query(collection(db, "reservations"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID), ...schoolScope())),
     getDocs(query(collection(db, "ptrEvaluations"), where("studentId", "==", DEMO_COMPLETE_STUDENT_ID))),
   ]);
+
+  const studentDoc = studentSnapshot.docs.find(item => item.id === DEMO_COMPLETE_STUDENT_ID) || studentSnapshot.docs[0];
+  if (!studentDoc) throw new Error("Le dossier Élève démonstration Formation terminée est introuvable.");
+  const studentData = studentDoc.data();
+  const instructorData = instructorSnapshot.docs.find(item => item.id === instructor.id)?.data() || {};
+  const instructorLicense = String(instructorData.licenseNumber || "DEMO-RS-001");
+  const instructorClass = String(instructorData.classLevel || "Classe 1").replace(/^Classe\s*/i, "") || "1";
+  const instructorLicenseClass = `${instructorLicense} — Classe ${instructorClass}`;
+  const studentName = "Élève démonstration Formation terminée";
+  const studentLicense = String(studentData.licenseNumber || studentData.licenceNumber || "DEMO-CANDIDAT-001");
+  const studentEmail = String(studentData.email || "demo.formation.terminee@orizon.demo");
+  const studentAddress = String(studentData.address || "Adresse de démonstration — Québec");
+  const electronicInstructorSignature = `Signé électroniquement par ${instructor.name} — démonstration`;
+  const electronicStudentSignature = `Signé électroniquement par ${studentName} — démonstration`;
 
   const aircraft = aircraftSnapshot.docs
     .map(item => ({ id: item.id, ...item.data() } as { id: string; registration?: string; status?: string; active?: boolean }))
@@ -175,7 +195,7 @@ export async function completeFinishedTrainingDemo(instructor: { id: string; nam
 
       if (!completedComponents.has(componentKey)) {
         writes.push(batch => batch.set(doc(db, "reservations", reservationId), withSchoolOrg({
-          date, studentId: DEMO_COMPLETE_STUDENT_ID, studentName: "Élève démonstration Formation terminée",
+          date, studentId: DEMO_COMPLETE_STUDENT_ID, studentName,
           instructorId: instructor.id, aircraftId: aircraft.id,
           resourceId: isGround ? instructor.id : aircraft.id, primaryResourceId: isGround ? instructor.id : aircraft.id,
           type: isGround ? "Sol" : isSimulator ? "Simulateur" : isSolo ? "Solo" : "Double commande",
@@ -210,8 +230,8 @@ export async function completeFinishedTrainingDemo(instructor: { id: string; nam
           strengths: "Objectifs du plan de leçon atteints.", improvements: "Maintenir les standards démontrés.",
           comments: `Plan de leçon ${template.number} complété dans le cadre de la démonstration.`,
           actions: ["Poursuivre la progression conformément au programme"], lessonStatus: "Réussi",
-          instructorSignature: `Signé électroniquement par ${instructor.name} — démonstration`,
-          studentSignature: "Signé électroniquement par Élève démonstration Formation terminée — démonstration",
+          instructorSignature: electronicInstructorSignature,
+          studentSignature: electronicStudentSignature,
           signedAt: `${date}T${clock(endMinutes)}:00`,
           evaluationType: isGround ? "ground" : "flight", groundResult: isGround ? "Réussi" : null,
           componentKey, componentModality: modality, isTestData: true, createdAt: serverTimestamp(),
@@ -242,9 +262,90 @@ export async function completeFinishedTrainingDemo(instructor: { id: string; nam
     lessonsCompleted += 1;
   }
 
+  const rentalSignedAt = "2025-03-03T09:00:00-05:00";
+  writes.push(batch => batch.set(doc(db, "studentAgreements", DEMO_COMPLETE_STUDENT_ID), {
+    studentId: DEMO_COMPLETE_STUDENT_ID, documentId: RENTAL_AGREEMENT.id,
+    documentTitle: RENTAL_AGREEMENT.title, documentVersion: RENTAL_AGREEMENT.version,
+    documentSha256: RENTAL_AGREEMENT.sha256, signerName: studentName, signerAddress: studentAddress,
+    initials: "ÉDFT", accepted: true, privacyAccepted: true,
+    studentSignature: electronicStudentSignature, privacySignature: electronicStudentSignature,
+    under18: false, guardianName: "", guardianAddress: "", guardianCapacity: "", guardianSignature: "",
+    signedAt: rentalSignedAt, signedByUid: DEMO_COMPLETE_STUDENT_ID, signedByEmail: studentEmail,
+    isTestData: true, createdAtServer: serverTimestamp(),
+  }, { merge: true }));
+
+  const programDefinition = programAgreementFor({
+    id: DEMO_COMPLETE_STUDENT_ID, firstName: "Élève démonstration", lastName: "Formation terminée",
+    email: studentEmail, phone: String(studentData.phone || ""), address: studentAddress,
+    emergencyContact: "", emergencyPhone: "", program: "ATP(A) intégré", programType: "Intégré",
+    trainingProgramId: ATPA_PROGRAM.id, trainingProgramName: ATPA_PROGRAM.name,
+    language: "Français", status: "Diplômé", primaryInstructorId: instructor.id, theoryCohortId: "",
+    startDate: "2025-03-03", flightHours: 0, groundHours: 0, notes: "Dossier fictif de démonstration",
+  } satisfies Student, "");
+  writes.push(batch => batch.set(doc(db, "students", DEMO_COMPLETE_STUDENT_ID, "programAgreements", programDefinition.key), {
+    studentId: DEMO_COMPLETE_STUDENT_ID, studentProgram: "ATP(A) intégré",
+    programTrack: programDefinition.track, documentKey: programDefinition.key,
+    documentTitle: programDefinition.title, documentVersion: programDefinition.version,
+    documentSha256: programDefinition.sha256, candidateName: studentName, candidateLicense: studentLicense,
+    accepted: true, candidateSignature: electronicStudentSignature,
+    signedAt: rentalSignedAt, signedByUid: DEMO_COMPLETE_STUDENT_ID, signedByEmail: studentEmail,
+    isTestData: true, createdAtServer: serverTimestamp(),
+  }, { merge: true }));
+
+  const preSoloDate = "2025-04-21";
+  const preSoloSignedAt = `${preSoloDate}T15:00:00-04:00`;
+  const preSoloExercises = Object.fromEntries(PRE_SOLO_EXERCISES.map(([id]) => [id, {
+    completed: true, instructorId: instructor.id, instructorName: instructor.name,
+    instructorLicense, instructorSignature: electronicInstructorSignature,
+    studentSignature: electronicStudentSignature, signedAt: preSoloDate,
+  }]));
+  writes.push(batch => batch.set(doc(db, "preSoloChecklists", DEMO_COMPLETE_STUDENT_ID), {
+    studentId: DEMO_COMPLETE_STUDENT_ID,
+    radioExaminerId: instructor.id, radioExaminerName: instructor.name,
+    radioExaminerSignature: electronicInstructorSignature, radioIssueDate: "2025-03-20",
+    pstarMark: "92 %", pstarDate: "2025-03-24",
+    permitAuthorizedPersonId: instructor.id, permitAuthorizedPerson: instructor.name,
+    permitSignature: electronicInstructorSignature, permitIssueDate: "2025-03-25", permitExpiryDate: "2030-03-25",
+    medicalAuthorizedPersonId: instructor.id, medicalAuthorizedPerson: instructor.name,
+    medicalSignature: electronicInstructorSignature, medicalIssueDate: "2025-02-15", medicalExpiryDate: "2026-02-15",
+    exercises: preSoloExercises,
+    recommendingInstructorId: instructor.id, recommendingInstructorName: instructor.name,
+    recommendingInstructorLicenseClass: instructorLicenseClass,
+    recommendingInstructorSignature: electronicInstructorSignature, recommendingDate: preSoloDate,
+    recommendingInstructorIsClass4: instructorClass === "4",
+    supervisingInstructorId: instructorClass === "4" ? instructor.id : "",
+    supervisingInstructorName: instructorClass === "4" ? instructor.name : "",
+    supervisingInstructorLicenseClass: instructorClass === "4" ? instructorLicenseClass : "",
+    supervisingInstructorSignature: instructorClass === "4" ? electronicInstructorSignature : "",
+    supervisingDate: instructorClass === "4" ? preSoloDate : "",
+    authorized: true, completedAt: preSoloSignedAt, isTestData: true, updatedAt: serverTimestamp(),
+  }, { merge: true }));
+
+  const recommendationDate = "2026-10-15";
+  const recommendationCompletedAt = `${recommendationDate}T16:00:00-04:00`;
+  writes.push(batch => batch.set(doc(db, "flightTestRecommendations", DEMO_COMPLETE_STUDENT_ID), {
+    studentId: DEMO_COMPLETE_STUDENT_ID,
+    recommendingInstructorName: instructor.name, recommendingInstructorLicense: instructorLicense,
+    recommendingInstructorClass: instructorClass, recommendingInstructorSignature: electronicInstructorSignature,
+    recommendingDate: recommendationDate, recommendingInstructorIsClass4: instructorClass === "4",
+    supervisingInstructorName: instructorClass === "4" ? instructor.name : "",
+    supervisingInstructorLicense: instructorClass === "4" ? instructorLicense : "",
+    supervisingInstructorClass: instructorClass === "4" ? "1" : "",
+    supervisingInstructorSignature: instructorClass === "4" ? electronicInstructorSignature : "",
+    supervisingDate: instructorClass === "4" ? recommendationDate : "",
+    valid: true, completedAt: recommendationCompletedAt, isTestData: true, updatedAt: serverTimestamp(),
+  }, { merge: true }));
+
   writes.push(batch => batch.set(doc(db, "students", DEMO_COMPLETE_STUDENT_ID), {
     primaryInstructorId: instructor.id, startDate: "2025-03-03", completionDate: "2026-11-24",
-    status: "Diplômé", updatedAt: serverTimestamp(),
+    status: "Diplômé", rentalAgreementSigned: true, rentalAgreementSignedAt: rentalSignedAt,
+    rentalAgreementVersion: RENTAL_AGREEMENT.version,
+    trainingProgramAgreementSigned: true, trainingProgramAgreementSignedAt: rentalSignedAt,
+    trainingProgramAgreementVersion: programDefinition.version,
+    trainingProgramAgreementProgram: "ATP(A) intégré", trainingProgramAgreementKey: programDefinition.key,
+    preSoloAuthorized: true, preSoloAuthorizedAt: preSoloSignedAt,
+    flightTestRecommended: true, flightTestRecommendedAt: recommendationCompletedAt,
+    updatedAt: serverTimestamp(),
   }, { merge: true }));
 
   for (let start = 0; start < writes.length; start += BATCH_LIMIT) {
@@ -253,7 +354,7 @@ export async function completeFinishedTrainingDemo(instructor: { id: string; nam
     await batch.commit();
   }
 
-  return { lessonsCompleted, reservationsCreated, evaluationsCreated, aircraft: aircraft.registration || aircraft.id };
+  return { lessonsCompleted, reservationsCreated, evaluationsCreated, aircraft: aircraft.registration || aircraft.id, complianceRecords: 4 };
 }
 
 const localDateDaysAgo=(days:number)=>{
